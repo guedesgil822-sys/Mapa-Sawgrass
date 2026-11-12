@@ -460,11 +460,16 @@ def main():
     else:
         regional, general = ocr_regions(lab, tmp), ocr_units(tmp)
         cache.write_text(json.dumps({"regional": regional, "general": general}))
+    def in_legend(x, y):
+        return any(x0 <= x + X0 <= x1 and y0 <= y + Y0 <= y1 for x0, y0, x1, y1 in ERASE)
+
     found = {}
     for t, x, y, conf in sorted(regional, key=lambda r: -r[3]):
-        found.setdefault(t, (x, y))
-    for t, xy in general.items():
-        found.setdefault(t, xy)
+        if not in_legend(x, y):
+            found.setdefault(t, (x, y))
+    for t, (x, y) in general.items():
+        if not in_legend(x, y):
+            found.setdefault(t, (x, y))
     cnodes, cedges = corridor_graph(cm)
     print(f"lista: {len(units)} números; OCR: {len(found)} números; corredores: {len(cnodes)} nós")
 
