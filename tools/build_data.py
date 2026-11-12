@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gera data/mall.json e maps/l1.webp a partir da planta do Sawgrass Mills.
+"""Gera data/mall.json a partir da planta do Sawgrass Mills.
 
 Uso:
   sh tools/fetch_sources.sh /tmp/raw
@@ -225,13 +225,12 @@ def main():
 
     src = Image.open(RAW / "map.png").convert("RGB").crop(CROP)
     w, h = round(src.width * SCALE), round(src.height * SCALE)
-    (OUT / "maps").mkdir(parents=True, exist_ok=True)
-    src.resize((w, h), Image.LANCZOS).save(OUT / "maps" / "l1.webp", quality=82, method=6)
+    # a imagem publicada é o vetor gerado por vectorize.py (maps/l1.svg)
 
     data = {
         "meta": {"name": "Sawgrass Mills", "schema": 1, "pxPerMeter": PX_PER_M,
                  "source": "Planta do Sawgrass Mills publicada em all-maps.com (PDF para impressão)"},
-        "floors": [{"id": FLOOR, "name": "Piso único", "level": 1, "image": "maps/l1.webp",
+        "floors": [{"id": FLOOR, "name": "Piso único", "level": 1, "image": "maps/l1.svg",
                     "width": w, "height": h}],
         "nodes": nodes, "edges": edges, "pois": pois,
     }

@@ -1,9 +1,9 @@
 // Cache para uso offline dentro do shopping (sinal costuma ser ruim).
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'js/app.js', 'js/graph.js', 'js/mapview.js',
   'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png',
-  'data/mall.json', 'maps/l1.webp',
+  'data/mall.json', 'maps/l1.svg',
 ];
 
 self.addEventListener('install', (e) => {

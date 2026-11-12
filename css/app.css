@@ -29,7 +29,8 @@ button { cursor: pointer; }
 /* ---------- mapa ---------- */
 #map { position: fixed; inset: 0; background: #fff; touch-action: none; overflow: hidden; user-select: none; -webkit-user-select: none; cursor: grab; }
 #map:active { cursor: grabbing; }
-.mv-content { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+/* sem will-change: o navegador redesenha o vetor a cada zoom e o mapa fica nítido */
+.mv-content { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
 .mv-content.mv-anim { transition: transform .35s ease; }
 .mv-content img { position: absolute; left: 0; top: 0; display: block; max-width: none; }
 .mv-content svg { position: absolute; left: 0; top: 0; overflow: visible; }

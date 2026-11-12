@@ -14,9 +14,9 @@ somem quando só existe um piso).
 - `editor.html`, `js/editor.js` – editor do grafo (nós, arestas, lojas) com exportação em JSON.
 - `js/graph.js` – dados, busca, rota por A* e instruções. `js/mapview.js` – mapa com arrastar e zoom.
 - `data/mall.json` – piso, nós, arestas e lojas.
-- `maps/l1.webp` – planta (2880×1725 px).
+- `maps/l1.svg` – planta em vetor (nítida em qualquer zoom), 2880×1725.
 - `sw.js`, `manifest.webmanifest`, `icons/` – PWA e cache offline.
-- `tools/fetch_sources.sh`, `tools/build_data.py` – baixam a planta e geram `mall.json` e `maps/l1.webp`.
+- `tools/fetch_sources.sh`, `tools/build_data.py`, `tools/vectorize.py` – baixam a planta, geram `mall.json` e desenham `maps/l1.svg`.
 
 ## Rodar
 
@@ -46,7 +46,7 @@ O mesmo do projeto original (o editor e o app dependem dele):
 ```jsonc
 {
   "meta":   { "name": "Sawgrass Mills", "schema": 1, "pxPerMeter": 2.0 },
-  "floors": [{ "id": "L1", "name": "Piso único", "level": 1, "image": "maps/l1.webp", "width": 2880, "height": 1725 }],
+  "floors": [{ "id": "L1", "name": "Piso único", "level": 1, "image": "maps/l1.svg", "width": 2880, "height": 1725 }],
   "nodes":  [{ "id": 0, "f": "L1", "x": 270, "y": 495, "t": "c" }],   // t: c, door, escalator, elevator, stairs, ramp
   "edges":  [{ "a": 0, "b": 1, "t": "walk" }],
   "pois":   [{ "id": "p0", "name": "Marshalls", "f": "L1", "x": 0, "y": 0, "node": 12,
@@ -65,6 +65,12 @@ A planta é o PDF para impressão publicado em
 Diferente do Salvador Norte, ela é só uma imagem, sem dados estruturados: os
 corredores, portas e contornos foram **traçados à mão** em `tools/build_data.py`.
 Resultado: 1 piso, 42 pontos, 147 nós, 147 arestas. Há rota entre todos os pares.
+
+A imagem original é pequena e borrada, então a planta publicada é redesenhada
+em vetor por `tools/vectorize.py`: contorno dos prédios pela cor de cada ala,
+corredores a partir do grafo, lojas âncora destacadas e nomes em texto. Fica
+nítida em qualquer zoom, mas é esquemática: as divisas das lojas pequenas são
+aproximadas.
 
 O material pertence ao shopping (Simon) e a quem publicou a planta: para uso além
 do pessoal é preciso autorização.
