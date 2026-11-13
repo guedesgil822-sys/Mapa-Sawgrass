@@ -152,6 +152,7 @@ function bindUI() {
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
   $('#sos-btn').onclick = () => $('#sos').showModal();
+  setupInstall();
   const goPlace = (cat) => { const p = mall.pois.find((q) => q.cat === cat); if (!p) return; $('#sos').close(); state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); };
   $('#sos-sec').onclick = () => goPlace('Administração');
   $('#sos-info').onclick = () => goPlace('Atendimento e cartões-presente');
@@ -778,6 +779,30 @@ function refreshFloorImage() {
   if (f) view.setFloor(floorSrc(f), f.width, f.height);
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', refreshFloorImage);
+
+/* ---------- instalar o app (ícone na tela de início) ---------- */
+let installEvt = null;
+function setupInstall() {
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const btn = $('#install-btn');
+  if (standalone) return;
+  // iPhone: não tem botão automático, mostra o passo a passo
+  if (ios) btn.hidden = false;
+  // Android/Chrome: o navegador avisa que dá para instalar
+  addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; btn.hidden = false; });
+  addEventListener('appinstalled', () => { btn.hidden = true; installEvt = null; toast(tx('📲 App instalado! Procure o ícone “Sawgrass” na tela de início.')); });
+  btn.onclick = async () => {
+    if (installEvt) {
+      installEvt.prompt();
+      const r = await installEvt.userChoice.catch(() => null);
+      if (r?.outcome === 'accepted') btn.hidden = true;
+      installEvt = null;
+    } else {
+      $('#install').showModal();
+    }
+  };
+}
 
 function setFloor(fid, refit) {
   const f = mall.floorById.get(fid);

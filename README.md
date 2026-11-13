@@ -130,6 +130,13 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Instalar o app
+
+- O botão **📲 Instalar app** aparece na fila de botões do topo quando o app ainda não está na tela de início.
+- **No Android (Chrome):** abre o pedido de instalação do próprio celular.
+- **No iPhone:** mostra o passo a passo: Safari, depois Compartilhar, depois Adicionar à Tela de Início.
+- Depois de instalado, o botão some.
+
 ## Mapa escuro, animações, recentes e letra maior
 
 - **Mapa escuro:** usa uma planta escura própria (`maps/l1-dark.svg`, gerada por `tools/make_dark.py`): contornos das lojas, vagas, ruas e nomes ficam claros sobre o fundo escuro. Rode o script de novo se `l1.svg` mudar.
