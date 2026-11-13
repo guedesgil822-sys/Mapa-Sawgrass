@@ -25,9 +25,11 @@ somem quando só existe um piso).
 
 O botão **🔎 Buscar loja** abre a lista de todos os lugares em ordem alfabética,
 com uma divisória por letra ("The" no início do nome não conta) e filtros por
-categoria. Digitando, a lista filtra por nome ou categoria. Ao escolher uma loja,
-o mapa vai até ela, pinta o contorno de azul, mostra um marcador pulsando e abre
-as ações "Estou aqui" e "Ir para cá".
+categoria. Digitando, a lista filtra por nome ou categoria. Tocar numa loja
+marca ou desmarca (✓); as marcadas ficam em amarelo com ★ no mapa e continuam
+salvas no aparelho. **Ver no mapa** enquadra todas; **Limpar** (na busca ou no
+botão "✕ Limpar" da tela principal) apaga a seleção. Tocando numa loja no mapa,
+o painel mostra "Estou aqui", "Ir para cá" e "Marcar/Desmarcar".
 
 ## Rodar
 

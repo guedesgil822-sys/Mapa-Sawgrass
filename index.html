@@ -27,6 +27,9 @@
   <div class="opts">
     <button type="button" class="chip find" id="find">🔎 Buscar loja</button>
     <label class="chip toggle"><input type="checkbox" id="accessible"><span>♿ Sem escada rolante</span></label>
+    <button type="button" class="chip marked" id="marked-chip" hidden></button>
+    <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
+    <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
   </div>
   <div class="card gps-bar" id="gps-bar" hidden role="status">
@@ -51,7 +54,12 @@
     <input type="search" id="q" placeholder="Buscar loja ou serviço" autocomplete="off" enterkeyhint="search">
   </form>
   <div class="chips" id="groups"></div>
+  <p class="mark-hint" id="mark-hint" hidden>Toque nas lojas para marcar ou desmarcar.</p>
   <ul id="results"></ul>
+  <div class="mark-bar" id="mark-bar" hidden>
+    <button type="button" class="btn" id="mark-clear">Limpar</button>
+    <button type="button" class="btn primary" id="mark-show">Ver no mapa</button>
+  </div>
 </dialog>
 
 <script type="module" src="js/app.js"></script>

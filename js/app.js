@@ -9,6 +9,7 @@ const el = (tag, cls, text) => {
   return e;
 };
 const DRAFT_KEY = 'sawgrass.draft';
+const MARK_KEY = 'sawgrass.marcadas';
 const ICON = {
   start: '●', straight: '↑', right: '↱', left: '↰', 'slight-right': '↗', 'slight-left': '↖',
   uturn: '↶', arrive: '⚑',
@@ -20,8 +21,14 @@ let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
 const multi = () => mall.floors.length > 1;
 const markers = [];
+// lojas marcadas na busca (destaque no mapa); guardadas no aparelho
+const marked = new Set();
+const saveMarked = () => { try { localStorage.setItem(MARK_KEY, JSON.stringify([...marked])); } catch { /* sem armazenamento */ } };
 // GPS: posição atual no mapa { x, y, acc (m), near (POI mais próxima), inside }
 const gps = { watch: null, me: null, centered: false };
+// aberto dentro de outro app (ex.: visualizador do Claude), onde o GPS fica bloqueado
+const framed = (() => { try { return window.top !== window; } catch { return true; } })();
+const WEB_URL = 'https://guedesgil822-sys.github.io/Mapa-Sawgrass/';
 
 async function init() {
   const useDraft = new URLSearchParams(location.search).has('draft') && localStorage.getItem(DRAFT_KEY);
@@ -53,8 +60,11 @@ async function init() {
   state.accessible = h.get('acessivel') === '1';
   $('#accessible').checked = state.accessible;
 
+  try { for (const id of JSON.parse(localStorage.getItem(MARK_KEY) || '[]')) if (mall.poiById.has(id)) marked.add(id); } catch { /* ignora */ }
+
   setFloor(state.from?.f || mall.floors[0].id, false);
   update(true);
+  renderMarked();
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -66,12 +76,19 @@ function bindUI() {
   $('#f-from').onclick = () => openPicker('from');
   $('#f-to').onclick = () => openPicker('to');
   $('#find').onclick = () => openPicker('find');
+  $('#mark-clear').onclick = () => { clearMarked(); renderResults(); };
+  $('#marked-clear').onclick = clearMarked;
+  $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
+  $('#marked-chip').onclick = showMarked;
   $('#swap').onclick = () => { [state.from, state.to] = [state.to, state.from]; update(true); };
   $('#accessible').onchange = (e) => { state.accessible = e.target.checked; update(true); };
   $('#zin').onclick = () => view.zoomBy(1.6);
   $('#zout').onclick = () => view.zoomBy(1 / 1.6);
   $('#gps').hidden = !mall.data.meta?.geo;
-  $('#gps').onclick = () => (gps.watch == null ? startGps() : gps.me && centerOnMe());
+  $('#open-web').hidden = !framed;
+  $('#open-web').onclick = (e) => { e.currentTarget.href = WEB_URL + location.hash; }; // leva a rota junto
+  $('#gps').onclick = () => (gps.watch == null ? startGps() : stopGps()); // liga/desliga
+  $('#gps-txt').onclick = () => gps.me && centerOnMe(); // tocar no texto recentraliza
   $('#gps-close').onclick = stopGps;
   $('#gps-use').onclick = () => {
     if (!gps.me?.near) return;
@@ -80,6 +97,8 @@ function bindUI() {
   $('#q').oninput = renderResults;
   $('#picker').addEventListener('close', () => { $('#q').value = ''; });
   addEventListener('resize', () => placeMarkers());
+  // iOS ignora user-scalable=no: impede que a pinça amplie a página inteira (o mapa tem zoom próprio)
+  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
 }
 
 function buildFloors() {
@@ -111,12 +130,14 @@ function openPicker(which) {
   picking = which;
   $('#q').placeholder = { from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
     find: 'Buscar loja, serviço ou categoria' }[which];
+  $('#mark-hint').hidden = which !== 'find';
   renderResults();
   $('#picker').showModal();
   $('#q').focus();
 }
 
 function renderResults() {
+  renderMarkBar();
   const ul = $('#results');
   ul.textContent = '';
   const q = $('#q').value.trim();
@@ -141,9 +162,23 @@ function renderResults() {
     box.append(el('div', 'n', p.name), el('div', 'c', p.cat || p.group));
     li.append(box);
     if (multi()) li.append(el('span', 'f', p.f));
+    if (picking === 'find') {
+      const on = marked.has(p.id);
+      li.classList.toggle('on', on);
+      li.setAttribute('role', 'checkbox');
+      li.setAttribute('aria-checked', String(on));
+      li.append(el('span', 'chk', on ? '✓' : ''));
+    }
     const pick = () => {
+      if (picking === 'find') {
+        toggleMarked(p);
+        const on = marked.has(p.id);
+        li.classList.toggle('on', on);
+        li.setAttribute('aria-checked', String(on));
+        li.querySelector('.chk').textContent = on ? '✓' : '';
+        return;
+      }
       $('#picker').close();
-      if (picking === 'find') return showPoi(p);
       state[picking] = p; state.picked = null; update(true);
     };
     li.onclick = pick;
@@ -153,6 +188,38 @@ function renderResults() {
 }
 
 // "The Sports Authority" fica no S; acentos não mudam a ordem
+/* ---------- lojas marcadas ---------- */
+function toggleMarked(p) {
+  if (marked.has(p.id)) marked.delete(p.id); else marked.add(p.id);
+  saveMarked(); renderMarkBar(); renderMarked();
+}
+
+function clearMarked() {
+  marked.clear();
+  saveMarked(); renderMarkBar(); renderMarked();
+}
+
+function renderMarkBar() {
+  const n = marked.size, bar = $('#mark-bar');
+  bar.hidden = picking !== 'find' || !n;
+  $('#mark-show').textContent = `Ver no mapa (${n})`;
+}
+
+function renderMarked() {
+  const n = marked.size;
+  $('#marked-chip').hidden = $('#marked-clear').hidden = !n;
+  $('#marked-chip').textContent = `★ ${n} ${n === 1 ? 'marcada' : 'marcadas'}`;
+  drawRoute();
+}
+
+function showMarked() {
+  const ps = [...marked].map((id) => mall.poiById.get(id)).filter(Boolean);
+  if (!ps.length) return;
+  if (!ps.some((p) => p.f === state.floor)) setFloor(ps[0].f, false);
+  state.picked = null; update(false);
+  fitPoints(ps.filter((p) => p.f === state.floor), 60 * mall.ppm);
+}
+
 const sortKey = (p) => norm(p.name.replace(/^the\s+/i, ''));
 
 /** Mostra uma loja em destaque: vai até ela, pinta o contorno e abre as ações. */
@@ -307,6 +374,9 @@ function renderSheet() {
     const b = el('button', 'btn primary', 'Ir para cá');
     b.onclick = () => { state.to = p; state.picked = null; update(true); };
     act.append(a, b);
+    const m = el('button', 'btn small mark-toggle', marked.has(p.id) ? '★ Desmarcar' : '☆ Marcar');
+    m.onclick = () => { toggleMarked(p); renderSheet(); };
+    act.append(m);
     s.append(head, act);
     s.hidden = false;
     return;
@@ -390,6 +460,12 @@ function drawRoute() {
     if (p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel ' + cls }, layers.sel);
     markers.push({ x: p.x, y: p.y, cls });
   };
+  for (const id of marked) {
+    const p = mall.poiById.get(id);
+    if (!p || p.f !== state.floor || p === state.from || p === state.to) continue;
+    if (p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel mark' }, layers.sel);
+    markers.push({ x: p.x, y: p.y, cls: 'mark', text: '★', title: p.name });
+  }
   if (state.picked && state.picked !== state.from && state.picked !== state.to) {
     const p = state.picked;
     if (p.f === state.floor) {
@@ -463,6 +539,8 @@ function gpsMsg(text, canUse = false) {
 function startGps() {
   if (!('geolocation' in navigator)) return gpsMsg('Este aparelho não oferece localização.');
   $('#gps').classList.add('on');
+  $('#gps').setAttribute('aria-pressed', 'true');
+  $('#gps').title = 'Desligar localização';
   gpsMsg('Procurando sua posição…');
   gps.centered = false;
   gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError,
@@ -473,11 +551,14 @@ function stopGps() {
   if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
   gps.watch = null; gps.me = null;
   $('#gps').classList.remove('on');
+  $('#gps').setAttribute('aria-pressed', 'false');
+  $('#gps').title = 'Onde estou (GPS)';
   $('#gps-bar').hidden = true;
   drawRoute();
 }
 
 function onGps(pos) {
+  if (gps.watch == null) return; // já desligado
   const { latitude, longitude, accuracy } = pos.coords;
   const { x, y } = geoToMap(latitude, longitude);
   const f = mall.floorById.get(state.floor);
@@ -495,18 +576,17 @@ function onGps(pos) {
   }
   gps.me = { x, y, acc: accuracy, near };
   const acc = accuracy < 1000 ? `±${Math.round(accuracy)} m` : 'baixa precisão';
-  gpsMsg(near ? `Perto de ${near.name} (${acc})` : `Você está aqui (${acc})`, !!near);
+  gpsMsg(near ? `📍 Perto de ${near.name} (${acc})` : `Você está aqui (${acc})`, !!near);
   if (!gps.centered) { gps.centered = true; centerOnMe(); } else drawRoute();
 }
 
 function onGpsError(err) {
+  if (gps.watch == null) return;
   if (err.code === 1) {
     stopGps();
-    let framed = true;
-    try { framed = window.top !== window; } catch { /* outro domínio: está dentro de um quadro */ }
     return gpsMsg(framed
-      ? 'Aqui dentro o GPS fica bloqueado pelo app onde a página está aberta. Abra o mapa pelo endereço próprio no Safari/Chrome para usar a localização.'
-      : 'Sem permissão de localização. Ative em Ajustes › Privacidade › Serviços de Localização (Safari) ou nas permissões do site no Chrome.');
+      ? 'Aqui dentro o GPS fica bloqueado. Toque em “🌐 Abrir no navegador” para usar a localização.'
+      : 'Localização bloqueada. iPhone: Ajustes › Privacidade e Segurança › Serviços de Localização › Sites do Safari › Durante o Uso. Depois, no Safari, toque em aA › Ajustes do Site › Localização › Perguntar e recarregue.');
   }
   gpsMsg(err.code === 3 ? 'O GPS está demorando. Dentro do shopping o sinal é fraco; tente perto de uma entrada.'
     : 'Não foi possível obter sua posição agora.');
