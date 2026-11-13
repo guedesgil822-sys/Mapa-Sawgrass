@@ -23,7 +23,7 @@ const ICON = {
 };
 
 const state = { meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
-let mall, view, layers, picking = 'from', group = '';
+let mall, view, layers, picking = 'from', group = '', onlyMarked = false;
 let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
 const multi = () => mall.floors.length > 1;
@@ -95,7 +95,7 @@ async function init() {
 function bindUI() {
   $('#f-from').onclick = () => openPicker('from');
   $('#f-to').onclick = () => openPicker('to');
-  $('#search-pill').onclick = () => openPicker('to');
+  $('#search-pill').onclick = () => openPicker('find'); // mesma tela da aba Buscar
   $('#trip-clear').onclick = () => { state.from = state.to = null; state.picked = null; update(false); };
   $('#tab-map').onclick = () => { state.picked = null; update(false); fitCurrent(); };
   $('#tab-find').onclick = () => openPicker('find');
@@ -120,6 +120,8 @@ function bindUI() {
   $('#mark-clear').onclick = () => { clearMarked(); renderResults(); };
   $('#marked-clear').onclick = clearMarked;
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
+  $('#mark-only').onclick = () => { onlyMarked = !onlyMarked; $('#results').scrollTop = 0; renderResults(); };
+  $('#picker').addEventListener('close', () => { onlyMarked = false; });
   $('#marked-chip').onclick = showMarked;
   $('#meet-chip').onclick = () => openMeet();
   $('#car-chip').onclick = () => openCar();
@@ -188,12 +190,12 @@ function buildGroups() {
 function openPicker(which) {
   picking = which;
   $('#q').placeholder = { from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
-    find: 'Buscar loja, serviço ou categoria', meet: 'Onde vão se encontrar?' }[which];
+    find: 'Para onde você vai?', meet: 'Onde vão se encontrar?' }[which];
   // dica do que o toque faz em cada modo
   $('#mark-hint').textContent = {
     from: 'Toque na loja mais perto de você.',
     to: 'Toque numa loja para traçar a rota. Para marcar várias, use a aba Buscar.',
-    find: 'Toque nas lojas para marcar ou desmarcar (✓). Elas ficam em destaque no mapa.',
+    find: 'Toque na loja para marcar várias (✓) ou em “Ir ➜” para traçar a rota.',
     meet: 'Toque no lugar do encontro.',
   }[which];
   $('#mark-hint').hidden = false;
@@ -210,13 +212,16 @@ function renderResults() {
   ul.textContent = '';
   const q = $('#q').value.trim();
   let list = mall.search(q, group);
+  // "Selecionados": só as lojas marcadas, com logo, para conferir antes de ir ao mapa
+  if (onlyMarked && picking === 'find') list = [...marked].map((id) => mall.poiById.get(id)).filter(Boolean);
   if (!list.length) {
     ul.appendChild(el('li', 'empty', group && q ? `Nada com “${q}” em ${group}.` : 'Nada encontrado.'));
     return;
   }
   // sem busca: ordem alfabética com uma divisória por letra (A, B, C…)
-  if (!q) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
-  ul.appendChild(el('li', 'count', `${list.length} ${list.length === 1 ? 'lugar' : 'lugares'}`));
+  if (!q || onlyMarked) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
+  ul.appendChild(el('li', 'count', onlyMarked ? `${list.length} ${list.length === 1 ? 'selecionada' : 'selecionadas'} · toque para desmarcar`
+    : `${list.length} ${list.length === 1 ? 'lugar' : 'lugares'}`));
   let letter = null;
   for (const p of list) {
     if (!q) {
@@ -226,20 +231,31 @@ function renderResults() {
     }
     const li = el('li');
     li.tabIndex = 0;
-    const box = el('div');
+    const box = el('div', 'txt');
     box.append(el('div', 'n', p.name), el('div', 'c', p.cat || p.group));
-    li.append(box);
+    li.append(logoEl(p), box);
     if (multi()) li.append(el('span', 'f', p.f));
     if (picking === 'find') {
       const on = marked.has(p.id);
       li.classList.toggle('on', on);
       li.setAttribute('role', 'checkbox');
       li.setAttribute('aria-checked', String(on));
-      li.append(el('span', 'chk', on ? '✓' : ''));
+      // "Ir": traça a rota até a loja sem precisar marcar
+      const go = el('button', 'go', 'Ir ➜');
+      go.type = 'button';
+      go.setAttribute('aria-label', `Traçar rota até ${p.name}`);
+      go.onclick = (e) => {
+        e.stopPropagation();
+        $('#picker').close();
+        state.to = p; state.picked = null; gpsAsOrigin(); update(true);
+        if (!state.from) openPicker('from');
+      };
+      li.append(go, el('span', 'chk', on ? '✓' : ''));
     }
     const pick = () => {
       if (picking === 'find') {
         toggleMarked(p);
+        if (onlyMarked) return renderResults();
         const on = marked.has(p.id);
         li.classList.toggle('on', on);
         li.setAttribute('aria-checked', String(on));
@@ -273,7 +289,11 @@ function clearMarked() {
 function renderMarkBar() {
   const n = marked.size, bar = $('#mark-bar');
   bar.hidden = picking !== 'find' || !n;
-  $('#mark-show').textContent = `Ver no mapa (${n})`;
+  if (!n) onlyMarked = false;
+  $('#mark-show').textContent = 'Ver no mapa';
+  $('#mark-only').textContent = onlyMarked ? 'Ver todas' : `Selecionados (${n})`;
+  $('#mark-only').setAttribute('aria-pressed', String(onlyMarked));
+  $('#mark-only').classList.toggle('on', onlyMarked);
 }
 
 function renderMarked() {
@@ -289,7 +309,26 @@ function showMarked() {
   if (!ps.length) return;
   if (!ps.some((p) => p.f === state.floor)) setFloor(ps[0].f, false);
   state.picked = null; update(false);
-  fitPoints(ps.filter((p) => p.f === state.floor), 60 * mall.ppm);
+  fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
+}
+
+/* ---------- logos das marcas ---------- */
+// ícone oficial do site da marca (campo "web" do mall.json); sem site, ou offline, um selo com as iniciais
+const GROUP_HUE = { Moda: 330, Calçados: 25, Esportes: 145, Alimentação: 35, Beleza: 300, Casa: 190, Tecnologia: 215,
+  Infantil: 50, 'Óticas e joias': 265, Lazer: 170, Serviços: 205, Facilidades: 205, Entradas: 0, Estacionamento: 215 };
+const initials = (n) => n.replace(/^the\s+/i, '').split(/[\s/&-]+/).filter((w) => /^[\p{L}\d]/u.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+function logoEl(p, cls = '') {
+  const d = el('span', 'logo ' + cls);
+  d.style.setProperty('--h', GROUP_HUE[p.group] ?? 220);
+  d.textContent = initials(p.name) || '•';
+  d.setAttribute('aria-hidden', 'true');
+  if (p.web) {
+    const img = new Image();
+    img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
+    img.onload = () => { if (img.naturalWidth > 16) { d.textContent = ''; d.classList.add('img'); d.append(img); } };
+    img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(p.web)}&sz=128`;
+  }
+  return d;
 }
 
 const sortKey = (p) => norm(p.name.replace(/^the\s+/i, ''));
@@ -301,7 +340,7 @@ function showPoi(p) {
   update(false);
   let pts = [{ x: p.x, y: p.y }];
   if (p.poly?.length >= 6) pts = p.poly.reduce((a, v, i) => (i % 2 ? a[a.length - 1].y = v : a.push({ x: v, y: 0 }), a), []);
-  fitPoints(pts, 90 * mall.ppm);
+  fitPoints(pts, 220 * mall.ppm);
 }
 
 /* ---------- piso ---------- */
@@ -438,6 +477,7 @@ function renderSheet() {
   if (p) {
     const head = el('div', 'sheet-head');
     const g = el('div', 'grow');
+    head.prepend(logoEl(p, 'big'));
     g.append(el('h2', '', p.name), el('p', '', [multi() && mall.floorById.get(p.f).name, p.cat || p.group].filter(Boolean).join(' · ')));
     const x = el('button', 'icon-btn', '✕');
     x.setAttribute('aria-label', 'Fechar');
@@ -524,7 +564,7 @@ function goStep(i) {
   const st = r.steps[i];
   // ao chegar num passo de troca de piso, o mapa mostra onde ela fica
   if (st.floor !== state.floor) setFloor(st.floor, false); else drawRoute();
-  fitPoints(st.pts, 18 * mall.ppm);
+  fitPoints(st.pts, 70 * mall.ppm);
 }
 
 /* ---------- rota no mapa ---------- */
@@ -697,7 +737,7 @@ function saveMeet() {
   persistMeet();
   $('#meet').close();
   state.picked = null; update(false);
-  fitPoints([state.meet], 80 * mall.ppm);
+  fitPoints([state.meet], 200 * mall.ppm);
 }
 
 const LOTS = () => mall.pois.filter((p) => p.group === 'Estacionamento');
@@ -740,7 +780,7 @@ function saveCar() {
   state.car = { lot, note: $('#car-note').value.trim(), t: Date.now(), ...(carPos || {}) };
   persistCar();
   $('#car').close();
-  fitPoints([CAR], 80 * mall.ppm);
+  fitPoints([CAR], 200 * mall.ppm);
 }
 
 function goToCar() {
@@ -1213,7 +1253,8 @@ function fitCurrent() {
   if (!pts.length) {
     for (const p of [state.from, state.to]) if (p && p.f === f.id) pts.push(p);
   }
-  if (pts.length) return fitPoints(pts, 40 * mall.ppm);
+  // só origem/destino (sem rota): mostra ~250 m em volta para dar contexto
+  if (pts.length) return fitPoints(pts, (state.route ? 60 : 250) * mall.ppm);
   // só as lojas (sem estacionamentos): o prédio enche a largura da tela
   const all = mall.pois.filter((p) => p.f === f.id && p.poly && p.group !== 'Estacionamento')
     .flatMap((p) => p.poly.reduce((a, v, i) => (i % 2 ? (a[a.length - 1].y = v) : a.push({ x: v, y: 0 }), a), []));
