@@ -597,3 +597,10 @@ button { cursor: pointer; }
 .install-steps li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); font-size: 15px; line-height: 1.4; }
 .install-steps svg { vertical-align: -3px; color: var(--pick); }
 .ist-ic { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; -webkit-text-fill-color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+
+/* ---------- 25 · busca por voz ---------- */
+.icon-btn.mic { color: var(--pick); }
+.icon-btn.mic.on { background: var(--accent); color: #fff; -webkit-text-fill-color: #fff; animation: mic-pulse 1.2s ease-in-out infinite; }
+@keyframes mic-pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 25%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .icon-btn.mic.on { animation: none; } }
+.mic-status { margin: 0; padding: 10px 16px 0; font-size: 15px; font-weight: 600; color: var(--ink); }

@@ -130,6 +130,12 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Busca por voz
+
+- Na tela de busca, toque no 🎤 ao lado do campo e fale o nome da loja, no idioma escolhido no app.
+- Frases como "onde fica a Nike" viram só "Nike".
+- O 🎤 só aparece em navegadores que reconhecem voz (Safari no iPhone, Chrome no Android). Na primeira vez o celular pede permissão para usar o microfone.
+
 ## Instalar o app
 
 - O botão **📲 Instalar app** aparece na fila de botões do topo quando o app ainda não está na tela de início.

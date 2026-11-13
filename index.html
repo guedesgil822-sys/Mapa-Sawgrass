@@ -53,11 +53,11 @@
     <button type="button" class="chip st-meet" id="meet-chip" hidden></button>
     <button type="button" class="chip st-car" id="car-chip" hidden></button>
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
+    <button type="button" class="chip tour" id="tour-btn" hidden>🧭 Roteiro</button>
     <button type="button" class="chip install" id="install-btn" hidden>📲 Instalar app</button>
     <button type="button" class="chip near" id="near-btn">📍 Perto de mim</button>
     <button type="button" class="chip shop" id="shop-btn">🛍️ Compras</button>
     <button type="button" class="chip hours" id="hours-btn"></button>
-    <button type="button" class="chip tour" id="tour-btn" hidden>🧭 Roteiro</button>
     <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
@@ -106,8 +106,10 @@
   <form method="dialog" class="picker-head">
     <button class="icon-btn" value="cancel" aria-label="Fechar">←</button>
     <input type="search" id="q" placeholder="Buscar loja ou serviço" autocomplete="off" enterkeyhint="search">
+    <button type="button" class="icon-btn mic" id="mic" hidden aria-label="Buscar falando" title="Buscar falando"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></button>
   </form>
   <div class="chips" id="groups"></div>
+  <p class="mic-status" id="mic-status" hidden role="status"></p>
   <p class="mark-hint" id="mark-hint" hidden>Toque nas lojas para marcar ou desmarcar.</p>
   <ul id="results"></ul>
   <div class="mark-bar" id="mark-bar" hidden>

@@ -212,6 +212,7 @@ function bindUI() {
     state.from = ME; state.picked = null; update(true);
   };
   $('#q').oninput = renderResults;
+  setupVoiceSearch();
   $('#picker').addEventListener('close', () => { $('#q').value = ''; });
   addEventListener('resize', () => placeMarkers());
   // iOS ignora user-scalable=no: impede que a pinça amplie a página inteira (o mapa tem zoom próprio)
@@ -779,6 +780,53 @@ function refreshFloorImage() {
   if (f) view.setFloor(floorSrc(f), f.width, f.height);
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', refreshFloorImage);
+
+/* ---------- busca por voz ---------- */
+function setupVoiceSearch() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;   // navegador sem reconhecimento de voz: o botão fica escondido
+  const btn = $('#mic'), st = $('#mic-status');
+  const LOC = { pt: 'pt-BR', en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', ja: 'ja-JP' };
+  let rec = null;
+  const stop = () => { btn.classList.remove('on'); rec = null; };
+  btn.hidden = false;
+  btn.onclick = () => {
+    if (rec) { rec.abort(); stop(); st.hidden = true; return; }
+    rec = new SR();
+    rec.lang = LOC[getLang()] || 'pt-BR';
+    rec.interimResults = true;
+    rec.maxAlternatives = 3;
+    btn.classList.add('on');
+    st.hidden = false;
+    st.textContent = tx('🎤 Fale o nome da loja…');
+    rec.onresult = (e) => {
+      const r = e.results[e.results.length - 1];
+      st.textContent = '🎤 “' + r[0].transcript + '”';
+      if (!r.isFinal) return;
+      // escolhe a primeira alternativa que acha alguma loja; tira palavras do começo ("onde fica a nike" → "nike")
+      const alts = [...r].map((a) => a.transcript.trim().replace(/[.?!,]+$/, ''));
+      let best = alts[0];
+      outer: for (const a of alts) {
+        const w = a.split(/\s+/);
+        for (let i = 0; i < w.length; i++) {
+          const q = w.slice(i).join(' ');
+          if (mall.search(q, group).length) { best = q; break outer; }
+        }
+      }
+      $('#q').value = best;
+      renderResults();
+    };
+    rec.onerror = (e) => {
+      st.textContent = e.error === 'not-allowed' || e.error === 'service-not-allowed'
+        ? tx('🎤 Permita o uso do microfone para buscar falando.')
+        : e.error === 'no-speech' ? tx('🎤 Não ouvi nada. Toque no microfone e fale de novo.') : tx('🎤 Não deu para ouvir. Tente de novo.');
+      stop();
+    };
+    rec.onend = () => { if (btn.classList.contains('on')) { stop(); if ($('#q').value) st.hidden = true; } };
+    try { rec.start(); } catch { stop(); st.hidden = true; }
+  };
+  $('#picker').addEventListener('close', () => { rec?.abort(); stop(); st.hidden = true; });
+}
 
 /* ---------- instalar o app (ícone na tela de início) ---------- */
 let installEvt = null;
