@@ -30,7 +30,8 @@
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 html, body { background: var(--bg); color: var(--ink); }
-body { overflow: hidden; overscroll-behavior: none; -webkit-font-smoothing: antialiased; }
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
+body { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; -webkit-font-smoothing: antialiased; }
 
 /* texto sempre com a cor do tema (o iOS e o visualizador podem impor outra) */
 .card, #sheet, .chip, .icon-btn, .btn, .field, #floors button, .zoom button, #picker, #q, #results li {

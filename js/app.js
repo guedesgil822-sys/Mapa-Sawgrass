@@ -80,6 +80,8 @@ function bindUI() {
   $('#q').oninput = renderResults;
   $('#picker').addEventListener('close', () => { $('#q').value = ''; });
   addEventListener('resize', () => placeMarkers());
+  // iOS ignora user-scalable=no: impede que a pinça amplie a página inteira (o mapa tem zoom próprio)
+  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
 }
 
 function buildFloors() {
@@ -506,7 +508,7 @@ function onGpsError(err) {
     try { framed = window.top !== window; } catch { /* outro domínio: está dentro de um quadro */ }
     return gpsMsg(framed
       ? 'Aqui dentro o GPS fica bloqueado pelo app onde a página está aberta. Abra o mapa pelo endereço próprio no Safari/Chrome para usar a localização.'
-      : 'Sem permissão de localização. Ative em Ajustes › Privacidade › Serviços de Localização (Safari) ou nas permissões do site no Chrome.');
+      : 'Localização bloqueada. iPhone: Ajustes › Privacidade e Segurança › Serviços de Localização › Sites do Safari › Durante o Uso. Depois, no Safari, toque em aA › Ajustes do Site › Localização › Perguntar e recarregue.');
   }
   gpsMsg(err.code === 3 ? 'O GPS está demorando. Dentro do shopping o sinal é fraco; tente perto de uma entrada.'
     : 'Não foi possível obter sua posição agora.');
