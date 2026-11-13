@@ -54,6 +54,13 @@ encontro, o número de lojas marcadas e um ponto quando o carro está salvo):
 
 Encontro e carro ficam salvos no aparelho.
 
+## Logos das marcas
+
+Cada loja com site conhecido tem o campo `web` no `mall.json` (lista em
+`tools/brands.json`). A busca e o painel da loja mostram o ícone oficial desse
+site (serviço de favicons do Google); sem site, sem internet ou dentro do
+visualizador do Claude, aparece um selo com as iniciais na cor do segmento.
+
 ## Grupo com conversa
 
 A aba **Grupo** cria um grupo (código tipo `SAW-K7Q2-M9XD` e link de convite

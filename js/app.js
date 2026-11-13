@@ -226,9 +226,9 @@ function renderResults() {
     }
     const li = el('li');
     li.tabIndex = 0;
-    const box = el('div');
+    const box = el('div', 'txt');
     box.append(el('div', 'n', p.name), el('div', 'c', p.cat || p.group));
-    li.append(box);
+    li.append(logoEl(p), box);
     if (multi()) li.append(el('span', 'f', p.f));
     if (picking === 'find') {
       const on = marked.has(p.id);
@@ -300,6 +300,25 @@ function showMarked() {
   if (!ps.some((p) => p.f === state.floor)) setFloor(ps[0].f, false);
   state.picked = null; update(false);
   fitPoints(ps.filter((p) => p.f === state.floor), 60 * mall.ppm);
+}
+
+/* ---------- logos das marcas ---------- */
+// ícone oficial do site da marca (campo "web" do mall.json); sem site, ou offline, um selo com as iniciais
+const GROUP_HUE = { Moda: 330, Calçados: 25, Esportes: 145, Alimentação: 35, Beleza: 300, Casa: 190, Tecnologia: 215,
+  Infantil: 50, 'Óticas e joias': 265, Lazer: 170, Serviços: 205, Facilidades: 205, Entradas: 0, Estacionamento: 215 };
+const initials = (n) => n.replace(/^the\s+/i, '').split(/[\s/&-]+/).filter((w) => /^[\p{L}\d]/u.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+function logoEl(p, cls = '') {
+  const d = el('span', 'logo ' + cls);
+  d.style.setProperty('--h', GROUP_HUE[p.group] ?? 220);
+  d.textContent = initials(p.name) || '•';
+  d.setAttribute('aria-hidden', 'true');
+  if (p.web) {
+    const img = new Image();
+    img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
+    img.onload = () => { if (img.naturalWidth > 16) { d.textContent = ''; d.classList.add('img'); d.append(img); } };
+    img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(p.web)}&sz=128`;
+  }
+  return d;
 }
 
 const sortKey = (p) => norm(p.name.replace(/^the\s+/i, ''));
@@ -448,6 +467,7 @@ function renderSheet() {
   if (p) {
     const head = el('div', 'sheet-head');
     const g = el('div', 'grow');
+    head.prepend(logoEl(p, 'big'));
     g.append(el('h2', '', p.name), el('p', '', [multi() && mall.floorById.get(p.f).name, p.cat || p.group].filter(Boolean).join(' · ')));
     const x = el('button', 'icon-btn', '✕');
     x.setAttribute('aria-label', 'Fechar');
