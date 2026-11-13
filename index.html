@@ -36,12 +36,18 @@
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
     <button type="button" class="chip near" id="near-btn">📍 Perto de mim</button>
     <button type="button" class="chip shop" id="shop-btn">🛍️ Compras</button>
+    <button type="button" class="chip hours" id="hours-btn"></button>
     <button type="button" class="chip tour" id="tour-btn" hidden>🧭 Roteiro</button>
     <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
   </div>
   <button type="button" class="card chat-bar" id="chat-bar" hidden><span class="cb-ic" aria-hidden="true">💬</span><span class="cb-txt" id="chat-bar-txt"></span><i class="cb-n" id="chat-bar-n" hidden></i></button>
+  <div class="card move-bar" id="move-bar" hidden role="status">
+    <span id="move-txt"></span>
+    <button type="button" class="chip" id="move-cancel">Cancelar</button>
+  </div>
+  <button type="button" class="chip fix" id="fix-chip" hidden></button>
   <div class="card shared-bar" id="shared-bar" hidden role="status">
     <div class="shared-txt" id="shared-txt"></div>
     <div class="shared-act">
@@ -166,6 +172,7 @@
   <form method="dialog" class="tools-box">
     <div class="tools-head"><h2>🌐 <span>Idioma</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
     <div class="lang-list" id="lang-list"></div>
+    <button type="button" class="btn link" id="intro-again">👋 Como usar o app</button>
   </form>
 </dialog>
 
@@ -209,6 +216,40 @@
 
     <section class="shop-pane" id="shop-sizes" hidden></section>
     <section class="shop-pane" id="shop-list" hidden></section>
+  </div>
+</dialog>
+
+<dialog id="hours" class="sheet-dlg">
+  <form method="dialog" class="tools-box">
+    <div class="tools-head"><h2>🕘 <span>Horário do shopping</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <table class="hours-table" id="hours-table"></table>
+    <p class="cv-note"><span>Horário de Sunrise (Flórida). Restaurantes, cinema e algumas lojas abrem ou fecham em outros horários, e feriados mudam o horário.</span></p>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="alert" hidden><span id="toast-txt"></span><button type="button" class="icon-btn" id="toast-x" aria-label="Fechar">✕</button></div>
+
+<dialog id="fixes" class="sheet-dlg">
+  <form method="dialog" class="tools-box">
+    <div class="tools-head"><h2>✏️ <span>Minhas correções</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <p class="cv-note"><span>As lojas que você mudou de lugar ficam assim só no seu celular. Envie para o criador do app colocar no mapa de todo mundo.</span></p>
+    <ul class="near-list" id="fix-list"></ul>
+    <div class="actions">
+      <button type="button" class="btn" id="fix-undo">Desfazer todas</button>
+      <button type="button" class="btn primary" id="fix-send">📤 Enviar correções</button>
+    </div>
+    <p class="share-done" id="fix-done" hidden></p>
+  </form>
+</dialog>
+
+<dialog id="intro" class="intro-dlg">
+  <div class="intro-box">
+    <div class="intro-slides" id="intro-slides"></div>
+    <div class="intro-dots" id="intro-dots"></div>
+    <div class="actions">
+      <button type="button" class="btn" id="intro-skip">Pular</button>
+      <button type="button" class="btn primary" id="intro-next">Próximo</button>
+    </div>
   </div>
 </dialog>
 

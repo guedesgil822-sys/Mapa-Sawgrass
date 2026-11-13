@@ -63,6 +63,12 @@ recebe a marca nova (o nome antigo é apagado do desenho e o app escreve o novo)
 loja que fechou sai do mapa; lojas novas viram pontos ligados ao corredor mais
 próximo (as grifes da parte nova do Colonnade ganham um caminho a pé até ele).
 O resumo da última atualização fica em `tools/update_stores_report.json`.
+
+Lojas do diretório atual que não estão no OpenStreetMap entram por
+`tools/add_missing.py`, a partir das pistas do diretório ("entre a Gap e a
+Solaris", "em frente à Nike", "perto da Burlington"): ficam perto das lojas
+citadas, ligadas ao corredor, com `"approx": true` (o app mostra "📍 local
+aproximado"; uma correção pelo app tira essa marca). Sem pista, ficam de fora.
 Limites: a posição vem do OpenStreetMap, que pode errar alguns metros, e lojas
 que não estão no OpenStreetMap ficam fora do mapa.
 
@@ -100,9 +106,10 @@ letras. Não funciona dentro do visualizador do Claude (só no site).
 ## Perto de mim
 
 O chip **📍 Perto de mim** mostra os 5 lugares mais próximos (distância real a
-pé) de: banheiro, comida, café e doces, saída, estacionamento, atendimento e
+pé) de: banheiro, caixa eletrônico, comida, café e doces, saída, estacionamento, atendimento e
 farmácia, a partir do GPS, da origem escolhida ou da loja aberta no painel.
-"Ir ➜" traça a rota. (Caixas eletrônicos ainda não estão nos dados.)
+"Ir ➜" traça a rota. Os 7 caixas eletrônicos vêm dos ícones "$" da planta
+(`tools/add_atms.py`). Fraldário não aparece na planta.
 
 ## Compras (preço, tamanhos e lista)
 
@@ -119,6 +126,34 @@ O chip **🛍️ Compras** abre três abas (`js/shop.js`):
 - **Lista**: o que comprar, preço e loja (entre as marcadas), agrupado por loja
   com "Ir ➜", marcar como comprado, e totais planejado/comprado na moeda
   escolhida. Fica salva no aparelho.
+
+## Tutorial
+
+Na primeira abertura aparecem 3 telas rápidas de "como usar" (busca e rota,
+lojas marcadas/roteiro/perto de mim, grupo e compras), no idioma do app. Dá
+para rever pela bandeira do idioma › "👋 Como usar o app".
+
+## Corrigir loja no lugar errado
+
+No painel da loja, **📍 Loja no lugar errado?** e depois um toque no mapa no
+lugar certo: a loja passa a ficar ali (ponto ligado ao corredor mais próximo).
+As correções ficam no aparelho (`sawgrass.correcoes`), aparecem no chip
+"✏️ N correções" e podem ser enviadas (📤) como texto para serem aplicadas no
+`mall.json` de todos.
+
+## Horário, aviso do encontro e Uber/táxi
+
+- **Horário**: o chip mostra "Aberto até 21h", "Fecha em 40 min" (laranja na
+  última hora) ou "Fechado · abre às 10h", sempre no horário de Sunrise
+  (seg–sáb 10h–21h, dom 11h–20h, conforme as lojas do shopping em 2026;
+  feriados mudam). Tocando, abre a tabela da semana.
+- **Aviso do encontro**: com o app aberto, aparece um aviso (e o celular vibra
+  onde houver suporte) 10 minutos antes e na hora do encontro. A notificação do
+  sistema só funciona se for permitida; no iPhone, só com o app adicionado à
+  tela de início.
+- **Uber / táxi**: em "Perto de mim", as entradas mais próximas com "Ir ➜" e
+  botões Uber e Lyft que já abrem o app com o embarque naquela entrada. O
+  shopping não tem um ponto oficial de embarque.
 
 ## Roteiro pelas lojas marcadas
 

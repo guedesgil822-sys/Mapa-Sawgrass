@@ -13,4 +13,4 @@ curl -fsS -A "mapa-sawgrass/1.0" "https://api.openstreetmap.org/api/0.6/map.json
 echo "ok: depois rode add_osm.py"
 # Diretório atual das lojas (nomes), para conferir quais lojas da planta de 2007 continuam
 curl -fsS -A "Mozilla/5.0" "https://www.malls.com/malls/sawgrass_mills/" -o "$RAW/malls.html"
-echo "ok: por último rode update_stores.py"
+echo "ok: por último rode update_stores.py e add_missing.py"
