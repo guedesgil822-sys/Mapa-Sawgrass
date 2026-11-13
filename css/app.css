@@ -652,3 +652,6 @@ button { cursor: pointer; }
 .phrase b { font-size: 17px; line-height: 1.3; }
 .phrase small { font-size: 13.5px; color: var(--ink-2); -webkit-text-fill-color: var(--ink-2); }
 .phrase.on { border-color: var(--pick); background: color-mix(in srgb, var(--pick) 12%, var(--panel)); }
+
+/* ---------- 32 · banheiro mais perto ---------- */
+.zoom .wc-btn { font-size: 21px; }

@@ -156,6 +156,7 @@ function bindUI() {
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
   $('#sos-btn').onclick = () => $('#sos').showModal();
+  $('#wc-btn').onclick = goNearestWc;
   setupInstall();
   // sem internet: o app segue funcionando (tudo fica guardado no celular); avisa o que depende da conexão
   const net = () => { $('#net-bar').hidden = navigator.onLine; };
@@ -338,6 +339,7 @@ function renderResults() {
       if (picking === 'meet') { meetDraft = p; return openMeet(p); }
       state[picking] = p; state.picked = null;
       if (tourPending && picking === 'from') { tourPending = false; return startTour(); }
+      if (wcPending && picking === 'from') { wcPending = false; state.from = p; return goNearestWc(); }
       if (nearPending && picking === 'from') { nearPending = false; state.from = p; update(false); return openNear(); }
       state.tour = null; // escolha manual encerra o roteiro
       if (picking === 'to') gpsAsOrigin();
@@ -587,7 +589,21 @@ function meetAlerts() {
 }
 
 /* ---------- mais perto de mim ---------- */
-let nearPending = false, nearCat = null;
+let nearPending = false, nearCat = null, wcPending = false;
+// 🚻 um toque: rota até o banheiro mais perto (pergunta onde você está se não houver GPS nem origem)
+function goNearestWc() {
+  const o = nearOrigin();
+  if (!o) { wcPending = true; return openPicker('from'); }
+  let best = null, bm = Infinity;
+  for (const p of mall.pois) {
+    if (p.f !== o.f || p === o || p.cat !== 'Banheiro') continue;
+    const m = walk(o, p);
+    if (m < bm) { bm = m; best = p; }
+  }
+  if (!best) return toast(tx('Nada encontrado.'));
+  state.tour = null; state.from = o; state.to = best; state.picked = null;
+  update(true);
+}
 // categorias: o que procurar e como reconhecer nos dados
 const NEAR = [
   { id: 'wc', ico: '🚻', label: 'Banheiro', ok: (p) => p.cat === 'Banheiro' },
