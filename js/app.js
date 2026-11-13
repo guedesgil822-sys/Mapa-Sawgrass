@@ -477,6 +477,7 @@ let nearPending = false, nearCat = null;
 // categorias: o que procurar e como reconhecer nos dados
 const NEAR = [
   { id: 'wc', ico: '🚻', label: 'Banheiro', ok: (p) => p.cat === 'Banheiro' },
+  { id: 'atm', ico: '🏧', label: 'Caixa eletrônico', ok: (p) => p.cat === 'Caixa eletrônico' },
   { id: 'food', ico: '🍔', label: 'Comida', ok: (p) => p.group === 'Alimentação' && !/Doces/.test(p.cat || '') },
   { id: 'cafe', ico: '☕', label: 'Café e doces', ok: (p) => /^Doces/.test(p.cat || '') },
   { id: 'exit', ico: '🚪', label: 'Saída', ok: (p) => p.group === 'Entradas' },
@@ -654,7 +655,7 @@ function logoEl(p, cls = '') {
   const d = el('span', 'logo ' + cls);
   d.style.setProperty('--h', GROUP_HUE[p.group] ?? 220);
   // lugares do shopping (não marcas) ganham ícone em vez de iniciais
-  const icon = { Banheiro: '🚻', Entrada: '🚪', Estacionamento: '🅿️', 'Atendimento e cartões-presente': 'ℹ️', Administração: '🛡️',
+  const icon = { Banheiro: '🚻', 'Caixa eletrônico': '🏧', Entrada: '🚪', Estacionamento: '🅿️', 'Atendimento e cartões-presente': 'ℹ️', Administração: '🛡️',
     'Praça de alimentação': '🍽️', Cinema: '🎬' }[(p.cat || '').split(' · ')[0]];
   d.textContent = icon || initials(p.name) || '•';
   if (icon) d.classList.add('ico');

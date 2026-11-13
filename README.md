@@ -106,9 +106,10 @@ letras. Não funciona dentro do visualizador do Claude (só no site).
 ## Perto de mim
 
 O chip **📍 Perto de mim** mostra os 5 lugares mais próximos (distância real a
-pé) de: banheiro, comida, café e doces, saída, estacionamento, atendimento e
+pé) de: banheiro, caixa eletrônico, comida, café e doces, saída, estacionamento, atendimento e
 farmácia, a partir do GPS, da origem escolhida ou da loja aberta no painel.
-"Ir ➜" traça a rota. (Caixas eletrônicos ainda não estão nos dados.)
+"Ir ➜" traça a rota. Os 7 caixas eletrônicos vêm dos ícones "$" da planta
+(`tools/add_atms.py`). Fraldário não aparece na planta.
 
 ## Compras (preço, tamanhos e lista)
 
