@@ -92,7 +92,7 @@ function buildGroups() {
   for (const g of groups) {
     const c = el('button', 'chip', g || 'Tudo');
     c.type = 'button';
-    c.onclick = () => { group = g; [...box.children].forEach((x) => x.classList.toggle('on', x === c)); renderResults(); };
+    c.onclick = () => { group = g; $('#q').value = ''; [...box.children].forEach((x) => x.classList.toggle('on', x === c)); renderResults(); };
     if (!g) c.classList.add('on');
     box.appendChild(c);
   }
@@ -112,7 +112,10 @@ function renderResults() {
   ul.textContent = '';
   const q = $('#q').value.trim();
   let list = mall.search(q, group);
-  if (!list.length) { ul.appendChild(el('li', 'empty', 'Nada encontrado.')); return; }
+  if (!list.length) {
+    ul.appendChild(el('li', 'empty', group && q ? `Nada com “${q}” em ${group}.` : 'Nada encontrado.'));
+    return;
+  }
   // sem busca: ordem alfabética com uma divisória por letra (A, B, C…)
   if (!q) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
   ul.appendChild(el('li', 'count', `${list.length} ${list.length === 1 ? 'lugar' : 'lugares'}`));
