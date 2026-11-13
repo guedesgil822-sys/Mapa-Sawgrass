@@ -190,7 +190,11 @@ function renderList() {
     for (const it of its) {
       const li = el('li', 'list-item' + (it.done ? ' done' : ''));
       const cb = el('input'); cb.type = 'checkbox'; cb.checked = it.done; cb.setAttribute('aria-label', it.t);
-      cb.onchange = () => { it.done = cb.checked; saveList(); renderList(); };
+      cb.onchange = () => {
+        const before = cotaUsed();
+        it.done = cb.checked; saveList(); renderList();
+        cotaWarn(before, cotaUsed());
+      };
       const pr = el('input', 'list-usd'); pr.value = it.usd ?? ''; pr.placeholder = 'US$'; pr.inputMode = 'decimal';
       pr.onchange = () => { it.usd = num(pr.value); saveList(); renderList(); };
       const conv2 = el('small', '', it.usd ? '≈ ' + money(toLocal(it.usd), cur) : '');
@@ -213,11 +217,55 @@ function renderList() {
     el('small', '', conv.tax ? tx('Valores com o imposto de 7%.') : ''),
   );
   pane.appendChild(tot);
+  if (showCota()) pane.appendChild(cotaBox());
   if (items.some((i) => i.done)) {
     const clr = el('button', 'btn link', tx('Limpar comprados')); clr.type = 'button';
     clr.onclick = () => { items = items.filter((i) => !i.done); saveList(); renderList(); };
     pane.appendChild(clr);
   }
+}
+
+/* ---------- cota de isenção da Receita Federal (bagagem) ---------- */
+// US$ 1.000 por viajante chegando ao Brasil de avião ou navio; acima disso, 50% sobre o excedente.
+// Conta o que foi marcado como comprado, com o imposto da loja (o valor pago).
+const COTA = 1000, COTA_TAX = 0.5;
+const showCota = () => getLang() === 'pt' || cur === 'BRL';
+let people = load('sawgrass.cota.pessoas', 1);
+const cotaUsed = () => items.filter((i) => i.done).reduce((s, i) => s + (i.usd || 0), 0) * (conv.tax ? 1 + SALES_TAX : 1);
+function cotaWarn(before, after) {
+  if (!showCota()) return;
+  const lim = COTA * people;
+  if (before <= lim && after > lim) toastShop(tx('🛃 Passou da cota de US$ {n}! O excedente paga 50% na Receita.', { n: lim.toLocaleString('pt-BR') }));
+  else if (before < lim * 0.8 && after >= lim * 0.8 && after <= lim) toastShop(tx('🛃 Atenção: já usou 80% da cota de US$ {n}.', { n: lim.toLocaleString('pt-BR') }));
+}
+function toastShop(msg) {
+  let t = $('#shop-toast');
+  if (!t) { t = el('p', 'shop-toast'); t.id = 'shop-toast'; t.setAttribute('role', 'status'); $('#shop-list').before(t); }
+  t.textContent = msg; t.hidden = false;
+  navigator.vibrate?.(150);
+  clearTimeout(toastShop.t); toastShop.t = setTimeout(() => { t.hidden = true; }, 6000);
+}
+function cotaBox() {
+  const lim = COTA * people, used = cotaUsed(), pct = used / lim;
+  const box = el('div', 'cota ' + (pct > 1 ? 'over' : pct >= 0.8 ? 'warn' : 'ok'));
+  const head = el('div', 'cota-head');
+  head.append(el('b', '', tx('🛃 Cota da Receita')));
+  const sel = el('select'); sel.setAttribute('aria-label', tx('Viajantes'));
+  for (let n = 1; n <= 6; n++) sel.append(new Option(n === 1 ? tx('1 viajante') : tx('{n} viajantes', { n }), n));
+  sel.value = people;
+  sel.onchange = () => { people = +sel.value; save('sawgrass.cota.pessoas', people); renderList(); };
+  head.append(sel);
+  const bar = el('div', 'cota-bar'); const fill = el('i'); fill.style.width = Math.min(100, pct * 100) + '%'; bar.append(fill);
+  const line = el('div', 'cota-line', tx('Usado {a} de {b}', { a: money(used, 'USD'), b: money(lim, 'USD') }));
+  box.append(head, bar, line);
+  if (pct > 1) {
+    const ex = used - lim;
+    box.append(el('div', 'cota-msg', tx('Passou {x}. Imposto estimado: {t} (≈ {l}).', { x: money(ex, 'USD'), t: money(ex * COTA_TAX, 'USD'), l: money(toLocal(ex * COTA_TAX, { tax: false, iof: false }), cur) })));
+  } else {
+    box.append(el('div', 'cota-msg', tx('Ainda cabem {x}.', { x: money(lim - used, 'USD') })));
+  }
+  box.append(el('small', '', tx('US$ 1.000 por viajante chegando de avião ou navio (por terra: US$ 500). Notebook e celular novos entram na conta. Confira as regras no site da Receita antes de viajar.')));
+  return box;
 }
 
 /* ---------- janela ---------- */

@@ -94,8 +94,11 @@ async function init() {
   readShared(h);
   resumeGroup(h.get('g'));
 
-  setFloor(state.from?.f || mall.floors[0].id, false);
+  // link de loja enviado por alguém: abre o mapa já mostrando a loja
+  const shared = !state.to && mall.poiById.get(h.get('loja'));
+  setFloor(shared?.f || state.from?.f || mall.floors[0].id, false);
   update(true);
+  if (shared) { state.picked = shared; update(false); fitPoints([shared], 120 * mall.ppm); }
   renderMarked();
   renderStatus();
   setInterval(renderStatus, 30000);
@@ -790,6 +793,32 @@ function refreshFloorImage() {
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', refreshFloorImage);
 
+/* ---------- enviar loja ou rota (WhatsApp etc.) ---------- */
+const SITE = 'https://guedesgil822-sys.github.io/Mapa-Sawgrass/';
+const siteBase = () => (/^https?:$/.test(location.protocol) && location.hostname.endsWith('github.io') ? location.origin + location.pathname : SITE);
+async function shareText(title, text) {
+  if (navigator.share) {
+    try { await navigator.share({ title, text }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(text); toast(tx('✅ Link copiado. Cole no WhatsApp.')); }
+  catch { prompt(tx('Copie o link:'), text); }
+}
+function sendPlace(p) {
+  const url = `${siteBase()}#loja=${encodeURIComponent(p.id)}`;
+  shareText(td(p.name), tx('📍 {x} no Sawgrass Mills. Veja no mapa: {u}', { x: td(p.name), u: url }));
+}
+function sendRoute() {
+  const r = state.route;
+  if (!r || !state.to) return;
+  const h = new URLSearchParams();
+  if (state.from && mall.poiById.get(state.from.id) === state.from) h.set('de', state.from.id);
+  if (mall.poiById.get(state.to.id) === state.to) h.set('para', state.to.id);
+  if (state.accessible) h.set('acessivel', '1');
+  const url = `${siteBase()}#${h}`;
+  const from = state.from === ME ? tx('onde estou') : td(state.from.name);
+  shareText(tx('Rota no Sawgrass Mills'), tx('🧭 Rota de {a} até {b} ({t} · {d}): {u}', { a: from, b: td(state.to.name), t: fmtTime(r.seconds), d: fmtDist(r.meters), u: url }));
+}
+
 /* ---------- busca por voz ---------- */
 function setupVoiceSearch() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1018,8 +1047,10 @@ function renderSheet() {
     m.onclick = () => { toggleMarked(p); renderSheet(); };
     const e = el('button', 'btn small', tx(state.meet === p ? '🤝 Editar encontro' : '🤝 Encontro aqui'));
     e.onclick = () => openMeet(p);
+    const sh = el('button', 'btn small', tx('📤 Enviar'));
+    sh.onclick = () => sendPlace(p);
     const row = el('div', 'actions');
-    row.append(m, e);
+    row.append(m, e, sh);
     const wrong = el('button', 'btn link small', tx('📍 Loja no lugar errado?'));
     wrong.onclick = () => startMove(p);
     s.append(head, act, row, wrong);
@@ -1059,7 +1090,11 @@ function renderSheet() {
   g.append(el('h2', 'eta', fmtTime(r.seconds)), el('p', '', sub.join(' · ')));
   const end = el('button', 'btn end', tx('Encerrar'));
   end.onclick = () => $('#trip-clear').click();
-  head.append(g, end);
+  const send = el('button', 'icon-btn send', '📤');
+  send.setAttribute('aria-label', tx('Enviar rota'));
+  send.title = tx('Enviar rota');
+  send.onclick = sendRoute;
+  head.append(g, send, end);
 
   const acts = el('div', 'nav-acts');
   const prev = el('button', 'btn', '‹');
