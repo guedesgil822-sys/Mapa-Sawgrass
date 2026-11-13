@@ -158,6 +158,17 @@ function bindUI() {
   $('#sos-btn').onclick = () => $('#sos').showModal();
   $('#wc-btn').onclick = goNearestWc;
   setupInstall();
+  // iPhone com o app na tela de início: em alguns iOS a área útil termina antes do fim da tela
+  // (sobra uma faixa vazia embaixo). Mede a diferença e estica o mapa e a barra até o fim.
+  const gapFix = () => {
+    const portrait = innerHeight > innerWidth;
+    const full = Math.max(screen.width, screen.height);
+    const gap = navigator.standalone && portrait ? Math.max(0, Math.min(80, full - innerHeight)) : 0;
+    document.documentElement.style.setProperty('--gap', gap + 'px');
+  };
+  gapFix();
+  addEventListener('resize', gapFix);
+  addEventListener('orientationchange', () => setTimeout(gapFix, 300));
   // sem internet: o app segue funcionando (tudo fica guardado no celular); avisa o que depende da conexão
   const net = () => { $('#net-bar').hidden = navigator.onLine; };
   addEventListener('offline', net);
