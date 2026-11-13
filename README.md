@@ -149,6 +149,13 @@ ligação direta não funcione.
 (`icons/icon.svg` e PNGs 180/192/512/maskable). Enquanto o mapa carrega,
 aparece a tela de abertura. Na tela de início o app se chama "Sawgrass".
 
+## Economia de bateria
+
+Com o GPS ligado, o botão 🔋 na faixa do GPS liga o modo econômico (GPS menos
+preciso e menos frequente, sem bússola). Ele liga sozinho com bateria abaixo
+de 20% onde o navegador informa a bateria. Em qualquer modo, o GPS pausa
+quando o app vai para segundo plano e volta ao abrir de novo.
+
 ## Tutorial
 
 Na primeira abertura aparecem 3 telas rápidas de "como usar" (busca e rota,

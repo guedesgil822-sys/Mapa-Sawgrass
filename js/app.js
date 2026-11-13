@@ -182,6 +182,7 @@ function bindUI() {
   $('#gps').onclick = () => (gps.watch == null ? startGps() : stopGps()); // liga/desliga
   $('#gps-txt').onclick = () => gps.me && centerOnMe(); // tocar no texto recentraliza
   $('#gps-close').onclick = stopGps;
+  $('#gps-eco').onclick = () => setEco(!eco, tx(!eco ? '🔋 Modo econômico ligado: GPS menos frequente e sem bússola.' : 'Modo econômico desligado.'));
   $('#gps-use').onclick = () => {
     if (!gps.me) return;
     state.from = ME; state.picked = null; update(true);
@@ -503,10 +504,14 @@ function openHours() {
 }
 
 /* ---------- aviso do encontro ---------- */
+let toastT = 0;
 function toast(msg) {
   $('#toast-txt').textContent = msg;
   $('#toast').hidden = false;
-  navigator.vibrate?.([200, 100, 200]);
+  clearTimeout(toastT);
+  // avisos do encontro ficam até a pessoa fechar; os demais somem sozinhos
+  if (/^[⏰🤝]/u.test(msg)) navigator.vibrate?.([200, 100, 200]);
+  else toastT = setTimeout(() => { $('#toast').hidden = true; }, 6000);
 }
 // avisa 10 min antes e na hora (uma vez cada), com o app aberto; notificação do sistema se permitida
 function meetAlerts() {
@@ -1532,14 +1537,59 @@ function startGps() {
   $('#gps').title = tx('Desligar localização');
   gpsMsg(tx('Procurando sua posição…'));
   gps.centered = false;
-  startCompass();
-  gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError,
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+  if (!eco) startCompass();
+  watchGps();
+  renderEco();
 }
+
+/* ---------- economia de bateria ---------- */
+// Econômico: GPS menos preciso e menos frequente, sem bússola. Sempre: GPS pausa com o app em segundo plano.
+let eco = (() => { try { return localStorage.getItem('sawgrass.eco') === 'true'; } catch { return false; } })();
+function watchGps() {
+  if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
+  gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError, eco
+    ? { enableHighAccuracy: false, maximumAge: 30000, timeout: 60000 }
+    : { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+}
+function setEco(on, why) {
+  eco = on;
+  try { localStorage.setItem('sawgrass.eco', String(on)); } catch { /* sem armazenamento */ }
+  if (gps.watch != null) {
+    watchGps();
+    if (on) { removeEventListener('deviceorientationabsolute', onHeading, true); removeEventListener('deviceorientation', onHeading, true); gps.heading = null; drawRoute(); }
+    else startCompass();
+  }
+  renderEco();
+  if (why) toast(why);
+}
+function renderEco() {
+  const b = $('#gps-eco');
+  b.classList.toggle('on', eco);
+  b.setAttribute('aria-pressed', String(eco));
+  b.textContent = eco ? tx('🔋 Econômico') : '🔋';
+  b.title = tx('Economia de bateria');
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && gps.watch != null) {
+    navigator.geolocation.clearWatch(gps.watch); gps.watch = null; gps.paused = true;
+  } else if (!document.hidden && gps.paused) {
+    gps.paused = false; watchGps();
+  }
+});
+// bateria fraca (onde o navegador informa): liga o modo econômico sozinho, uma vez
+navigator.getBattery?.().then((bat) => {
+  const check = () => {
+    if (!eco && !bat.charging && bat.level <= 0.2 && !sessionStorage.getItem('eco-auto')) {
+      sessionStorage.setItem('eco-auto', '1');
+      setEco(true, tx('🔋 Bateria fraca: modo econômico ligado.'));
+    }
+  };
+  check(); bat.addEventListener('levelchange', check);
+}).catch(() => {});
 
 function stopGps() {
   if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
-  gps.watch = null; gps.me = null; gps.heading = null;
+  gps.watch = null; gps.me = null; gps.heading = null; gps.paused = false;
   removeEventListener('deviceorientationabsolute', onHeading, true);
   removeEventListener('deviceorientation', onHeading, true);
   if (state.from === ME) { state.from = null; update(false); }

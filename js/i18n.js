@@ -329,6 +329,12 @@ const D = {
   "📞 Ligar": ["📞 Call", "📞 Llamar", "📞 Appeler", "📞 Anrufen"],
   "🧭 Ir até lá": ["🧭 Take me there", "🧭 Ir allí", "🧭 Y aller", "🧭 Hinführen"],
   "Criança perdida: avise o segurança ou o funcionário de qualquer loja e diga onde ela foi vista pela última vez. Se estiver num grupo, avise lá também.": ["Lost child: tell security or staff at any store where the child was last seen. If you’re in a group, tell them too.", "Niño perdido: avisa a seguridad o al personal de cualquier tienda y di dónde lo viste por última vez. Si estás en un grupo, avisa también.", "Enfant perdu : prévenez la sécurité ou le personnel d’un magasin et dites où il a été vu pour la dernière fois. Prévenez aussi votre groupe.", "Kind verloren: Sag dem Sicherheitsdienst oder Personal eines Geschäfts, wo es zuletzt gesehen wurde. Informiere auch deine Gruppe."],
+  // ---------- bateria ----------
+  "Economia de bateria": ["Battery saver", "Ahorro de batería", "Économie de batterie", "Akkusparmodus"],
+  "🔋 Econômico": ["🔋 Saver", "🔋 Ahorro", "🔋 Éco", "🔋 Sparen"],
+  "🔋 Modo econômico ligado: GPS menos frequente e sem bússola.": ["🔋 Battery saver on: less frequent GPS, no compass.", "🔋 Ahorro activado: GPS menos frecuente y sin brújula.", "🔋 Mode éco activé : GPS moins fréquent, sans boussole.", "🔋 Sparmodus an: seltener GPS, kein Kompass."],
+  "Modo econômico desligado.": ["Battery saver off.", "Ahorro desactivado.", "Mode éco désactivé.", "Sparmodus aus."],
+  "🔋 Bateria fraca: modo econômico ligado.": ["🔋 Low battery: battery saver on.", "🔋 Batería baja: ahorro activado.", "🔋 Batterie faible : mode éco activé.", "🔋 Akku schwach: Sparmodus an."],
   // ---------- tutorial ----------
   "Bem-vindo ao Sawgrass Mills": ["Welcome to Sawgrass Mills", "Bienvenido a Sawgrass Mills", "Bienvenue à Sawgrass Mills", "Willkommen in Sawgrass Mills"],
   "Busque qualquer loja em \"Para onde você vai?\" e toque em \"Ir ➜\": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.": ["Search any store in “Where are you going?” and tap “Go ➜”: the app draws the walking route, step by step. Turn on GPS (◎) to start from where you are.", "Busca cualquier tienda en “¿A dónde vas?” y toca “Ir ➜”: la app traza la ruta a pie, paso a paso. Activa el GPS (◎) para salir desde donde estás.", "Cherchez un magasin dans « Où allez-vous ? » et touchez « Aller ➜ » : l’app trace l’itinéraire à pied, étape par étape. Activez le GPS (◎) pour partir d’où vous êtes.", "Suche ein Geschäft unter „Wohin möchtest du?“ und tippe auf „Los ➜“: Die App zeigt den Fußweg Schritt für Schritt. Mit GPS (◎) startest du an deinem Standort."],
@@ -413,6 +419,11 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  "Economia de bateria": ["省电模式", "省電力"],
+  "🔋 Econômico": ["🔋 省电", "🔋 省電力"],
+  "🔋 Modo econômico ligado: GPS menos frequente e sem bússola.": ["🔋 已开启省电：降低 GPS 频率，关闭指南针。", "🔋 省電力オン：GPSの更新を減らし、コンパスを停止。"],
+  "Modo econômico desligado.": ["已关闭省电模式。", "省電力オフ。"],
+  "🔋 Bateria fraca: modo econômico ligado.": ["🔋 电量低：已开启省电模式。", "🔋 バッテリー残量低下：省電力オン。"],
   "Emergência": ["紧急", "緊急"],
   "Polícia, bombeiros e ambulância": ["警察、消防和急救", "警察・消防・救急"],
   "Segurança do shopping": ["商场保安", "モールの警備"],
