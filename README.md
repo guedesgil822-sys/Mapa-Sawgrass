@@ -71,8 +71,12 @@ que é vetorial. `tools/build_from_pdf.py`:
 5. liga a porta de cada loja (ponto do contorno mais perto do corredor) ao corredor;
 6. publica o próprio vetor do PDF como planta, sem a lista de lojas e sem os números das lojas que ganharam nome.
 
-Resultado: 257 pontos (âncoras, ~220 lojas com contorno, entradas, banheiros e
-praças de alimentação), 893 nós, 897 arestas. Há rota entre todos os pares.
+Resultado: 267 pontos (âncoras, ~220 lojas com contorno, entradas, banheiros,
+praças de alimentação e 10 estacionamentos), 913 nós, 917 arestas. Há rota entre
+todos os pares.
+
+Estacionamentos: a planta não os desenha. Cada um é um ponto do lado de fora de
+uma entrada, ligado a ela por um caminho a pé ("Estacionamento · Entrada 3").
 
 O material pertence à Simon: para uso além do pessoal é preciso autorização.
 
