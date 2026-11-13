@@ -317,6 +317,9 @@ const D = {
   "Dicas para economizar": ["Tips to save", "Consejos para ahorrar", "Conseils pour économiser", "Spartipps"],
   "Pergunte no caixa se há desconto extra para turistas (muitas lojas aceitam o cupom do livreto). Confira se a etiqueta já é preço de outlet e lembre que o imposto de 7% é somado no caixa.": ["Ask at the register about extra discounts for tourists (many stores take the coupon book). Check whether the tag is already the outlet price, and remember 7% tax is added at checkout.", "Pregunta en la caja si hay descuento extra para turistas (muchas tiendas aceptan la cuponera). Revisa si la etiqueta ya es precio outlet y recuerda que el 7% de impuesto se suma en la caja.", "Demandez en caisse s’il y a une remise pour touristes (beaucoup de magasins acceptent le carnet). Vérifiez si l’étiquette est déjà au prix outlet ; la taxe de 7 % s’ajoute en caisse.", "Frag an der Kasse nach Rabatt für Touristen (viele Geschäfte nehmen das Gutscheinheft). Prüfe, ob das Etikett schon Outlet-Preis ist; 7 % Steuer kommen an der Kasse dazu."],
   "As ofertas mudam com frequência; confirme na loja ou no Atendimento.": ["Deals change often; confirm at the store or Guest Services.", "Las ofertas cambian a menudo; confirma en la tienda o en Atención al cliente.", "Les offres changent souvent ; vérifiez en magasin ou à l’accueil.", "Angebote ändern sich oft; frag im Geschäft oder beim Guest Service nach."],
+  // ---------- voz ----------
+  "Ler a rota em voz alta": ["Read the route aloud", "Leer la ruta en voz alta", "Lire l’itinéraire à voix haute", "Route vorlesen"],
+  "Desligar voz": ["Turn voice off", "Apagar voz", "Couper la voix", "Sprachausgabe aus"],
   // ---------- tutorial ----------
   "Bem-vindo ao Sawgrass Mills": ["Welcome to Sawgrass Mills", "Bienvenido a Sawgrass Mills", "Bienvenue à Sawgrass Mills", "Willkommen in Sawgrass Mills"],
   "Busque qualquer loja em \"Para onde você vai?\" e toque em \"Ir ➜\": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.": ["Search any store in “Where are you going?” and tap “Go ➜”: the app draws the walking route, step by step. Turn on GPS (◎) to start from where you are.", "Busca cualquier tienda en “¿A dónde vas?” y toca “Ir ➜”: la app traza la ruta a pie, paso a paso. Activa el GPS (◎) para salir desde donde estás.", "Cherchez un magasin dans « Où allez-vous ? » et touchez « Aller ➜ » : l’app trace l’itinéraire à pied, étape par étape. Activez le GPS (◎) pour partir d’où vous êtes.", "Suche ein Geschäft unter „Wohin möchtest du?“ und tippe auf „Los ➜“: Die App zeigt den Fußweg Schritt für Schritt. Mit GPS (◎) startest du an deinem Standort."],
@@ -401,6 +404,8 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  "Ler a rota em voz alta": ["语音播报路线", "ルートを読み上げ"],
+  "Desligar voz": ["关闭语音", "音声をオフ"],
   "Ofertas": ["优惠", "お得情報"],
   "Livreto de cupons para turistas": ["游客优惠券册", "観光客向けクーポンブック"],
   "Turistas estrangeiros ganham um livreto de cupons de desconto no Atendimento ao cliente (Simon Guest Services), em frente à Burlington. Leve o passaporte.": ["外国游客可在 Burlington 对面的 Simon Guest Services（服务台）免费领取优惠券册，请携带护照。", "海外からの観光客は、Burlingtonの向かいのSimon Guest Servicesでクーポンブックをもらえます。パスポートを持参してください。"],

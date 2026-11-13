@@ -343,6 +343,27 @@ function showMarked() {
   fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
 }
 
+/* ---------- rota em voz alta ---------- */
+let voiceOn = (() => { try { return localStorage.getItem('sawgrass.voz') === 'true'; } catch { return false; } })();
+const VOICE_LANG = { pt: 'pt-BR', en: 'en-US', es: 'es-US', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', ja: 'ja-JP' };
+let lastSaid = '';
+function say(text) {
+  if (!voiceOn || !('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/[☆★➜›‹·]/g, ' '));
+  u.lang = VOICE_LANG[getLang()] || 'pt-BR';
+  const v = speechSynthesis.getVoices().find((x) => x.lang.replace('_', '-').startsWith(u.lang.slice(0, 2)));
+  if (v) u.voice = v;
+  u.rate = 1;
+  speechSynthesis.speak(u);
+  lastSaid = text;
+}
+function speakStep() {
+  const st = state.route?.steps?.[state.step];
+  if (!st) return;
+  say(st.dist ? `${st.text}. ${tx('siga por {x}', { x: fmtDist(st.dist) })}` : st.text);
+}
+
 /* ---------- tutorial (primeira abertura) ---------- */
 const INTRO = [
   { ico: '🗺️', t: 'Bem-vindo ao Sawgrass Mills', d: 'Busque qualquer loja em "Para onde você vai?" e toque em "Ir ➜": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.' },
@@ -825,6 +846,7 @@ function update(refit) {
   for (const b of $('#floors').children) b.classList.toggle('in-route', inRoute.has(b.dataset.f));
 
   renderSheet();
+  if (refit && state.route) speakStep();
   if (gps.me) renderGpsBar();
   if (refit) {
     const target = state.route ? state.route.steps[0].floor : (state.to || state.from)?.f;
@@ -901,7 +923,12 @@ function renderSheet() {
   next.onclick = () => goStep(state.step + 1);
   prev.disabled = state.step === 0;
   next.disabled = state.step === r.steps.length - 1;
-  head.append(g, prev, next);
+  const spk = el('button', 'btn small voice' + (voiceOn ? ' on' : ''), voiceOn ? '🔊' : '🔇');
+  spk.setAttribute('aria-label', tx(voiceOn ? 'Desligar voz' : 'Ler a rota em voz alta'));
+  spk.title = spk.getAttribute('aria-label');
+  spk.hidden = !('speechSynthesis' in window);
+  spk.onclick = () => { voiceOn = !voiceOn; store('sawgrass.voz', voiceOn); if (voiceOn) speakStep(); else speechSynthesis.cancel(); renderSheet(); };
+  head.append(g, spk, prev, next);
 
   const cur = r.steps[state.step];
   const now = el('div', 'now');
@@ -935,6 +962,7 @@ function goStep(i) {
   if (!r || i < 0 || i >= r.steps.length) return;
   state.step = i;
   renderSheet();
+  speakStep();
   const st = r.steps[i];
   // ao chegar num passo de troca de piso, o mapa mostra onde ela fica
   if (st.floor !== state.floor) setFloor(st.floor, false); else drawRoute();
@@ -1569,6 +1597,7 @@ function renderGpsBar() {
   if (state.from === ME && state.to && r) {
     const left = Math.max(0, Math.round(r.meters));
     const arrow = dirArrow(state.to);
+    if (left < 15 && lastSaid !== 'arrive:' + state.to.id) { say(tx('✅ Você chegou: {x}', { x: td(state.to.name) }).replace('✅', '')); lastSaid = 'arrive:' + state.to.id; }
     if (left < 15 && state.tour && state.tour.i < state.tour.stops.length - 1) return gpsMsg(tx('✅ Você chegou: {x}', { x: td(state.to.name) }) + ' · ' + tx('Próxima loja ›'), false);
     return gpsMsg(left < 15 ? tx('✅ Você chegou: {x}', { x: td(state.to.name) }) : tx('{a} {x} · {n} m pela rota ({p})', { a: arrow, x: td(state.to.name), n: left, p: prec }), false);
   }

@@ -130,6 +130,12 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Rota em voz alta
+
+No painel da rota, o botão 🔇/🔊 liga a leitura em voz alta (voz do próprio
+celular, no idioma do app): cada passo é falado ao começar a rota e ao tocar
+em "Próximo", e com o GPS o app fala "Você chegou". A escolha fica salva.
+
 ## Tutorial
 
 Na primeira abertura aparecem 3 telas rápidas de "como usar" (busca e rota,

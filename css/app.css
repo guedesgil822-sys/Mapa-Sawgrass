@@ -463,3 +463,5 @@ button { cursor: pointer; }
 .deal-txt span { font-size: 14px; line-height: 1.45; color: var(--ink-2); }
 .deal-card .btn { grid-column: 2; justify-self: start; text-decoration: none; display: inline-grid; place-items: center; color: var(--ink); }
 .deal-card .btn.primary { color: #fff; -webkit-text-fill-color: #fff; }
+.btn.voice { flex: none; width: 44px; padding: 0; font-size: 18px; }
+.btn.voice.on { background: var(--focus); border-color: var(--focus); }
