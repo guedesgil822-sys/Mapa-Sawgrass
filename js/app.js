@@ -23,7 +23,7 @@ const ICON = {
 };
 
 const state = { meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
-let mall, view, layers, picking = 'from', group = '';
+let mall, view, layers, picking = 'from', group = '', onlyMarked = false;
 let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
 const multi = () => mall.floors.length > 1;
@@ -120,6 +120,8 @@ function bindUI() {
   $('#mark-clear').onclick = () => { clearMarked(); renderResults(); };
   $('#marked-clear').onclick = clearMarked;
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
+  $('#mark-only').onclick = () => { onlyMarked = !onlyMarked; $('#results').scrollTop = 0; renderResults(); };
+  $('#picker').addEventListener('close', () => { onlyMarked = false; });
   $('#marked-chip').onclick = showMarked;
   $('#meet-chip').onclick = () => openMeet();
   $('#car-chip').onclick = () => openCar();
@@ -210,13 +212,16 @@ function renderResults() {
   ul.textContent = '';
   const q = $('#q').value.trim();
   let list = mall.search(q, group);
+  // "Selecionados": só as lojas marcadas, com logo, para conferir antes de ir ao mapa
+  if (onlyMarked && picking === 'find') list = [...marked].map((id) => mall.poiById.get(id)).filter(Boolean);
   if (!list.length) {
     ul.appendChild(el('li', 'empty', group && q ? `Nada com “${q}” em ${group}.` : 'Nada encontrado.'));
     return;
   }
   // sem busca: ordem alfabética com uma divisória por letra (A, B, C…)
-  if (!q) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
-  ul.appendChild(el('li', 'count', `${list.length} ${list.length === 1 ? 'lugar' : 'lugares'}`));
+  if (!q || onlyMarked) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
+  ul.appendChild(el('li', 'count', onlyMarked ? `${list.length} ${list.length === 1 ? 'selecionada' : 'selecionadas'} · toque para desmarcar`
+    : `${list.length} ${list.length === 1 ? 'lugar' : 'lugares'}`));
   let letter = null;
   for (const p of list) {
     if (!q) {
@@ -250,6 +255,7 @@ function renderResults() {
     const pick = () => {
       if (picking === 'find') {
         toggleMarked(p);
+        if (onlyMarked) return renderResults();
         const on = marked.has(p.id);
         li.classList.toggle('on', on);
         li.setAttribute('aria-checked', String(on));
@@ -283,7 +289,11 @@ function clearMarked() {
 function renderMarkBar() {
   const n = marked.size, bar = $('#mark-bar');
   bar.hidden = picking !== 'find' || !n;
-  $('#mark-show').textContent = `Ver no mapa (${n})`;
+  if (!n) onlyMarked = false;
+  $('#mark-show').textContent = 'Ver no mapa';
+  $('#mark-only').textContent = onlyMarked ? 'Ver todas' : `Selecionados (${n})`;
+  $('#mark-only').setAttribute('aria-pressed', String(onlyMarked));
+  $('#mark-only').classList.toggle('on', onlyMarked);
 }
 
 function renderMarked() {
