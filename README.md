@@ -54,6 +54,18 @@ encontro, o número de lojas marcadas e um ponto quando o carro está salvo):
 
 Encontro e carro ficam salvos no aparelho.
 
+## Lojas atualizadas (2026)
+
+A planta oficial é de 2007. `tools/update_stores.py` cruza cada loja da planta
+com o OpenStreetMap (lojas com posição) e com o diretório atual do malls.com
+(só nomes): loja que continua ganha o nome atual; espaço ocupado por outra marca
+recebe a marca nova (o nome antigo é apagado do desenho e o app escreve o novo);
+loja que fechou sai do mapa; lojas novas viram pontos ligados ao corredor mais
+próximo (as grifes da parte nova do Colonnade ganham um caminho a pé até ele).
+O resumo da última atualização fica em `tools/update_stores_report.json`.
+Limites: a posição vem do OpenStreetMap, que pode errar alguns metros, e lojas
+que não estão no OpenStreetMap ficam fora do mapa.
+
 ## Idiomas
 
 Português, English, Español, Français, Deutsch, 中文 (simplificado) e 日本語
