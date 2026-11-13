@@ -29,10 +29,16 @@
     <label class="chip toggle"><input type="checkbox" id="accessible"><span>♿ Sem escada rolante</span></label>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
   </div>
+  <div class="card gps-bar" id="gps-bar" hidden role="status">
+    <span class="gps-txt" id="gps-txt"></span>
+    <button type="button" class="chip" id="gps-use" hidden>Usar como origem</button>
+    <button type="button" class="icon-btn" id="gps-close" aria-label="Desligar localização">✕</button>
+  </div>
 </header>
 
 <nav id="floors" aria-label="Pisos"></nav>
 <div class="zoom">
+  <button type="button" id="gps" aria-label="Onde estou (GPS)" title="Onde estou (GPS)">◎</button>
   <button type="button" id="zin" aria-label="Aproximar">+</button>
   <button type="button" id="zout" aria-label="Afastar">−</button>
 </div>

@@ -2,9 +2,12 @@
 
 PWA mobile tipo "Waze de shopping" para o **Sawgrass Mills** (Sunrise, Flórida,
 perto de Miami). Você informa onde está (loja ou entrada) e para onde quer ir, e
-o app desenha a rota a pé sobre a planta, com passo a passo em texto. Não usa
-GPS: a origem é informada manualmente, porque GPS não funciona bem em ambiente
-fechado.
+o app desenha a rota a pé sobre a planta, com passo a passo em texto. A origem
+pode ser escolhida na lista ou pelo botão ◎ (GPS do celular), que mostra um
+ponto azul com o raio de precisão e sugere a loja mais próxima como origem.
+Dentro do prédio o GPS costuma errar 10–50 m; perto das entradas e no
+estacionamento ele é mais confiável. A conversão lat/lon → mapa fica em
+`meta.geo` do `mall.json` (gerada por `tools/add_osm.py`).
 
 Mesmo código do app feito para o Salvador Norte Shopping, adaptado para um
 shopping de **piso único** (o seletor de piso e a opção "Sem escada rolante"

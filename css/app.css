@@ -145,3 +145,13 @@ button { cursor: pointer; }
 
 .more { background: none; border: 0; color: var(--ink-2); font-weight: 700; font-size: 14px; padding: 12px 0 2px; text-align: center; }
 @media (min-width: 760px) { .more { display: none; } .steps[hidden] { display: block !important; } }
+
+/* ---------- GPS ---------- */
+.zoom #gps { font-size: 22px; color: var(--pick); }
+.zoom #gps.on { background: var(--pick); color: #fff; }
+.mk.me { width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, .45); }
+.gps-acc { fill: rgba(26, 115, 232, .15); stroke: rgba(26, 115, 232, .5); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.gps-bar { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 8px 8px 8px 14px; font-size: 14px; }
+.gps-bar[hidden] { display: none; }
+.gps-txt { flex: 1; min-width: 0; }
+.gps-bar .chip { background: var(--pick); color: #fff; border-color: var(--pick); cursor: pointer; box-shadow: none; }

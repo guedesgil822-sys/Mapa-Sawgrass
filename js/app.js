@@ -20,6 +20,8 @@ let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
 const multi = () => mall.floors.length > 1;
 const markers = [];
+// GPS: posição atual no mapa { x, y, acc (m), near (POI mais próxima), inside }
+const gps = { watch: null, me: null, centered: false };
 
 async function init() {
   const useDraft = new URLSearchParams(location.search).has('draft') && localStorage.getItem(DRAFT_KEY);
@@ -68,6 +70,13 @@ function bindUI() {
   $('#accessible').onchange = (e) => { state.accessible = e.target.checked; update(true); };
   $('#zin').onclick = () => view.zoomBy(1.6);
   $('#zout').onclick = () => view.zoomBy(1 / 1.6);
+  $('#gps').hidden = !mall.data.meta?.geo;
+  $('#gps').onclick = () => (gps.watch == null ? startGps() : gps.me && centerOnMe());
+  $('#gps-close').onclick = stopGps;
+  $('#gps-use').onclick = () => {
+    if (!gps.me?.near) return;
+    state.from = gps.me.near; state.picked = null; update(true);
+  };
   $('#q').oninput = renderResults;
   $('#picker').addEventListener('close', () => { $('#q').value = ''; });
   addEventListener('resize', () => placeMarkers());
@@ -413,6 +422,10 @@ function drawRoute() {
   }
   mark(state.from, 'from');
   mark(state.to, 'to');
+  if (gps.me) {
+    svgEl('circle', { cx: gps.me.x, cy: gps.me.y, r: Math.max(gps.me.acc, 3) * mall.ppm, class: 'gps-acc' }, layers.sel);
+    markers.push({ x: gps.me.x, y: gps.me.y, cls: 'me', title: 'Você está aqui' });
+  }
   placeMarkers();
 }
 
@@ -432,6 +445,74 @@ function placeMarkers() {
     d.style.left = s.x + 'px';
     d.style.top = s.y + 'px';
   });
+}
+
+/* ---------- GPS ---------- */
+// lat/lon -> coordenadas do mapa (transformação afim gravada em meta.geo pelo tools/add_osm.py)
+function geoToMap(lat, lon) {
+  const g = mall.data.meta.geo, dl = lon - g.lon0, dt = lat - g.lat0;
+  return { x: g.x0 + g.xLon * dl + g.xLat * dt, y: g.y0 + g.yLon * dl + g.yLat * dt };
+}
+
+function gpsMsg(text, canUse = false) {
+  $('#gps-bar').hidden = false;
+  $('#gps-txt').textContent = text;
+  $('#gps-use').hidden = !canUse;
+}
+
+function startGps() {
+  if (!('geolocation' in navigator)) return gpsMsg('Este aparelho não oferece localização.');
+  $('#gps').classList.add('on');
+  gpsMsg('Procurando sua posição…');
+  gps.centered = false;
+  gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError,
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+}
+
+function stopGps() {
+  if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
+  gps.watch = null; gps.me = null;
+  $('#gps').classList.remove('on');
+  $('#gps-bar').hidden = true;
+  drawRoute();
+}
+
+function onGps(pos) {
+  const { latitude, longitude, accuracy } = pos.coords;
+  const { x, y } = geoToMap(latitude, longitude);
+  const f = mall.floorById.get(state.floor);
+  const m = 150 * mall.ppm; // tolerância de 150 m fora da área do mapa
+  const inside = x > -m && y > -m && x < f.width + m && y < f.height + m;
+  if (!inside) {
+    gps.me = null; drawRoute();
+    return gpsMsg('Você não está no Sawgrass Mills. A posição aparece quando você chegar ao shopping.');
+  }
+  let near = null, bd = Infinity;
+  for (const p of mall.pois) {
+    if (p.f !== state.floor || p.group === 'Estacionamento') continue;
+    const d = Math.hypot(p.x - x, p.y - y);
+    if (d < bd) { bd = d; near = p; }
+  }
+  gps.me = { x, y, acc: accuracy, near };
+  const acc = accuracy < 1000 ? `±${Math.round(accuracy)} m` : 'baixa precisão';
+  gpsMsg(near ? `Perto de ${near.name} (${acc})` : `Você está aqui (${acc})`, !!near);
+  if (!gps.centered) { gps.centered = true; centerOnMe(); } else drawRoute();
+}
+
+function onGpsError(err) {
+  if (err.code === 1) {
+    stopGps();
+    return gpsMsg('Sem permissão de localização. Libere o acesso à localização para este site nos ajustes do navegador.');
+  }
+  gpsMsg(err.code === 3 ? 'O GPS está demorando. Dentro do shopping o sinal é fraco; tente perto de uma entrada.'
+    : 'Não foi possível obter sua posição agora.');
+}
+
+function centerOnMe() {
+  const { x, y, acc } = gps.me;
+  const r = Math.max(acc, 40) * mall.ppm;
+  drawRoute();
+  fitPoints([{ x: x - r, y: y - r }, { x: x + r, y: y + r }]);
 }
 
 /* ---------- enquadramento ---------- */

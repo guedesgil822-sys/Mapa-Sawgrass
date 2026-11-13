@@ -93,6 +93,10 @@ def main():
     s, th, tx, ty = align(osm, nodes)
     R = rot(th)
 
+    def to_xy(lat, lon):
+        x, y = np.array(meters(lat, lon)) @ R * s + [tx, ty]
+        return float(x + ML), float(y + MT)
+
     def to_map(nid):
         """Nó OSM -> coordenadas da nova imagem."""
         x, y = np.array(meters(*nodes[nid])) @ R * s + [tx, ty]
@@ -118,6 +122,11 @@ def main():
     f = data["floors"][0]
     f["width"], f["height"] = NW, NH
     data["meta"]["pxPerMeter"] = round(s, 3)
+    o, ex, ey = (to_xy(LAT0, LON0), to_xy(LAT0, LON0 + 1e-3), to_xy(LAT0 + 1e-3, LON0))
+    data["meta"]["geo"] = {   # x = x0 + xLon*(lon-lon0) + xLat*(lat-lat0); idem y — usado pelo GPS do app
+        "lat0": LAT0, "lon0": LON0, "x0": round(o[0], 2), "y0": round(o[1], 2),
+        "xLon": round((ex[0] - o[0]) / 1e-3, 2), "xLat": round((ey[0] - o[0]) / 1e-3, 2),
+        "yLon": round((ex[1] - o[1]) / 1e-3, 2), "yLat": round((ey[1] - o[1]) / 1e-3, 2)}
     data["meta"]["source"] += "; ruas e estacionamentos © colaboradores do OpenStreetMap (ODbL)"
 
     # estacionamento real mais perto de cada entrada
