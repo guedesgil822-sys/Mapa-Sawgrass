@@ -13,6 +13,7 @@ const el = (tag, cls, text) => {
 const DRAFT_KEY = 'sawgrass.draft';
 const MARK_KEY = 'sawgrass.marcadas';
 const NAME_KEY = 'sawgrass.nome';
+const FIX_KEY = 'sawgrass.correcoes';
 const GROUP_KEY = 'sawgrass.grupo';
 // banco do grupo (Firebase Realtime Database, via REST + eventos; sem biblioteca)
 const DB_URL = 'https://sawgrass-58fe7-default-rtdb.firebaseio.com';
@@ -55,6 +56,7 @@ async function init() {
   } else {
     mall = await Mall.load('data/mall.json');
   }
+  applyFixes();
 
   view = new MapView($('#map'));
   layers = {
@@ -135,6 +137,10 @@ function bindUI() {
   });
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
+  $('#move-cancel').onclick = () => { moving = null; $('#move-bar').hidden = true; };
+  $('#fix-chip').onclick = openFixes;
+  $('#fix-undo').onclick = () => { store(FIX_KEY, null); location.reload(); };
+  $('#fix-send').onclick = sendFixes;
   $('#toast-x').onclick = () => { $('#toast').hidden = true; };
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
   $('#mark-only').onclick = () => { onlyMarked = !onlyMarked; $('#results').scrollTop = 0; renderResults(); };
@@ -332,6 +338,82 @@ function showMarked() {
   if (!ps.some((p) => p.f === state.floor)) setFloor(ps[0].f, false);
   state.picked = null; update(false);
   fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
+}
+
+/* ---------- corrigir loja no lugar errado ---------- */
+// Correções ficam no aparelho ({id: {x, y, name}}) e podem ser enviadas ao criador do app.
+let moving = null;
+const fixes = () => load(FIX_KEY) || {};
+function nearestCorridor(x, y, f) {
+  let best = null, bd = Infinity;
+  for (const n of mall.nodes.values()) {
+    if (n.f !== f || n.t === 'door' || !mall.adj.get(n.id)?.length) continue;
+    const d = Math.hypot(n.x - x, n.y - y);
+    if (d < bd) { bd = d; best = n; }
+  }
+  return best;
+}
+function movePoi(p, x, y) {
+  p.x = x; p.y = y;
+  delete p.poly;            // o contorno antigo era de outro lugar
+  p.label = true;
+  const n = nearestCorridor(x, y, p.f);
+  if (n) p.node = n.id;
+}
+function applyFixes() {
+  for (const [id, f] of Object.entries(fixes())) {
+    const p = mall.poiById.get(id);
+    if (p) movePoi(p, f.x, f.y);
+  }
+  renderFixChip();
+}
+function renderFixChip() {
+  const n = Object.keys(fixes()).length;
+  $('#fix-chip').hidden = !n;
+  $('#fix-chip').textContent = tx(n === 1 ? '✏️ {n} correção' : '✏️ {n} correções', { n });
+}
+function startMove(p) {
+  moving = p;
+  state.picked = null; update(false);
+  $('#move-txt').textContent = tx('Toque no mapa onde a {x} fica de verdade.', { x: td(p.name) });
+  $('#move-bar').hidden = false;
+}
+function placeMoved(pt) {
+  const p = moving;
+  moving = null;
+  $('#move-bar').hidden = true;
+  movePoi(p, Math.round(pt.x * 10) / 10, Math.round(pt.y * 10) / 10);
+  const all = fixes();
+  all[p.id] = { x: p.x, y: p.y, name: p.name };
+  store(FIX_KEY, all);
+  legCache?.clear?.();
+  drawFloor(mall.floorById.get(state.floor));
+  state.picked = p; update(false);
+  renderFixChip();
+  toast(tx('✅ {x} mudou de lugar. Obrigado!', { x: td(p.name) }));
+}
+function openFixes() {
+  const ul = $('#fix-list');
+  ul.textContent = '';
+  for (const [id, f] of Object.entries(fixes())) {
+    const p = mall.poiById.get(id);
+    const li = el('li');
+    const txt = el('div', 'txt');
+    txt.append(el('div', 'n', td(f.name)), el('div', 'c', `x ${Math.round(f.x)} · y ${Math.round(f.y)}`));
+    const x = el('button', 'icon-btn', '✕'); x.type = 'button'; x.setAttribute('aria-label', tx('Remover'));
+    x.onclick = () => { const all = fixes(); delete all[id]; store(FIX_KEY, all); location.reload(); };
+    li.append(p ? logoEl(p) : el('span'), txt, x);
+    ul.appendChild(li);
+  }
+  $('#fix-done').hidden = true;
+  $('#fixes').showModal();
+}
+async function sendFixes() {
+  const text = 'Correções do mapa Sawgrass Mills:\n' + JSON.stringify(fixes());
+  if (navigator.share) { try { await navigator.share({ title: 'Correções do mapa', text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); $('#fix-done').textContent = tx('Copiado! Cole na conversa com o criador do app.'); }
+  catch { $('#fix-done').textContent = text; }
+  $('#fix-done').hidden = false;
 }
 
 /* ---------- horário do shopping ---------- */
@@ -675,6 +757,7 @@ function cullLabels() {
 
 /* ---------- toque no mapa ---------- */
 function onMapTap(pt, ev, target) {
+  if (moving) return placeMoved(pt);
   let p = target?.dataset?.id ? mall.poiById.get(target.dataset.id) : null;
   if (!p) {
     let bd = 24 / view.k;
@@ -753,7 +836,9 @@ function renderSheet() {
     e.onclick = () => openMeet(p);
     const row = el('div', 'actions');
     row.append(m, e);
-    s.append(head, act, row);
+    const wrong = el('button', 'btn link small', tx('📍 Loja no lugar errado?'));
+    wrong.onclick = () => startMove(p);
+    s.append(head, act, row, wrong);
     s.hidden = false;
     return;
   }

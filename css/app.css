@@ -434,3 +434,12 @@ button { cursor: pointer; }
 .btn.ride.uber { background: #000; }
 .btn.ride.lyft { background: #ff00bf; }
 .near-list li.cv-note { display: block; border-top: 0; font-size: 12.5px; }
+
+/* ---------- corrigir lugar ---------- */
+.move-bar { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 10px 10px 10px 14px; font-weight: 700; font-size: 15px; border: 2px solid var(--focus); }
+.move-bar[hidden] { display: none; }
+.move-bar span { flex: 1; }
+.move-bar .chip { cursor: pointer; box-shadow: none; }
+.chip.fix { cursor: pointer; margin-top: 8px; background: var(--focus); color: #3d2600; -webkit-text-fill-color: #3d2600; border-color: var(--focus); }
+.chip.fix[hidden] { display: none; }
+#sheet .btn.link { align-self: center; margin-top: 4px; min-height: 34px; font-size: 13px; color: var(--ink-2); -webkit-text-fill-color: var(--ink-2); }

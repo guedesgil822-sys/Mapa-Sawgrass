@@ -120,6 +120,14 @@ O chip **🛍️ Compras** abre três abas (`js/shop.js`):
   com "Ir ➜", marcar como comprado, e totais planejado/comprado na moeda
   escolhida. Fica salva no aparelho.
 
+## Corrigir loja no lugar errado
+
+No painel da loja, **📍 Loja no lugar errado?** e depois um toque no mapa no
+lugar certo: a loja passa a ficar ali (ponto ligado ao corredor mais próximo).
+As correções ficam no aparelho (`sawgrass.correcoes`), aparecem no chip
+"✏️ N correções" e podem ser enviadas (📤) como texto para serem aplicadas no
+`mall.json` de todos.
+
 ## Horário, aviso do encontro e Uber/táxi
 
 - **Horário**: o chip mostra "Aberto até 21h", "Fecha em 40 min" (laranja na

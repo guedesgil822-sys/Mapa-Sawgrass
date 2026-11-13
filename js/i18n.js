@@ -306,6 +306,18 @@ const D = {
   'Uber / táxi': ['Uber / taxi', 'Uber / taxi', 'Uber / taxi', 'Uber / Taxi'],
   'O shopping não tem um ponto oficial de embarque: os carros param nas entradas. Confira o local no app antes de sair; táxis também param nas entradas principais.': ['The mall has no official rideshare zone: cars stop at the entrances. Check the spot in the app before heading out; taxis also stop at the main entrances.', 'El centro comercial no tiene un punto oficial: los autos paran en las entradas. Confirma el lugar en la app antes de salir; los taxis también paran en las entradas principales.', 'Pas de zone officielle : les voitures s’arrêtent aux entrées. Vérifiez le point dans l’app avant de sortir ; les taxis s’arrêtent aussi aux entrées principales.', 'Es gibt keinen offiziellen Abholpunkt: Autos halten an den Eingängen. Prüfe den Ort in der App; Taxis halten ebenfalls an den Haupteingängen.'],
 
+  // ---------- correções ----------
+  '📍 Loja no lugar errado?': ['📍 Store in the wrong place?', '📍 ¿Tienda en el lugar equivocado?', '📍 Magasin mal placé ?', '📍 Geschäft am falschen Ort?'],
+  'Toque no mapa onde a {x} fica de verdade.': ['Tap the map where {x} really is.', 'Toca el mapa donde está realmente {x}.', 'Touchez la carte là où se trouve vraiment {x}.', 'Tippe auf die Karte, wo {x} wirklich ist.'],
+  '✅ {x} mudou de lugar. Obrigado!': ['✅ {x} moved. Thank you!', '✅ {x} cambió de lugar. ¡Gracias!', '✅ {x} a été déplacé. Merci !', '✅ {x} verschoben. Danke!'],
+  '✏️ {n} correção': ['✏️ {n} fix', '✏️ {n} corrección', '✏️ {n} correction', '✏️ {n} Korrektur'],
+  '✏️ {n} correções': ['✏️ {n} fixes', '✏️ {n} correcciones', '✏️ {n} corrections', '✏️ {n} Korrekturen'],
+  'Minhas correções': ['My fixes', 'Mis correcciones', 'Mes corrections', 'Meine Korrekturen'],
+  'As lojas que você mudou de lugar ficam assim só no seu celular. Envie para o criador do app colocar no mapa de todo mundo.': ['Stores you moved stay that way only on your phone. Send them to the app’s creator to fix the map for everyone.', 'Las tiendas que moviste quedan así solo en tu celular. Envíalas al creador de la app para corregir el mapa de todos.', 'Les magasins déplacés ne le sont que sur votre téléphone. Envoyez-les au créateur de l’app pour corriger la carte pour tous.', 'Verschobene Geschäfte gelten nur auf deinem Handy. Sende sie an den App-Ersteller, damit die Karte für alle korrigiert wird.'],
+  'Desfazer todas': ['Undo all', 'Deshacer todas', 'Tout annuler', 'Alle rückgängig'],
+  '📤 Enviar correções': ['📤 Send fixes', '📤 Enviar correcciones', '📤 Envoyer les corrections', '📤 Korrekturen senden'],
+  'Copiado! Cole na conversa com o criador do app.': ['Copied! Paste it in the chat with the app’s creator.', '¡Copiado! Pégalo en la conversación con el creador de la app.', 'Copié ! Collez-le dans la discussion avec le créateur de l’app.', 'Kopiert! In den Chat mit dem App-Ersteller einfügen.'],
+
   // ---------- segmentos ----------
   'Alimentação': ['Food', 'Comida', 'Restauration', 'Essen'],
   'Beleza': ['Beauty', 'Belleza', 'Beauté', 'Beauty'],
@@ -365,6 +377,16 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  '📍 Loja no lugar errado?': ['📍 店铺位置不对？', '📍 店の位置が違う？'],
+  'Toque no mapa onde a {x} fica de verdade.': ['请在地图上点击 {x} 的实际位置。', '{x}の本当の場所を地図でタップしてください。'],
+  '✅ {x} mudou de lugar. Obrigado!': ['✅ 已移动 {x}，谢谢！', '✅ {x}を移動しました。ありがとう！'],
+  '✏️ {n} correção': ['✏️ {n} 处修正', '✏️ 修正 {n} 件'],
+  '✏️ {n} correções': ['✏️ {n} 处修正', '✏️ 修正 {n} 件'],
+  'Minhas correções': ['我的修正', '自分の修正'],
+  'As lojas que você mudou de lugar ficam assim só no seu celular. Envie para o criador do app colocar no mapa de todo mundo.': ['您移动的店铺只在您的手机上生效。发送给应用作者，即可为所有人更正地图。', '移動した店はあなたのスマホだけに反映されます。アプリの作者に送ると全員の地図が直ります。'],
+  'Desfazer todas': ['全部撤销', 'すべて元に戻す'],
+  '📤 Enviar correções': ['📤 发送修正', '📤 修正を送る'],
+  'Copiado! Cole na conversa com o criador do app.': ['已复制！请粘贴到与应用作者的对话中。', 'コピーしました！アプリの作者とのチャットに貼り付けてください。'],
   'Horário do shopping': ['商场营业时间', 'モールの営業時間'],
   '🕘 Aberto até {h}': ['🕘 营业至 {h}', '🕘 {h}まで営業'],
   '🕘 Fecha em {n} min': ['🕘 {n} 分钟后关门', '🕘 あと{n}分で閉店'],
