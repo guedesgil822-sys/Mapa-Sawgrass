@@ -134,6 +134,8 @@ function bindUI() {
     goTo: (p) => { state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); },
   });
   $('#shop-close').onclick = () => $('#shop').close();
+  $('#hours-btn').onclick = openHours;
+  $('#toast-x').onclick = () => { $('#toast').hidden = true; };
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
   $('#mark-only').onclick = () => { onlyMarked = !onlyMarked; $('#results').scrollTop = 0; renderResults(); };
   $('#picker').addEventListener('close', () => { onlyMarked = false; });
@@ -332,6 +334,61 @@ function showMarked() {
   fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
 }
 
+/* ---------- horário do shopping ---------- */
+// Seg–sáb 10h–21h, dom 11h–20h (horário de Sunrise, Flórida). [abre, fecha] em horas, domingo = 0
+const HOURS = [[11, 20], [10, 21], [10, 21], [10, 21], [10, 21], [10, 21], [10, 21]];
+const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+function floridaNow() {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' })
+    .formatToParts(new Date()).map((x) => [x.type, x.value]));
+  return { day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(parts.weekday), min: +parts.hour * 60 + +parts.minute };
+}
+const hh = (h) => (getLang() === 'en' ? `${h > 12 ? h - 12 : h} ${h >= 12 ? 'PM' : 'AM'}` : `${h}h`);
+function renderHours() {
+  const { day, min } = floridaNow(), [o, c] = HOURS[day], b = $('#hours-btn');
+  let txt, cls = '';
+  if (min < o * 60) txt = tx('🕘 Fechado · abre às {h}', { h: hh(o) });
+  else if (min >= c * 60) txt = tx('🕘 Fechado · abre amanhã às {h}', { h: hh(HOURS[(day + 1) % 7][0]) });
+  else if (c * 60 - min <= 60) { txt = tx('🕘 Fecha em {n} min', { n: c * 60 - min }); cls = 'soon'; }
+  else txt = tx('🕘 Aberto até {h}', { h: hh(c) });
+  b.textContent = txt;
+  b.className = 'chip hours ' + cls + (min < o * 60 || min >= c * 60 ? ' closed' : '');
+}
+function openHours() {
+  const t = $('#hours-table'), { day } = floridaNow();
+  t.textContent = '';
+  [1, 2, 3, 4, 5, 6, 0].forEach((d) => {
+    const tr = el('tr', d === day ? 'on' : '');
+    tr.append(el('td', '', tx(DAYS[d])), el('td', '', `${hh(HOURS[d][0])} – ${hh(HOURS[d][1])}`));
+    t.appendChild(tr);
+  });
+  $('#hours').showModal();
+}
+
+/* ---------- aviso do encontro ---------- */
+function toast(msg) {
+  $('#toast-txt').textContent = msg;
+  $('#toast').hidden = false;
+  navigator.vibrate?.([200, 100, 200]);
+}
+// avisa 10 min antes e na hora (uma vez cada), com o app aberto; notificação do sistema se permitida
+function meetAlerts() {
+  if (!state.meet || !state.meetTime) return;
+  const m = minsTo(state.meetTime), name = td(state.meet.name);
+  const fire = (tag, msg) => {
+    const key = `sawgrass.aviso.${state.meet.id}@${state.meetTime}:${tag}`;
+    if (load(key)) return;
+    store(key, 1);
+    toast(msg);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      navigator.serviceWorker?.ready.then((r) => r.showNotification('Sawgrass Mills', { body: msg, tag: 'encontro' }))
+        .catch(() => { try { new Notification('Sawgrass Mills', { body: msg }); } catch { /* sem suporte */ } });
+    }
+  };
+  if (m <= 10 && m > 0) fire('10', tx('⏰ Encontro em {n} min na {x}', { n: m, x: name }));
+  else if (m <= 0 && m >= -5) fire('0', tx('🤝 Hora do encontro na {x}!', { x: name }));
+}
+
 /* ---------- mais perto de mim ---------- */
 let nearPending = false, nearCat = null;
 // categorias: o que procurar e como reconhecer nos dados
@@ -343,7 +400,13 @@ const NEAR = [
   { id: 'park', ico: '🅿️', label: 'Estacionamento', ok: (p) => p.group === 'Estacionamento' },
   { id: 'info', ico: 'ℹ️', label: 'Atendimento', ok: (p) => p.cat === 'Atendimento e cartões-presente' },
   { id: 'rx', ico: '💊', label: 'Farmácia', ok: (p) => /CVS|Pharmacy|Farm/i.test(p.name) },
+  { id: 'ride', ico: '🚕', label: 'Uber / táxi', ok: (p) => p.group === 'Entradas' },
 ];
+// mapa -> lat/lon (inverso de meta.geo), para abrir o Uber/Lyft com o embarque na entrada
+function mapToGeo(x, y) {
+  const g = mall.data.meta.geo, a = g.xLon, b = g.xLat, c = g.yLon, d = g.yLat, det = a * d - b * c, X = x - g.x0, Y = y - g.y0;
+  return { lat: g.lat0 + (-c * X + a * Y) / det, lon: g.lon0 + (d * X - b * Y) / det };
+}
 
 // ponto de partida: GPS, a origem escolhida ou a loja aberta no painel
 const nearOrigin = () => (gps.me && ME.node ? ME : state.from || state.picked || null);
@@ -394,8 +457,22 @@ function renderNear(o) {
       update(true);
     };
     li.append(logoEl(p), txt, go);
+    if (c.id === 'ride') {
+      // botões que abrem o app de corrida com o embarque nesta entrada
+      const { lat, lon } = mapToGeo(p.x, p.y), nick = encodeURIComponent(`Sawgrass Mills - ${td(p.name)}`);
+      const apps = el('div', 'ride-apps');
+      const uber = el('a', 'btn small ride uber', 'Uber');
+      uber.href = `https://m.uber.com/ul/?action=setPickup&pickup[latitude]=${lat.toFixed(6)}&pickup[longitude]=${lon.toFixed(6)}&pickup[nickname]=${nick}`;
+      const lyft = el('a', 'btn small ride lyft', 'Lyft');
+      lyft.href = `https://lyft.com/ride?id=lyft&pickup[latitude]=${lat.toFixed(6)}&pickup[longitude]=${lon.toFixed(6)}`;
+      for (const a of [uber, lyft]) { a.target = '_blank'; a.rel = 'noopener'; }
+      apps.append(uber, lyft);
+      li.classList.add('ride-row');
+      li.appendChild(apps);
+    }
     ul.appendChild(li);
   }
+  if (c.id === 'ride') ul.appendChild(el('li', 'cv-note', tx('O shopping não tem um ponto oficial de embarque: os carros param nas entradas. Confira o local no app antes de sair; táxis também param nas entradas principais.')));
 }
 
 /* ---------- roteiro pelas lojas marcadas ---------- */
@@ -933,6 +1010,8 @@ function renderStatus() {
   $('#tab-car-b').hidden = !state.car;
   $('#tab-find-b').hidden = !marked.size;
   $('#tab-find-b').textContent = marked.size || '';
+  renderHours();
+  meetAlerts();
 }
 
 
@@ -949,6 +1028,8 @@ function saveMeet() {
   if (!meetDraft) { $('#mt-place').classList.add('need'); return; }
   state.meet = meetDraft; state.meetTime = $('#mt-time').value || '';
   persistMeet();
+  // pede permissão para avisar 10 min antes (só funciona com o app na tela de início no iPhone)
+  if (state.meetTime && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission().catch(() => {});
   $('#meet').close();
   state.picked = null; update(false);
   fitPoints([state.meet], 200 * mall.ppm);

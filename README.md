@@ -120,6 +120,20 @@ O chip **🛍️ Compras** abre três abas (`js/shop.js`):
   com "Ir ➜", marcar como comprado, e totais planejado/comprado na moeda
   escolhida. Fica salva no aparelho.
 
+## Horário, aviso do encontro e Uber/táxi
+
+- **Horário**: o chip mostra "Aberto até 21h", "Fecha em 40 min" (laranja na
+  última hora) ou "Fechado · abre às 10h", sempre no horário de Sunrise
+  (seg–sáb 10h–21h, dom 11h–20h, conforme as lojas do shopping em 2026;
+  feriados mudam). Tocando, abre a tabela da semana.
+- **Aviso do encontro**: com o app aberto, aparece um aviso (e o celular vibra
+  onde houver suporte) 10 minutos antes e na hora do encontro. A notificação do
+  sistema só funciona se for permitida; no iPhone, só com o app adicionado à
+  tela de início.
+- **Uber / táxi**: em "Perto de mim", as entradas mais próximas com "Ir ➜" e
+  botões Uber e Lyft que já abrem o app com o embarque naquela entrada. O
+  shopping não tem um ponto oficial de embarque.
+
 ## Roteiro pelas lojas marcadas
 
 Com 2 ou mais lojas marcadas aparece o chip **🧭 Roteiro**. O app calcula a

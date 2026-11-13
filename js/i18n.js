@@ -290,6 +290,22 @@ const D = {
   'Valores com o imposto de 7%.': ['Amounts include 7% tax.', 'Valores con el impuesto del 7%.', 'Montants avec la taxe de 7 %.', 'Beträge inkl. 7 % Steuer.'],
   'Limpar comprados': ['Clear bought items', 'Borrar comprados', 'Effacer les achats', 'Gekaufte löschen'],
 
+  // ---------- horário, aviso, corrida ----------
+  'Horário do shopping': ['Mall hours', 'Horario del centro comercial', 'Horaires du centre', 'Öffnungszeiten'],
+  '🕘 Aberto até {h}': ['🕘 Open until {h}', '🕘 Abierto hasta {h}', '🕘 Ouvert jusqu’à {h}', '🕘 Geöffnet bis {h}'],
+  '🕘 Fecha em {n} min': ['🕘 Closes in {n} min', '🕘 Cierra en {n} min', '🕘 Ferme dans {n} min', '🕘 Schließt in {n} Min.'],
+  '🕘 Fechado · abre às {h}': ['🕘 Closed · opens at {h}', '🕘 Cerrado · abre a las {h}', '🕘 Fermé · ouvre à {h}', '🕘 Geschlossen · öffnet um {h}'],
+  '🕘 Fechado · abre amanhã às {h}': ['🕘 Closed · opens tomorrow at {h}', '🕘 Cerrado · abre mañana a las {h}', '🕘 Fermé · ouvre demain à {h}', '🕘 Geschlossen · öffnet morgen um {h}'],
+  'Domingo': ['Sunday', 'Domingo', 'Dimanche', 'Sonntag'], 'Segunda': ['Monday', 'Lunes', 'Lundi', 'Montag'],
+  'Terça': ['Tuesday', 'Martes', 'Mardi', 'Dienstag'], 'Quarta': ['Wednesday', 'Miércoles', 'Mercredi', 'Mittwoch'],
+  'Quinta': ['Thursday', 'Jueves', 'Jeudi', 'Donnerstag'], 'Sexta': ['Friday', 'Viernes', 'Vendredi', 'Freitag'],
+  'Sábado': ['Saturday', 'Sábado', 'Samedi', 'Samstag'],
+  'Horário de Sunrise (Flórida). Restaurantes, cinema e algumas lojas abrem ou fecham em outros horários, e feriados mudam o horário.': ['Sunrise (Florida) time. Restaurants, the cinema and some stores keep other hours, and holidays change the schedule.', 'Hora de Sunrise (Florida). Restaurantes, cine y algunas tiendas tienen otros horarios, y los feriados cambian el horario.', 'Heure de Sunrise (Floride). Restaurants, cinéma et certains magasins ont d’autres horaires ; les jours fériés les modifient.', 'Ortszeit Sunrise (Florida). Restaurants, Kino und einige Geschäfte haben andere Zeiten; an Feiertagen ändern sie sich.'],
+  '⏰ Encontro em {n} min na {x}': ['⏰ Meet-up in {n} min at {x}', '⏰ Encuentro en {n} min en {x}', '⏰ Rendez-vous dans {n} min à {x}', '⏰ Treffen in {n} Min. bei {x}'],
+  '🤝 Hora do encontro na {x}!': ['🤝 Time to meet at {x}!', '🤝 ¡Hora del encuentro en {x}!', '🤝 C’est l’heure du rendez-vous à {x} !', '🤝 Zeit fürs Treffen bei {x}!'],
+  'Uber / táxi': ['Uber / taxi', 'Uber / taxi', 'Uber / taxi', 'Uber / Taxi'],
+  'O shopping não tem um ponto oficial de embarque: os carros param nas entradas. Confira o local no app antes de sair; táxis também param nas entradas principais.': ['The mall has no official rideshare zone: cars stop at the entrances. Check the spot in the app before heading out; taxis also stop at the main entrances.', 'El centro comercial no tiene un punto oficial: los autos paran en las entradas. Confirma el lugar en la app antes de salir; los taxis también paran en las entradas principales.', 'Pas de zone officielle : les voitures s’arrêtent aux entrées. Vérifiez le point dans l’app avant de sortir ; les taxis s’arrêtent aussi aux entrées principales.', 'Es gibt keinen offiziellen Abholpunkt: Autos halten an den Eingängen. Prüfe den Ort in der App; Taxis halten ebenfalls an den Haupteingängen.'],
+
   // ---------- segmentos ----------
   'Alimentação': ['Food', 'Comida', 'Restauration', 'Essen'],
   'Beleza': ['Beauty', 'Belleza', 'Beauté', 'Beauty'],
@@ -349,6 +365,18 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  'Horário do shopping': ['商场营业时间', 'モールの営業時間'],
+  '🕘 Aberto até {h}': ['🕘 营业至 {h}', '🕘 {h}まで営業'],
+  '🕘 Fecha em {n} min': ['🕘 {n} 分钟后关门', '🕘 あと{n}分で閉店'],
+  '🕘 Fechado · abre às {h}': ['🕘 已关门 · {h} 开门', '🕘 閉店中・{h}開店'],
+  '🕘 Fechado · abre amanhã às {h}': ['🕘 已关门 · 明天 {h} 开门', '🕘 閉店中・明日{h}開店'],
+  'Domingo': ['星期日', '日曜日'], 'Segunda': ['星期一', '月曜日'], 'Terça': ['星期二', '火曜日'], 'Quarta': ['星期三', '水曜日'],
+  'Quinta': ['星期四', '木曜日'], 'Sexta': ['星期五', '金曜日'], 'Sábado': ['星期六', '土曜日'],
+  'Horário de Sunrise (Flórida). Restaurantes, cinema e algumas lojas abrem ou fecham em outros horários, e feriados mudam o horário.': ['以 Sunrise（佛州）当地时间为准。餐厅、电影院和部分店铺营业时间不同，节假日也会调整。', 'サンライズ（フロリダ）の現地時間です。レストラン・映画館・一部の店は時間が異なり、祝日は変更になります。'],
+  '⏰ Encontro em {n} min na {x}': ['⏰ {n} 分钟后在 {x} 集合', '⏰ あと{n}分で{x}で待ち合わせ'],
+  '🤝 Hora do encontro na {x}!': ['🤝 该去 {x} 集合了！', '🤝 {x}で待ち合わせの時間です！'],
+  'Uber / táxi': ['Uber / 出租车', 'Uber / タクシー'],
+  'O shopping não tem um ponto oficial de embarque: os carros param nas entradas. Confira o local no app antes de sair; táxis também param nas entradas principais.': ['商场没有官方上车点，车辆在各入口停靠。出发前请在应用中确认地点；出租车也在主要入口停靠。', 'モールに公式の乗車場所はなく、車は各入口に停まります。出る前にアプリで場所を確認してください。タクシーも主な入口に停まります。'],
   'O que comprar': ['要买什么', '買うもの'],
   'Ex.: tênis de corrida': ['例如：跑鞋', '例：ランニングシューズ'],
   'Qualquer loja': ['任意店铺', 'どの店でも'],
