@@ -14,9 +14,9 @@ somem quando só existe um piso).
 - `editor.html`, `js/editor.js` – editor do grafo (nós, arestas, lojas) com exportação em JSON.
 - `js/graph.js` – dados, busca, rota por A* e instruções. `js/mapview.js` – mapa com arrastar e zoom.
 - `data/mall.json` – piso, nós, arestas e lojas.
-- `maps/l1.svg` – planta oficial em vetor (nítida em qualquer zoom), 3260×1870.
+- `maps/l1.svg` – planta oficial em vetor (nítida em qualquer zoom) com ruas e estacionamentos em volta, 4020×2820.
 - `sw.js`, `manifest.webmanifest`, `icons/` – PWA e cache offline.
-- `tools/fetch_sources.sh`, `tools/build_from_pdf.py` – baixam a planta oficial em PDF e geram `mall.json` e `maps/l1.svg`.
+- `tools/fetch_sources.sh`, `tools/build_from_pdf.py`, `tools/add_osm.py` – baixam a planta oficial em PDF e o OpenStreetMap e geram `mall.json` e `maps/l1.svg` (nessa ordem).
 
 ## Rodar
 
@@ -75,8 +75,15 @@ Resultado: 267 pontos (âncoras, ~220 lojas com contorno, entradas, banheiros,
 praças de alimentação e 10 estacionamentos), 913 nós, 917 arestas. Há rota entre
 todos os pares.
 
-Estacionamentos: a planta não os desenha. Cada um é um ponto do lado de fora de
-uma entrada, ligado a ela por um caminho a pé ("Estacionamento · Entrada 3").
+Ruas e estacionamentos vêm do OpenStreetMap (© colaboradores do OpenStreetMap,
+licença ODbL). `tools/add_osm.py` alinha o contorno do prédio no OSM com a planta
+(escala, rotação e posição que mais sobrepõem os dois; ~74% de sobreposição), amplia
+a área até a avenida Sawgrass Mills Circle e desenha estacionamentos, vias e prédios
+vizinhos por baixo da planta. O alinhamento também dá a escala: ~2,98 pt por metro.
+
+Cada ponto "Estacionamento · Entrada N" fica no estacionamento real mais perto da
+entrada, ligado a ela por um caminho a pé. A rota vai da borda do estacionamento
+até a loja; não há caminhos mapeados entre as vagas.
 
 O material pertence à Simon: para uso além do pessoal é preciso autorização.
 
@@ -85,7 +92,7 @@ O material pertence à Simon: para uso além do pessoal é preciso autorização
 - **48 lojas da lista ficaram sem posição**: o OCR não leu o número delas na planta
   (números muito pequenos ou encostados nas linhas). Dá para incluí-las pelo editor.
 - **Portas estimadas.** Em lojas grandes a porta pode estar no lado errado.
-- **Escala estimada** (~2,4 pt por metro): distâncias e tempos são aproximados.
+- **Escala pelo alinhamento com o OpenStreetMap** (~2,98 pt por metro): distâncias e tempos são aproximados.
 - Não foi testado andando dentro do shopping.
 
 ## Regras para quem for mexer
