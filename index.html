@@ -106,8 +106,10 @@
   <form method="dialog" class="picker-head">
     <button class="icon-btn" value="cancel" aria-label="Fechar">←</button>
     <input type="search" id="q" placeholder="Buscar loja ou serviço" autocomplete="off" enterkeyhint="search">
+    <button type="button" class="icon-btn mic" id="mic" hidden aria-label="Buscar falando" title="Buscar falando"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></button>
   </form>
   <div class="chips" id="groups"></div>
+  <p class="mic-status" id="mic-status" hidden role="status"></p>
   <p class="mark-hint" id="mark-hint" hidden>Toque nas lojas para marcar ou desmarcar.</p>
   <ul id="results"></ul>
   <div class="mark-bar" id="mark-bar" hidden>
