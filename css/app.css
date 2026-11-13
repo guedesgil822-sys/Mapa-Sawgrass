@@ -303,7 +303,7 @@ button { cursor: pointer; }
 .grp-pos { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
 .grp-pos input { width: 20px; height: 20px; flex: none; margin: 0; accent-color: #7c3aed; }
 .btn.danger { background: #c62828; border-color: #c62828; color: #fff; -webkit-text-fill-color: #fff; }
-#results li .go { flex: none; margin-left: auto; border: 1px solid var(--accent); background: transparent; color: var(--accent); -webkit-text-fill-color: currentColor; border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 14px; cursor: pointer; }
+#results li .go { flex: none; margin-left: auto; border: 0; background: var(--accent); color: #fff; -webkit-text-fill-color: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 2px 8px rgba(229, 36, 107, .35); }
 #results li .go + .chk { margin-left: 0; }
 #results li .go:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
