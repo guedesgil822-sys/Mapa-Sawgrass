@@ -1,4 +1,5 @@
 // Modelo de dados do shopping + rota por A* + instruções em texto.
+import { t, td } from './i18n.js';
 
 export const TRANSITION = {
   escalator: { label: 'escada rolante', cost: 20, accessible: false },
@@ -11,8 +12,8 @@ const WALK_SPEED = 1.2; // m/s
 export const norm = (s) =>
   s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 
-export const fmtDist = (m) => (m < 10 ? 'poucos metros' : `${Math.round(m / 5) * 5} m`);
-export const fmtTime = (s) => (s < 50 ? 'menos de 1 min' : `${Math.max(1, Math.round(s / 60))} min`);
+export const fmtDist = (m) => (m < 10 ? t('poucos metros') : `${Math.round(m / 5) * 5} m`);
+export const fmtTime = (s) => (s < 50 ? t('menos de 1 min') : t('{n} min', { n: Math.max(1, Math.round(s / 60)) }));
 
 class Heap {
   constructor() { this.a = []; }
@@ -85,7 +86,7 @@ export class Mall {
     if (!nq) return list;
     const scored = [];
     for (const p of list) {
-      const n = norm(p.name), c = norm(p.cat || '');
+      const n = norm(p.name) + ' ' + norm(td(p.name)), c = norm(p.cat || '') + ' ' + norm(td(p.cat || ''));
       const s = n.startsWith(nq) ? 0 : n.includes(' ' + nq) ? 1 : n.includes(nq) ? 2 : c.includes(nq) ? 3 : -1;
       if (s >= 0) scored.push([s, p]);
     }
@@ -155,8 +156,8 @@ export class Mall {
         const fromLevel = this.level(legs[li - 1].floor), up = this.level(leg.floor) > fromLevel;
         const T = TRANSITION[leg.via] || TRANSITION.stairs;
         const text = leg.via === 'elevator'
-          ? `Pegue o elevador e ${up ? 'suba' : 'desça'} até o piso ${floorName(leg.floor)}`
-          : `${up ? 'Suba' : 'Desça'} pela ${T.label} até o piso ${floorName(leg.floor)}`;
+          ? t(up ? 'Pegue o elevador e suba até o piso {x}' : 'Pegue o elevador e desça até o piso {x}', { x: floorName(leg.floor) })
+          : t(up ? 'Suba pela {y} até o piso {x}' : 'Desça pela {y} até o piso {x}', { x: floorName(leg.floor), y: t(T.label) });
         seconds += T.cost / WALK_SPEED;
         if (prevStep?.kind === 'transition' && prevStep.via === leg.via) {
           prevStep.text = text; prevStep.toFloor = leg.floor;
@@ -183,11 +184,11 @@ export class Mall {
           continue;
         }
         let text;
-        if (first) text = from.gps ? 'Siga a partir da sua posição' : `Saia de ${from.name}`;
-        else if (k === 0) text = 'Siga em frente';
+        if (first) text = from.gps ? t('Siga a partir da sua posição') : t('Saia de {x}', { x: td(from.name) });
+        else if (k === 0) text = t('Siga em frente');
         else {
           const lm = (this.landmarks.get(a.id) || []).find((p) => p.id !== from.id && p.id !== to.id && !/banheiro|pagamento|em breve/i.test(p.name));
-          text = TURN_TEXT[turn] + (lm ? ` em frente a ${lm.name.replace(/\s*\([^)]*\)/g, '')}` : '');
+          text = lm ? t('{x} em frente a {y}', { x: t(TURN_TEXT[turn]), y: td(lm.name.replace(/\s*\([^)]*\)/g, '')) }) : t(TURN_TEXT[turn]);
         }
         steps.push({ kind: first ? 'start' : (turn || 'straight'), text, dist: len, floor: leg.floor, pts: raw });
       }
@@ -198,11 +199,12 @@ export class Mall {
     let side = '';
     const n = pts.length;
     if (n >= 3 && pts[n - 3].f === to.f) {
-      const t = turnOf(pts[n - 3], pts[n - 2], pts[n - 1]);
-      if (t.includes('right')) side = ', à sua direita';
-      else if (t.includes('left')) side = ', à sua esquerda';
+      const turn = turnOf(pts[n - 3], pts[n - 2], pts[n - 1]);
+      if (turn.includes('right')) side = 'right';
+      else if (turn.includes('left')) side = 'left';
     }
-    steps.push({ kind: 'arrive', text: `Você chegou: ${to.name}${side}`, floor: to.f, pts: [pts[n - 1]] });
+    const arrived = t('Você chegou: {x}', { x: td(to.name) });
+    steps.push({ kind: 'arrive', text: side ? t(side === 'right' ? '{x}, à sua direita' : '{x}, à sua esquerda', { x: arrived }) : arrived, floor: to.f, pts: [pts[n - 1]] });
 
     return { from, to, legs, steps, meters, seconds, floors: legs.map((l) => l.floor) };
   }

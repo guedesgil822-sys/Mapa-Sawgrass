@@ -1,5 +1,6 @@
 import { Mall, TRANSITION, fmtDist, fmtTime, norm } from './graph.js';
 import { MapView, svgEl } from './mapview.js';
+import { t as tx, td, clock, initLang, setLang, getLang, translateDom, LANGS } from './i18n.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, text) => {
@@ -42,6 +43,10 @@ const framed = (() => { try { return window.top !== window; } catch { return tru
 const WEB_URL = 'https://guedesgil822-sys.github.io/Mapa-Sawgrass/';
 
 async function init() {
+  initLang();
+  translateDom();
+  ME.name = tx('📍 Minha posição');
+  buildLang();
   const useDraft = new URLSearchParams(location.search).has('draft') && localStorage.getItem(DRAFT_KEY);
   if (useDraft) {
     mall = new Mall(JSON.parse(localStorage.getItem(DRAFT_KEY)));
@@ -177,9 +182,9 @@ function buildFloors() {
 
 function buildGroups() {
   const box = $('#groups');
-  const groups = ['', ...new Set(mall.pois.map((p) => p.group))].sort((a, b) => a.localeCompare(b, 'pt'));
+  const groups = ['', ...new Set(mall.pois.map((p) => p.group))].sort((a, b) => (a && tx(a)).localeCompare(b && tx(b), getLang()));
   for (const g of groups) {
-    const c = el('button', 'chip', g || 'Tudo');
+    const c = el('button', 'chip', g ? tx(g) : tx('Tudo'));
     c.type = 'button';
     c.onclick = () => { group = g; $('#q').value = ''; [...box.children].forEach((x) => x.classList.toggle('on', x === c)); renderResults(); };
     if (!g) c.classList.add('on');
@@ -189,15 +194,15 @@ function buildGroups() {
 
 function openPicker(which) {
   picking = which;
-  $('#q').placeholder = { from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
-    find: 'Para onde você vai?', meet: 'Onde vão se encontrar?' }[which];
+  $('#q').placeholder = tx({ from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
+    find: 'Para onde você vai?', meet: 'Onde vão se encontrar?' }[which]);
   // dica do que o toque faz em cada modo
-  $('#mark-hint').textContent = {
+  $('#mark-hint').textContent = tx({
     from: 'Toque na loja mais perto de você.',
     to: 'Toque numa loja para traçar a rota. Para marcar várias, use a aba Buscar.',
     find: 'Toque na loja para marcar várias (✓) ou em “Ir ➜” para traçar a rota.',
     meet: 'Toque no lugar do encontro.',
-  }[which];
+  }[which]);
   $('#mark-hint').hidden = false;
   renderResults();
   $('#picker').showModal();
@@ -215,13 +220,14 @@ function renderResults() {
   // "Selecionados": só as lojas marcadas, com logo, para conferir antes de ir ao mapa
   if (onlyMarked && picking === 'find') list = [...marked].map((id) => mall.poiById.get(id)).filter(Boolean);
   if (!list.length) {
-    ul.appendChild(el('li', 'empty', group && q ? `Nada com “${q}” em ${group}.` : 'Nada encontrado.'));
+    ul.appendChild(el('li', 'empty', group && q ? tx('Nada com “{q}” em {g}.', { q, g: tx(group) }) : tx('Nada encontrado.')));
     return;
   }
   // sem busca: ordem alfabética com uma divisória por letra (A, B, C…)
   if (!q || onlyMarked) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
-  ul.appendChild(el('li', 'count', onlyMarked ? `${list.length} ${list.length === 1 ? 'selecionada' : 'selecionadas'} · toque para desmarcar`
-    : `${list.length} ${list.length === 1 ? 'lugar' : 'lugares'}`));
+  const one = list.length === 1;
+  ul.appendChild(el('li', 'count', tx(onlyMarked ? (one ? '{n} selecionada · toque para desmarcar' : '{n} selecionadas · toque para desmarcar')
+    : (one ? '{n} lugar' : '{n} lugares'), { n: list.length })));
   let letter = null;
   for (const p of list) {
     if (!q) {
@@ -232,7 +238,7 @@ function renderResults() {
     const li = el('li');
     li.tabIndex = 0;
     const box = el('div', 'txt');
-    box.append(el('div', 'n', p.name), el('div', 'c', p.cat || p.group));
+    box.append(el('div', 'n', td(p.name)), el('div', 'c', td(p.cat || p.group)));
     li.append(logoEl(p), box);
     if (multi()) li.append(el('span', 'f', p.f));
     if (picking === 'find') {
@@ -241,9 +247,9 @@ function renderResults() {
       li.setAttribute('role', 'checkbox');
       li.setAttribute('aria-checked', String(on));
       // "Ir": traça a rota até a loja sem precisar marcar
-      const go = el('button', 'go', 'Ir ➜');
+      const go = el('button', 'go', tx('Ir ➜'));
       go.type = 'button';
-      go.setAttribute('aria-label', `Traçar rota até ${p.name}`);
+      go.setAttribute('aria-label', tx('Traçar rota até {x}', { x: td(p.name) }));
       go.onclick = (e) => {
         e.stopPropagation();
         $('#picker').close();
@@ -290,8 +296,8 @@ function renderMarkBar() {
   const n = marked.size, bar = $('#mark-bar');
   bar.hidden = picking !== 'find' || !n;
   if (!n) onlyMarked = false;
-  $('#mark-show').textContent = 'Ver no mapa';
-  $('#mark-only').textContent = onlyMarked ? 'Ver todas' : `Selecionados (${n})`;
+  $('#mark-show').textContent = tx('Ver no mapa');
+  $('#mark-only').textContent = onlyMarked ? tx('Ver todas') : tx('Selecionados ({n})', { n });
   $('#mark-only').setAttribute('aria-pressed', String(onlyMarked));
   $('#mark-only').classList.toggle('on', onlyMarked);
 }
@@ -300,7 +306,7 @@ function renderMarked() {
   const n = marked.size;
   renderStatus();
   $('#marked-chip').hidden = $('#marked-clear').hidden = !n;
-  $('#marked-chip').textContent = `★ ${n} ${n === 1 ? 'marcada' : 'marcadas'}`;
+  $('#marked-chip').textContent = tx(n === 1 ? '★ {n} marcada' : '★ {n} marcadas', { n });
   drawRoute();
 }
 
@@ -437,8 +443,8 @@ function onMapTap(pt, ev, target) {
 
 /* ---------- estado → tela ---------- */
 function update(refit) {
-  setField('#f-from', state.from, 'Escolha a loja mais próxima');
-  setField('#f-to', state.to, 'Escolha o destino');
+  setField('#f-from', state.from, tx('Escolha a loja mais próxima'));
+  setField('#f-to', state.to, tx('Escolha o destino'));
   $('#trip').hidden = !(state.from || state.to);
   $('#search-pill').hidden = !$('#trip').hidden;
 
@@ -470,7 +476,8 @@ function update(refit) {
 function setField(sel, poi, placeholder) {
   const b = $(sel);
   b.classList.toggle('set', !!poi);
-  b.querySelector('span').textContent = poi ? (multi() ? `${poi.name} · ${poi.f}` : poi.name) : placeholder;
+  const name = poi ? td(poi.name) : '';
+  b.querySelector('span').textContent = poi ? (multi() ? `${name} · ${poi.f}` : name) : placeholder;
 }
 
 function renderSheet() {
@@ -481,20 +488,20 @@ function renderSheet() {
     const head = el('div', 'sheet-head');
     const g = el('div', 'grow');
     head.prepend(logoEl(p, 'big'));
-    g.append(el('h2', '', p.name), el('p', '', [multi() && mall.floorById.get(p.f).name, p.cat || p.group].filter(Boolean).join(' · ')));
+    g.append(el('h2', '', td(p.name)), el('p', '', [multi() && mall.floorById.get(p.f).name, td(p.cat || p.group)].filter(Boolean).join(' · ')));
     const x = el('button', 'icon-btn', '✕');
     x.setAttribute('aria-label', 'Fechar');
     x.onclick = () => { state.picked = null; update(false); };
     head.append(g, x);
     const act = el('div', 'actions');
-    const a = el('button', 'btn from', 'Estou aqui');
+    const a = el('button', 'btn from', tx('Estou aqui'));
     a.onclick = () => { state.from = p; state.picked = null; update(true); };
-    const b = el('button', 'btn primary', 'Ir para cá');
+    const b = el('button', 'btn primary', tx('Ir para cá'));
     b.onclick = () => { state.to = p; state.picked = null; gpsAsOrigin(); update(true); };
     act.append(a, b);
-    const m = el('button', 'btn small', marked.has(p.id) ? '★ Desmarcar' : '☆ Marcar');
+    const m = el('button', 'btn small', tx(marked.has(p.id) ? '★ Desmarcar' : '☆ Marcar'));
     m.onclick = () => { toggleMarked(p); renderSheet(); };
-    const e = el('button', 'btn small', state.meet === p ? '🤝 Editar encontro' : '🤝 Encontro aqui');
+    const e = el('button', 'btn small', tx(state.meet === p ? '🤝 Editar encontro' : '🤝 Encontro aqui'));
     e.onclick = () => openMeet(p);
     const row = el('div', 'actions');
     row.append(m, e);
@@ -503,14 +510,14 @@ function renderSheet() {
     return;
   }
   if (state.from && state.to && state.from.id === state.to.id) {
-    s.append(el('p', 'empty', 'Origem e destino são o mesmo lugar.'));
+    s.append(el('p', 'empty', tx('Origem e destino são o mesmo lugar.')));
     s.hidden = false;
     return;
   }
   if (state.from && state.to && !state.route) {
     s.append(el('p', 'empty', state.accessible
-      ? 'Não encontrei rota sem escada rolante entre esses pontos. Desmarque a opção para ver outras rotas.'
-      : 'Não encontrei caminho entre esses pontos no mapa.'));
+      ? tx('Não encontrei rota sem escada rolante entre esses pontos. Desmarque a opção para ver outras rotas.')
+      : tx('Não encontrei caminho entre esses pontos no mapa.')));
     s.hidden = false;
     return;
   }
@@ -522,11 +529,11 @@ function renderSheet() {
   const fl = r.floors.filter((f, i) => f !== r.floors[i - 1]);
   g.append(
     el('h2', '', `${fmtTime(r.seconds)} · ${fmtDist(r.meters)}`),
-    el('p', '', fl.length > 1 ? `Pisos: ${fl.join(' → ')}` : multi() ? `Tudo no piso ${fl[0]}` : 'A pé, sem trocar de piso'),
+    el('p', '', fl.length > 1 ? tx('Pisos: {x}', { x: fl.join(' → ') }) : multi() ? tx('Tudo no piso {x}', { x: fl[0] }) : tx('A pé, sem trocar de piso')),
   );
   const prev = el('button', 'btn small', '‹');
-  prev.setAttribute('aria-label', 'Passo anterior');
-  const next = el('button', 'btn small primary', 'Próximo ›');
+  prev.setAttribute('aria-label', tx('Passo anterior'));
+  const next = el('button', 'btn small primary', tx('Próximo ›'));
   prev.onclick = () => goStep(state.step - 1);
   next.onclick = () => goStep(state.step + 1);
   prev.disabled = state.step === 0;
@@ -536,7 +543,7 @@ function renderSheet() {
   const cur = r.steps[state.step];
   const now = el('div', 'now');
   const txt = el('div', 'txt', cur.text);
-  if (cur.dist) txt.appendChild(el('small', '', `siga por ${fmtDist(cur.dist)}`));
+  if (cur.dist) txt.appendChild(el('small', '', tx('siga por {x}', { x: fmtDist(cur.dist) })));
   now.append(el('div', 'ico', stepIcon(cur)), txt);
 
   const ol = el('ol', 'steps');
@@ -549,7 +556,7 @@ function renderSheet() {
     li.onclick = () => goStep(i);
     ol.appendChild(li);
   });
-  const more = el('button', 'more', state.open ? 'Ocultar passos' : `Ver os ${r.steps.length} passos`);
+  const more = el('button', 'more', state.open ? tx('Ocultar passos') : tx('Ver os {n} passos', { n: r.steps.length }));
   more.onclick = () => { state.open = !state.open; renderSheet(); };
   ol.hidden = !state.open;
   s.append(head, now, more, ol);
@@ -605,7 +612,7 @@ function drawRoute() {
       const nextLeg = r.legs[i + 1], prevLeg = r.legs[i - 1];
       if (nextLeg) {
         const up = mall.level(nextLeg.floor) > mall.level(leg.floor), a = leg.pts.at(-1);
-        markers.push({ x: a.x, y: a.y, cls: 'hop', text: `${up ? '⬆' : '⬇'} ${nextLeg.floor}`, go: nextLeg.floor, title: TRANSITION[nextLeg.via]?.label });
+        markers.push({ x: a.x, y: a.y, cls: 'hop', text: `${up ? '⬆' : '⬇'} ${nextLeg.floor}`, go: nextLeg.floor, title: tx(TRANSITION[nextLeg.via]?.label || '') });
       }
       if (prevLeg && leg.pts.length > 1) {
         const a = leg.pts[0];
@@ -620,20 +627,19 @@ function drawRoute() {
   if (state.meet && state.meet.f === state.floor) {
     const p = state.meet;
     if (p.poly?.length >= 6 && p !== state.to) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel meet' }, layers.sel);
-    markers.push({ x: p.x, y: p.y, cls: 'meet' + (state.meetTime ? ' timed' : ''), text: state.meetTime ? `🤝 ${state.meetTime}` : '🤝', title: 'Ponto de encontro: ' + p.name });
+    markers.push({ x: p.x, y: p.y, cls: 'meet' + (state.meetTime ? ' timed' : ''), text: state.meetTime ? `🤝 ${state.meetTime}` : '🤝', title: tx('Ponto de encontro: {x}', { x: td(p.name) }) });
   }
   if (state.car && CAR.f === state.floor) {
     const n = state.to === CAR && r && mall.nodes.get(CAR.node);
     if (n) svgEl('line', { x1: n.x, y1: n.y, x2: CAR.x, y2: CAR.y, class: 'car-link' }, layers.route);
-    markers.push({ x: CAR.x, y: CAR.y, cls: 'car', text: '🚗', title: 'Meu carro' });
+    markers.push({ x: CAR.x, y: CAR.y, cls: 'car', text: '🚗', title: tx('Meu carro') });
   }
   for (const [uid, p] of Object.entries(grp.data?.pos || {})) {
     if (uid === grp.uid || !p || Date.now() - p.ts > 15 * 60000 || !Number.isFinite(p.x)) continue;
-    const t = new Date(p.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    markers.push({ x: p.x, y: p.y, cls: 'friend', text: `${p.n || 'Amigo'} · ${t}`, title: 'Posição no grupo' });
+    markers.push({ x: p.x, y: p.y, cls: 'friend', text: `${p.n || tx('Amigo')} · ${clock(p.ts)}`, title: tx('Posição no grupo') });
   }
   const fr = state.shared?.who;
-  if (fr && fr.f === state.floor) markers.push({ x: fr.x, y: fr.y, cls: 'friend', text: `${fr.name || 'Amigo'}${fr.time ? ' · ' + fr.time : ''}`, title: 'Posição compartilhada' });
+  if (fr && fr.f === state.floor) markers.push({ x: fr.x, y: fr.y, cls: 'friend', text: `${fr.name || tx('Amigo')}${fr.time ? ' · ' + fr.time : ''}`, title: tx('Posição compartilhada') });
   if (state.from !== ME) mark(state.from, 'from');
   if (state.to !== CAR) mark(state.to, 'to');
   if (gps.me) {
@@ -648,7 +654,7 @@ function drawRoute() {
       svgEl('polygon', { points: `${gps.me.x},${gps.me.y} ${tip(a - w, L)} ${tip(a + w, L)}`, class: 'gps-cone' }, layers.route);
       svgEl('line', { x1: gps.me.x, y1: gps.me.y, x2: gps.me.x + Math.sin(a) * L * 1.15, y2: gps.me.y - Math.cos(a) * L * 1.15, class: 'gps-stick' }, layers.route);
     }
-    markers.push({ x: gps.me.x, y: gps.me.y, cls: 'me', title: 'Você está aqui' });
+    markers.push({ x: gps.me.x, y: gps.me.y, cls: 'me', title: tx('Você está aqui') });
   }
   placeMarkers();
 }
@@ -671,9 +677,30 @@ function placeMarkers() {
   });
 }
 
+/* ---------- idioma ---------- */
+function buildLang() {
+  const cur = LANGS.find((l) => l.id === getLang());
+  $('#lang-btn').textContent = cur.flag;
+  $('#lang-btn').onclick = () => $('#lang').showModal();
+  const ul = $('#lang-list');
+  ul.textContent = '';
+  for (const l of LANGS) {
+    const b = el('button', 'lang-opt' + (l.id === cur.id ? ' on' : ''));
+    b.type = 'button';
+    b.append(el('span', 'fl', l.flag), el('span', 'nm', l.name));
+    if (l.id === cur.id) b.append(el('span', 'ok', '✓'));
+    b.onclick = () => {
+      if (l.id === getLang()) return $('#lang').close();
+      setLang(l.id);
+      location.reload(); // recarrega já no idioma novo (rota, lojas marcadas e grupo continuam salvos)
+    };
+    ul.appendChild(b);
+  }
+}
+
 /* ---------- ferramentas: encontro e carro ---------- */
 let meetDraft = null;
-const hhmm = (t) => new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const hhmm = (t) => new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); // valor do campo de hora (24 h)
 const store = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch { /* sem armazenamento */ } };
 const load = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
 
@@ -684,10 +711,10 @@ function minsTo(t) {
 }
 function relTime(t) {
   const m = minsTo(t);
-  if (m > 90) return `em ${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`;
-  if (m > 1) return `em ${m} min`;
-  if (m >= -1) return 'agora';
-  return `há ${-m} min`;
+  if (m > 90) return tx('em {h}h{m}', { h: Math.floor(m / 60), m: String(m % 60).padStart(2, '0') });
+  if (m > 1) return tx('em {n} min', { n: m });
+  if (m >= -1) return tx('agora');
+  return tx('há {n} min', { n: -m });
 }
 
 function loadMeetCar() {
@@ -706,7 +733,7 @@ function persistCar() { store(CAR_KEY, state.car); if (state.car) placeCar(); re
 function placeCar() {
   const lot = mall.poiById.get(state.car.lot), c = state.car;
   Object.assign(CAR, { f: lot.f, x: c.x ?? lot.x, y: c.y ?? lot.y, node: lot.node,
-    name: `🚗 Meu carro (${lot.name.replace(/^Estacionamento · /, '')})` });
+    name: tx('🚗 Meu carro ({x})', { x: td(lot.name.replace(/^Estacionamento · /, '')) }) });
   mall.poiById.set(CAR.id, CAR);
 }
 
@@ -714,11 +741,11 @@ function placeCar() {
 function renderStatus() {
   const mc = $('#meet-chip'), cc = $('#car-chip');
   mc.hidden = !state.meet;
-  if (state.meet) mc.textContent = `🤝 ${state.meetTime ? `${state.meetTime} · ${relTime(state.meetTime)}` : state.meet.name}`;
+  if (state.meet) mc.textContent = `🤝 ${state.meetTime ? `${state.meetTime} · ${relTime(state.meetTime)}` : td(state.meet.name)}`;
   cc.hidden = !state.car;
-  if (state.car) cc.textContent = `🚗 ${mall.poiById.get(state.car.lot).name.replace(/^Estacionamento · /, '')}`;
+  if (state.car) cc.textContent = `🚗 ${td(mall.poiById.get(state.car.lot).name.replace(/^Estacionamento · /, ''))}`;
   mc.classList.toggle('late', !!state.meetTime && minsTo(state.meetTime) <= 5);
-  $('#tab-meet-l').textContent = state.meet && state.meetTime ? state.meetTime : 'Encontro';
+  $('#tab-meet-l').textContent = state.meet && state.meetTime ? state.meetTime : tx('Encontro');
   $('#tab-car-b').hidden = !state.car;
   $('#tab-find-b').hidden = !marked.size;
   $('#tab-find-b').textContent = marked.size || '';
@@ -727,7 +754,7 @@ function renderStatus() {
 
 function openMeet(p) {
   if (p) meetDraft = p; else meetDraft = state.meet;
-  $('#mt-place').textContent = meetDraft ? `📍 ${meetDraft.name}` : 'Escolher local';
+  $('#mt-place').textContent = meetDraft ? `📍 ${td(meetDraft.name)}` : tx('Escolher local');
   $('#mt-place').classList.toggle('set', !!meetDraft);
   if (!$('#mt-time').value || (!p && state.meetTime)) $('#mt-time').value = state.meetTime || hhmm(Date.now() + 30 * 60000);
   $('#mt-del').hidden = $('#mt-share').hidden = !state.meet;
@@ -748,16 +775,16 @@ const LOTS = () => mall.pois.filter((p) => p.group === 'Estacionamento');
 function openCar() {
   const sel = $('#car-lot');
   if (!sel.options.length) {
-    sel.append(new Option('Escolha…', ''));
-    for (const p of LOTS()) sel.append(new Option(p.name.replace(/^Estacionamento · /, ''), p.id));
+    sel.append(new Option(tx('Escolha…'), ''));
+    for (const p of LOTS()) sel.append(new Option(td(p.name.replace(/^Estacionamento · /, '')), p.id));
   }
   const c = state.car;
   sel.value = c?.lot || ''; $('#car-note').value = c?.note || '';
   carPos = c && c.x != null ? { x: c.x, y: c.y } : null;
   $('#car-info').hidden = !c;
-  if (c) $('#car-info').textContent = `Salvo às ${hhmm(c.t)}${c.x != null ? ' pelo GPS' : ''}${c.note ? ' · ' + c.note : ''}`;
+  if (c) $('#car-info').textContent = `${tx('Salvo às {t}', { t: clock(c.t) })}${c.x != null ? tx(' pelo GPS') : ''}${c.note ? ' · ' + c.note : ''}`;
   $('#car-del').hidden = $('#car-go').hidden = !c;
-  $('#car-gps').textContent = '📍 Usar minha posição agora (GPS)';
+  $('#car-gps').textContent = tx('📍 Usar minha posição agora (GPS)');
   if (!$('#car').open) $('#car').showModal();
 }
 
@@ -765,7 +792,7 @@ let carPos = null, carWaiting = false;
 function carFromGps() {
   if (!gps.me) {
     carWaiting = true;
-    $('#car-gps').textContent = '⏳ Procurando sua posição…';
+    $('#car-gps').textContent = tx('⏳ Procurando sua posição…');
     if (gps.watch == null) startGps();
     return;
   }
@@ -774,7 +801,7 @@ function carFromGps() {
   let best = null, bd = Infinity;
   for (const p of LOTS()) { const d = Math.hypot(p.x - carPos.x, p.y - carPos.y); if (d < bd) { bd = d; best = p; } }
   $('#car-lot').value = best?.id || '';
-  $('#car-gps').textContent = `✅ Posição capturada (±${Math.round(gps.me.acc)} m)`;
+  $('#car-gps').textContent = tx('✅ Posição capturada (±{n} m)', { n: Math.round(gps.me.acc) });
 }
 
 function saveCar() {
@@ -822,7 +849,7 @@ function bindGroup() {
   $('#gr-link').onclick = () => { $('#group').close(); openShare(); };
   $('#gr-invite').onclick = inviteGroup;
   $('#gr-form').onsubmit = (e) => { e.preventDefault(); sendMsg(); };
-  $('#gr-leave').onclick = () => leaveGroup('Você saiu do grupo.');
+  $('#gr-leave').onclick = () => leaveGroup(tx('Você saiu do grupo.'));
   $('#gr-del').onclick = () => { $('#gr-confirm').hidden = false; };
   $('#gr-del-ok').onclick = deleteGroup;
   $('#gr-pos').onchange = (e) => {
@@ -836,7 +863,7 @@ function bindGroup() {
 function groupErr(msg) { $('#gr-err').textContent = msg; $('#gr-err').hidden = !msg; }
 const needName = () => {
   const n = $('#gr-name').value.trim();
-  if (!n) { groupErr('Escreva seu nome para o grupo saber quem é você.'); $('#gr-name').focus(); return null; }
+  if (!n) { groupErr(tx('Escreva seu nome para o grupo saber quem é você.')); $('#gr-name').focus(); return null; }
   try { localStorage.setItem(NAME_KEY, n); } catch { /* sem armazenamento */ }
   return n;
 };
@@ -853,21 +880,21 @@ async function createGroup() {
   const name = needName(); if (!name) return;
   const code = randCode(), uid = myUid();
   try {
-    await dbReq('PUT', `grupos/${code}`, { exp: Date.now() + GROUP_TTL - 60000, nome: `Grupo de ${name}`, dono: uid,
+    await dbReq('PUT', `grupos/${code}`, { exp: Date.now() + GROUP_TTL - 60000, nome: tx('Grupo de {x}', { x: name }), dono: uid,
       ...(state.meet ? { enc: { id: state.meet.id, h: state.meetTime || '' } } : {}),
-      msgs: { first: { n: name, t: `${name} criou o grupo 👋`, ts: { '.sv': 'timestamp' }, u: uid } } });
-  } catch (e) { return groupErr(framed ? 'Aqui dentro do Claude o grupo não funciona. Toque em “🌐 Abrir no navegador”.' : 'Não deu para criar o grupo. Confira a internet e tente de novo.'); }
+      msgs: { first: { n: name, t: tx('{x} criou o grupo 👋', { x: name }), ts: { '.sv': 'timestamp' }, u: uid } } });
+  } catch (e) { return groupErr(tx(framed ? 'Aqui dentro do Claude o grupo não funciona. Toque em “🌐 Abrir no navegador”.' : 'Não deu para criar o grupo. Confira a internet e tente de novo.')); }
   startGroup(code, true);
   inviteGroup();
 }
 
 async function joinGroup(code) {
-  if (code.length < 10) return groupErr('O código tem 11 letras, como SAW-K7Q2-M9XD.');
+  if (code.length < 10) return groupErr(tx('O código tem 11 letras, como SAW-K7Q2-M9XD.'));
   const name = needName(); if (!name) return;
   let g = null;
   try { g = await dbReq('GET', `grupos/${code}`); } catch { /* sem permissão = expirado ou não existe */ }
-  if (!g) return groupErr('Grupo não encontrado. Ele pode ter sido excluído ou passado de 24 h.');
-  dbReq('POST', `grupos/${code}/msgs`, { n: name, t: `${name} entrou no grupo`, ts: { '.sv': 'timestamp' }, u: myUid() }).catch(() => {});
+  if (!g) return groupErr(tx('Grupo não encontrado. Ele pode ter sido excluído ou passado de 24 h.'));
+  dbReq('POST', `grupos/${code}/msgs`, { n: name, t: tx('{x} entrou no grupo', { x: name }), ts: { '.sv': 'timestamp' }, u: myUid() }).catch(() => {});
   startGroup(code, g.dono === myUid());
 }
 
@@ -891,12 +918,12 @@ function startGroup(code, owner) {
       const last = keys.at(-1);
       if (patch) o[last] = { ...(o[last] || {}), ...data }; else if (data === null) delete o[last]; else o[last] = data;
     }
-    if (!grp.data) return leaveGroup('O grupo foi excluído.');
+    if (!grp.data) return leaveGroup(tx('O grupo foi excluído.'), true);
     onGroupData();
   };
   es.addEventListener('put', (e) => apply(e, false));
   es.addEventListener('patch', (e) => apply(e, true));
-  es.addEventListener('cancel', () => leaveGroup('O grupo terminou (excluído ou passou de 24 h).'));
+  es.addEventListener('cancel', () => leaveGroup(tx('O grupo terminou (excluído ou passou de 24 h).'), true));
   renderGroup();
 }
 
@@ -905,7 +932,7 @@ function resumeGroup(linkCode) {
   if (linkCode && cleanCode(linkCode) !== saved?.code) {
     // convite: abre o grupo já com o código preenchido
     $('#gr-code').value = fmtCode(cleanCode(linkCode));
-    setTimeout(() => { openGroup(); groupErr(myName() ? '' : 'Escreva seu nome e toque em Entrar.'); if (myName()) joinGroup(cleanCode(linkCode)); }, 300);
+    setTimeout(() => { openGroup(); groupErr(myName() ? '' : tx('Escreva seu nome e toque em Entrar.')); if (myName()) joinGroup(cleanCode(linkCode)); }, 300);
     return;
   }
   if (saved?.code) startGroup(saved.code, !!saved.owner);
@@ -931,7 +958,7 @@ function onGroupData() {
 function renderChatBar() {
   const list = msgList(), last = list.at(-1), unread = Math.max(0, list.length - grp.seen);
   $('#chat-bar').hidden = !grp.code || !last;
-  if (last) $('#chat-bar-txt').textContent = `${last.u === grp.uid ? 'Você' : last.n}: ${last.t}`;
+  if (last) $('#chat-bar-txt').textContent = `${last.u === grp.uid ? tx('Você') : last.n}: ${last.t}`;
   $('#chat-bar-n').hidden = !unread;
   $('#chat-bar-n').textContent = unread;
   $('#tab-share').classList.toggle('alert', unread > 0);
@@ -940,19 +967,18 @@ function renderChatBar() {
 function renderGroup() {
   const inG = !!grp.code;
   $('#gr-out').hidden = inG; $('#gr-in').hidden = !inG;
-  $('#gr-title').textContent = inG ? `👥 ${grp.data?.nome || 'Grupo'}` : '👥 Grupo';
+  $('#gr-title').textContent = inG ? `👥 ${grp.data?.nome || tx('Grupo')}` : tx('👥 Grupo');
   if (!inG) return;
   $('#gr-code-show').textContent = fmtCode(grp.code);
   $('#gr-del').hidden = !grp.owner;
   $('#gr-confirm').hidden = true;
   const names = [...new Set(msgList().map((m) => m.n))];
-  $('#gr-who').textContent = names.length ? `${names.length} ${names.length === 1 ? 'pessoa' : 'pessoas'}: ${names.join(', ')}` : '';
+  $('#gr-who').textContent = names.length ? tx(names.length === 1 ? '{n} pessoa: {x}' : '{n} pessoas: {x}', { n: names.length, x: names.join(', ') }) : '';
   const ul = $('#gr-msgs');
   ul.textContent = '';
   for (const m of msgList()) {
     const li = el('li', m.u === grp.uid ? 'me' : '');
-    const t = m.ts ? new Date(m.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-    li.append(el('small', '', `${m.u === grp.uid ? 'Você' : m.n} · ${t}`), el('span', '', m.t));
+    li.append(el('small', '', `${m.u === grp.uid ? tx('Você') : m.n} · ${m.ts ? clock(m.ts) : ''}`), el('span', '', m.t));
     ul.appendChild(li);
   }
 }
@@ -963,37 +989,37 @@ async function sendMsg() {
   const t = $('#gr-text').value.trim();
   if (!t || !grp.code) return;
   $('#gr-text').value = '';
-  try { await dbReq('POST', `grupos/${grp.code}/msgs`, { n: myName() || 'Alguém', t, ts: { '.sv': 'timestamp' }, u: grp.uid }); }
+  try { await dbReq('POST', `grupos/${grp.code}/msgs`, { n: myName() || tx('Alguém'), t, ts: { '.sv': 'timestamp' }, u: grp.uid }); }
   catch { $('#gr-text').value = t; }
 }
 
 function sendMyPos() {
   if (!grp.code || !gps.me || !$('#gr-pos').checked || Date.now() - grp.lastPos < 15000) return;
   grp.lastPos = Date.now();
-  dbReq('PUT', `grupos/${grp.code}/pos/${grp.uid}`, { n: myName() || 'Alguém', x: Math.round(gps.me.x), y: Math.round(gps.me.y), ts: { '.sv': 'timestamp' } }).catch(() => {});
+  dbReq('PUT', `grupos/${grp.code}/pos/${grp.uid}`, { n: myName() || tx('Alguém'), x: Math.round(gps.me.x), y: Math.round(gps.me.y), ts: { '.sv': 'timestamp' } }).catch(() => {});
 }
 
 async function inviteGroup() {
   const url = `${baseUrl()}#g=${grp.code}`;
-  const text = `👥 Entre no meu grupo do Sawgrass Mills\nCódigo: ${fmtCode(grp.code)}\n${url}`;
+  const text = `${tx('👥 Entre no meu grupo do Sawgrass Mills')}\n${tx('Código: {x}', { x: fmtCode(grp.code) })}\n${url}`;
   if (navigator.share) { try { await navigator.share({ title: 'Grupo Sawgrass Mills', text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
-  try { await navigator.clipboard.writeText(text); $('#gr-who').textContent = '✅ Convite copiado. Cole no WhatsApp.'; }
-  catch { $('#gr-who').textContent = `Mande este código: ${fmtCode(grp.code)}`; }
+  try { await navigator.clipboard.writeText(text); $('#gr-who').textContent = tx('✅ Convite copiado. Cole no WhatsApp.'); }
+  catch { $('#gr-who').textContent = tx('Mande este código: {x}', { x: fmtCode(grp.code) }); }
 }
 
-function leaveGroup(msg) {
-  if (grp.code && !msg?.startsWith('O grupo')) dbReq('DELETE', `grupos/${grp.code}/pos/${grp.uid}`).catch(() => {});
+function leaveGroup(msg, ended = false) {
+  if (grp.code && !ended) dbReq('DELETE', `grupos/${grp.code}/pos/${grp.uid}`).catch(() => {});
   grp.es?.close();
   Object.assign(grp, { code: null, data: null, es: null, owner: false, seen: 0 });
   store(GROUP_KEY, null);
   renderGroup(); renderChatBar(); drawRoute();
-  if (msg) { groupErr(msg); if (!$('#group').open && msg.startsWith('O grupo')) { openGroup(); groupErr(msg); } }
+  if (msg) { groupErr(msg); if (!$('#group').open && ended) { openGroup(); groupErr(msg); } }
 }
 
 async function deleteGroup() {
   const code = grp.code;
   try { await dbReq('DELETE', `grupos/${code}`); } catch { /* já não existe */ }
-  leaveGroup('Grupo excluído. A conversa foi apagada.');
+  leaveGroup(tx('Grupo excluído. A conversa foi apagada.'));
 }
 
 /* ---------- compartilhar com o grupo ---------- */
@@ -1004,9 +1030,9 @@ const myName = () => { try { return localStorage.getItem(NAME_KEY) || ''; } catc
 function openShare() {
   const n = marked.size, names = [...marked].map((id) => mall.poiById.get(id)?.name).filter(Boolean);
   $('#sh-marked-row').hidden = !n;
-  $('#sh-marked-txt').textContent = `★ Lojas marcadas (${n}): ${names.slice(0, 4).join(', ')}${n > 4 ? '…' : ''}`;
+  $('#sh-marked-txt').textContent = tx('★ Lojas marcadas ({n}): {x}', { n, x: names.slice(0, 4).map(td).join(', ') + (n > 4 ? '…' : '') });
   $('#sh-meet-row').hidden = !state.meet;
-  $('#sh-meet-txt').textContent = `🤝 Encontro: ${state.meet?.name || ''}${state.meetTime ? ' às ' + state.meetTime : ''}`;
+  $('#sh-meet-txt').textContent = tx('🤝 Encontro: {x}', { x: td(state.meet?.name || '') }) + (state.meetTime ? tx(' às {t}', { t: state.meetTime }) : '');
   $('#sh-me-row').hidden = !gps.me;
   $('#sh-empty').hidden = !!(n || state.meet || gps.me);
   $('#sh-name').value = myName();
@@ -1021,21 +1047,21 @@ function buildShare() {
   if (!$('#sh-meet-row').hidden && $('#sh-meet').checked) {
     h.set('enc', state.meet.id);
     if (state.meetTime) h.set('eh', state.meetTime);
-    lines.push(`🤝 Encontro: ${state.meet.name}${state.meetTime ? ' às ' + state.meetTime : ''}`);
+    lines.push(tx('🤝 Encontro: {x}', { x: td(state.meet.name) }) + (state.meetTime ? tx(' às {t}', { t: state.meetTime }) : ''));
   }
   if (!$('#sh-marked-row').hidden && $('#sh-marked').checked) {
     const ids = [...marked];
     h.set('m', ids.join(','));
-    lines.push(`★ Lojas: ${ids.map((id) => mall.poiById.get(id)?.name).join(', ')}`);
+    lines.push(tx('★ Lojas: {x}', { x: ids.map((id) => td(mall.poiById.get(id)?.name)).join(', ') }));
   }
   if (!$('#sh-me-row').hidden && $('#sh-me').checked && gps.me) {
     const t = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     h.set('px', `${Math.round(gps.me.x)},${Math.round(gps.me.y)}`); h.set('h', t);
-    lines.push(`📍 ${name || 'Eu'} estava perto de ${gps.me.near?.name || 'aqui'} às ${t}`);
+    lines.push(tx('📍 {n} estava perto de {x} às {t}', { n: name || tx('Eu'), x: td(gps.me.near?.name) || tx('aqui'), t }));
   }
   if (name) h.set('quem', name);
   const url = baseUrl() + (h.size ? '#' + h : '');
-  lines.push('Abra o mapa: ' + url);
+  lines.push(tx('Abra o mapa: {x}', { x: url }));
   return { title: 'Sawgrass Mills', text: lines.join('\n'), url };
 }
 
@@ -1046,7 +1072,7 @@ async function sendShare() {
     try { await navigator.share({ title: data.title, text: data.text }); $('#share').close(); return; }
     catch (e) { if (e.name === 'AbortError') return; }
   }
-  try { await navigator.clipboard.writeText(data.text); done('Copiado! Cole no WhatsApp do grupo.'); }
+  try { await navigator.clipboard.writeText(data.text); done(tx('Copiado! Cole no WhatsApp do grupo.')); }
   catch { open('https://wa.me/?text=' + encodeURIComponent(data.text), '_blank', 'noopener'); }
 }
 
@@ -1062,11 +1088,12 @@ function readShared(h) {
   state.shared = { marks, who };
   if (meet) { state.meet = meet; state.meetTime = /^\d\d:\d\d$/.test(h.get('eh') || '') ? h.get('eh') : ''; persistMeet(); }
   for (const id of marks) marked.add(id); // aparecem no mapa; só ficam salvas se tocar em "Guardar"
-  const from = name ? `${name} compartilhou` : 'Compartilhado com você';
-  const bits = [meet && `🤝 encontro na ${meet.name}${state.meetTime ? ' às ' + state.meetTime : ''}`, marks.length && `★ ${marks.length} lojas`, who && `📍 posição às ${who.time}`].filter(Boolean);
+  const from = name ? tx('{x} compartilhou', { x: name }) : tx('Compartilhado com você');
+  const bits = [meet && tx('🤝 encontro na {x}', { x: td(meet.name) }) + (state.meetTime ? tx(' às {t}', { t: state.meetTime }) : ''),
+    marks.length && tx('★ {n} lojas', { n: marks.length }), who && tx('📍 posição às {t}', { t: who.time })].filter(Boolean);
   $('#shared-txt').textContent = `${from}: ${bits.join(' · ')}`;
   $('#shared-keep').hidden = !marks.length;
-  $('#shared-keep').textContent = `Guardar ${marks.length} ${marks.length === 1 ? 'loja' : 'lojas'}`;
+  $('#shared-keep').textContent = tx(marks.length === 1 ? 'Guardar {n} loja' : 'Guardar {n} lojas', { n: marks.length });
   $('#shared-gps').hidden = !meet;
   $('#shared-bar').hidden = false;
   if (meet) state.to = meet;
@@ -1086,11 +1113,11 @@ function gpsMsg(text, canUse = false) {
 }
 
 function startGps() {
-  if (!('geolocation' in navigator)) return gpsMsg('Este aparelho não oferece localização.');
+  if (!('geolocation' in navigator)) return gpsMsg(tx('Este aparelho não oferece localização.'));
   $('#gps').classList.add('on');
   $('#gps').setAttribute('aria-pressed', 'true');
-  $('#gps').title = 'Desligar localização';
-  gpsMsg('Procurando sua posição…');
+  $('#gps').title = tx('Desligar localização');
+  gpsMsg(tx('Procurando sua posição…'));
   gps.centered = false;
   startCompass();
   gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError,
@@ -1105,7 +1132,7 @@ function stopGps() {
   if (state.from === ME) { state.from = null; update(false); }
   $('#gps').classList.remove('on');
   $('#gps').setAttribute('aria-pressed', 'false');
-  $('#gps').title = 'Onde estou (GPS)';
+  $('#gps').title = tx('Onde estou (GPS)');
   $('#gps-bar').hidden = true;
   drawRoute();
 }
@@ -1119,7 +1146,7 @@ function onGps(pos) {
   const inside = x > -m && y > -m && x < f.width + m && y < f.height + m;
   if (!inside) {
     gps.me = null; drawRoute();
-    return gpsMsg('Você não está no Sawgrass Mills. A posição aparece quando você chegar ao shopping.');
+    return gpsMsg(tx('Você não está no Sawgrass Mills. A posição aparece quando você chegar ao shopping.'));
   }
   let near = null, bd = Infinity;
   for (const p of mall.pois) {
@@ -1157,15 +1184,15 @@ function gpsAsOrigin() {
 // texto da faixa do GPS: destino com distância e direção, ou loja mais próxima
 function renderGpsBar() {
   const { acc, near } = gps.me;
-  const prec = acc < 1000 ? `±${Math.round(acc)} m` : 'baixa precisão';
+  const prec = acc < 1000 ? `±${Math.round(acc)} m` : tx('baixa precisão');
   const r = state.route;
   if (state.from === ME && state.to && r) {
     const left = Math.max(0, Math.round(r.meters));
     const arrow = dirArrow(state.to);
-    return gpsMsg(left < 15 ? `✅ Você chegou: ${state.to.name}` : `${arrow} ${state.to.name} · ${left} m pela rota (${prec})`, false);
+    return gpsMsg(left < 15 ? tx('✅ Você chegou: {x}', { x: td(state.to.name) }) : tx('{a} {x} · {n} m pela rota ({p})', { a: arrow, x: td(state.to.name), n: left, p: prec }), false);
   }
-  gpsMsg(near ? `📍 Perto de ${near.name} (${prec})` : `Você está aqui (${prec})`, !!near);
-  $('#gps-use').textContent = 'Usar como origem';
+  gpsMsg(near ? tx('📍 Perto de {x} ({p})', { x: td(near.name), p: prec }) : tx('Você está aqui ({p})', { p: prec }), !!near);
+  $('#gps-use').textContent = tx('Usar como origem');
 }
 
 // seta de direção até o destino, relativa à bússola do celular (ou ao mapa, sem bússola)
@@ -1214,11 +1241,11 @@ function onGpsError(err) {
   if (err.code === 1) {
     stopGps();
     return gpsMsg(framed
-      ? 'Aqui dentro o GPS fica bloqueado. Toque em “🌐 Abrir no navegador” para usar a localização.'
-      : 'Localização bloqueada. iPhone: Ajustes › Privacidade e Segurança › Serviços de Localização › Sites do Safari › Durante o Uso. Depois, no Safari, toque em aA › Ajustes do Site › Localização › Perguntar e recarregue.');
+      ? tx('Aqui dentro o GPS fica bloqueado. Toque em “🌐 Abrir no navegador” para usar a localização.')
+      : tx('Localização bloqueada. iPhone: Ajustes › Privacidade e Segurança › Serviços de Localização › Sites do Safari › Durante o Uso. Depois, no Safari, toque em aA › Ajustes do Site › Localização › Perguntar e recarregue.'));
   }
-  gpsMsg(err.code === 3 ? 'O GPS está demorando. Dentro do shopping o sinal é fraco; tente perto de uma entrada.'
-    : 'Não foi possível obter sua posição agora.');
+  gpsMsg(tx(err.code === 3 ? 'O GPS está demorando. Dentro do shopping o sinal é fraco; tente perto de uma entrada.'
+    : 'Não foi possível obter sua posição agora.'));
 }
 
 function centerOnMe() {
@@ -1270,5 +1297,5 @@ init().catch((err) => {
   console.error(err);
   const s = $('#sheet');
   s.hidden = false;
-  s.textContent = 'Não foi possível carregar o mapa. Verifique a conexão e tente de novo.';
+  s.textContent = tx('Não foi possível carregar o mapa. Verifique a conexão e tente de novo.');
 });

@@ -1,7 +1,7 @@
 // Cache para uso offline dentro do shopping (sinal costuma ser ruim).
-const VERSION = 'v30';
+const VERSION = 'v31';
 const SHELL = [
-  './', 'index.html', 'css/app.css', 'js/app.js', 'js/graph.js', 'js/mapview.js',
+  './', 'index.html', 'css/app.css', 'js/app.js', 'js/graph.js', 'js/mapview.js', 'js/i18n.js',
   'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png',
   'data/mall.json', 'maps/l1.svg',
 ];

@@ -16,6 +16,7 @@
 <div id="markers" aria-hidden="true"></div>
 
 <header class="top">
+  <button type="button" id="lang-btn" class="lang-btn" aria-label="Idioma" title="Idioma">🇧🇷</button>
   <button type="button" class="card search-pill" id="search-pill"><span class="sp-ic" aria-hidden="true">🔎</span><span class="sp-q">Para onde você vai?</span></button>
   <div class="card trip" id="trip" hidden>
     <div class="rail" aria-hidden="true"><i class="dot from"></i><i class="line"></i><i class="dot to"></i></div>
@@ -156,6 +157,13 @@
       <p class="grp-err" id="gr-confirm" hidden>Excluir apaga a conversa de todos. <button type="button" class="btn small danger" id="gr-del-ok">Sim, excluir</button></p>
     </div>
   </div>
+</dialog>
+
+<dialog id="lang" class="sheet-dlg">
+  <form method="dialog" class="tools-box">
+    <div class="tools-head"><h2>🌐 <span>Idioma</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <div class="lang-list" id="lang-list"></div>
+  </form>
 </dialog>
 
 <dialog id="share">

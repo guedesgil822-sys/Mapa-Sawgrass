@@ -54,6 +54,15 @@ encontro, o número de lojas marcadas e um ponto quando o carro está salvo):
 
 Encontro e carro ficam salvos no aparelho.
 
+## Idiomas
+
+Português, English, Español, Français e Deutsch (os idiomas dos maiores grupos
+de turistas da Flórida). O app abre no idioma do celular; a bandeira na busca
+do topo troca o idioma (fica salvo). Traduções em `js/i18n.js`, com o texto em
+português como chave: textos da tela, passo a passo da rota, segmentos,
+categorias e lugares como entradas, banheiros e estacionamentos. Nomes das
+lojas (marcas) e mensagens do grupo não mudam.
+
 ## Logos das marcas
 
 Cada loja com site conhecido tem o campo `web` no `mall.json` (lista em
