@@ -502,7 +502,11 @@ function onGps(pos) {
 function onGpsError(err) {
   if (err.code === 1) {
     stopGps();
-    return gpsMsg('Sem permissão de localização. Libere o acesso à localização para este site nos ajustes do navegador.');
+    let framed = true;
+    try { framed = window.top !== window; } catch { /* outro domínio: está dentro de um quadro */ }
+    return gpsMsg(framed
+      ? 'Aqui dentro o GPS fica bloqueado pelo app onde a página está aberta. Abra o mapa pelo endereço próprio no Safari/Chrome para usar a localização.'
+      : 'Sem permissão de localização. Ative em Ajustes › Privacidade › Serviços de Localização (Safari) ou nas permissões do site no Chrome.');
   }
   gpsMsg(err.code === 3 ? 'O GPS está demorando. Dentro do shopping o sinal é fraco; tente perto de uma entrada.'
     : 'Não foi possível obter sua posição agora.');
