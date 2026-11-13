@@ -127,6 +127,12 @@ O chip **🛍️ Compras** abre três abas (`js/shop.js`):
   com "Ir ➜", marcar como comprado, e totais planejado/comprado na moeda
   escolhida. Fica salva no aparelho.
 
+## Tutorial
+
+Na primeira abertura aparecem 3 telas rápidas de "como usar" (busca e rota,
+lojas marcadas/roteiro/perto de mim, grupo e compras), no idioma do app. Dá
+para rever pela bandeira do idioma › "👋 Como usar o app".
+
 ## Corrigir loja no lugar errado
 
 No painel da loja, **📍 Loja no lugar errado?** e depois um toque no mapa no

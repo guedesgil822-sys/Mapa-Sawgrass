@@ -172,6 +172,7 @@
   <form method="dialog" class="tools-box">
     <div class="tools-head"><h2>🌐 <span>Idioma</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
     <div class="lang-list" id="lang-list"></div>
+    <button type="button" class="btn link" id="intro-again">👋 Como usar o app</button>
   </form>
 </dialog>
 
@@ -239,6 +240,17 @@
     </div>
     <p class="share-done" id="fix-done" hidden></p>
   </form>
+</dialog>
+
+<dialog id="intro" class="intro-dlg">
+  <div class="intro-box">
+    <div class="intro-slides" id="intro-slides"></div>
+    <div class="intro-dots" id="intro-dots"></div>
+    <div class="actions">
+      <button type="button" class="btn" id="intro-skip">Pular</button>
+      <button type="button" class="btn primary" id="intro-next">Próximo</button>
+    </div>
+  </div>
 </dialog>
 
 <dialog id="share">

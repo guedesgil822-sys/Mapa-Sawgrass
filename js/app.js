@@ -89,6 +89,7 @@ async function init() {
   renderMarked();
   renderStatus();
   setInterval(renderStatus, 30000);
+  if (!load('sawgrass.intro') && !state.shared) setTimeout(openIntro, 600);
   if (state.shared) { // enquadra tudo o que foi compartilhado
     const pts = [state.meet, state.shared.who, ...state.shared.marks.map((id) => mall.poiById.get(id))].filter(Boolean);
     requestAnimationFrame(() => { const m = 25 * mall.ppm; fitPoints(pts.flatMap((p) => [{ x: p.x - m, y: p.y - m }, { x: p.x + m, y: p.y + m }])); });
@@ -137,6 +138,7 @@ function bindUI() {
   });
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
+  $('#intro-again').onclick = () => { $('#lang').close(); openIntro(); };
   $('#move-cancel').onclick = () => { moving = null; $('#move-bar').hidden = true; };
   $('#fix-chip').onclick = openFixes;
   $('#fix-undo').onclick = () => { store(FIX_KEY, null); location.reload(); };
@@ -339,6 +341,31 @@ function showMarked() {
   state.picked = null; update(false);
   fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
 }
+
+/* ---------- tutorial (primeira abertura) ---------- */
+const INTRO = [
+  { ico: '🗺️', t: 'Bem-vindo ao Sawgrass Mills', d: 'Busque qualquer loja em "Para onde você vai?" e toque em "Ir ➜": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.' },
+  { ico: '★', t: 'Marque suas lojas', d: 'Na busca, toque nas lojas para marcar várias. Depois use "🧭 Roteiro" para visitar todas na melhor ordem, e "📍 Perto de mim" para achar banheiro, comida ou caixa eletrônico.' },
+  { ico: '🤝', t: 'Com o grupo e nas compras', d: 'Crie um grupo para conversar e marcar o encontro, salve onde parou o carro e use "🛍️ Compras" para converter preços (com imposto), ver tamanhos e fazer sua lista.' },
+];
+let introI = 0;
+function openIntro() {
+  introI = 0; renderIntro();
+  $('#intro-skip').onclick = closeIntro;
+  $('#intro-next').onclick = () => (introI < INTRO.length - 1 ? (introI++, renderIntro()) : closeIntro());
+  if (!$('#intro').open) $('#intro').showModal();
+}
+function renderIntro() {
+  const s = INTRO[introI], box = $('#intro-slides');
+  box.textContent = '';
+  box.append(el('div', 'intro-ico', s.ico), el('h2', '', tx(s.t)), el('p', '', tx(s.d)));
+  const dots = $('#intro-dots');
+  dots.textContent = '';
+  INTRO.forEach((_, i) => dots.appendChild(el('i', i === introI ? 'on' : '')));
+  $('#intro-next').textContent = introI < INTRO.length - 1 ? tx('Próximo') : tx('Começar');
+  $('#intro-skip').hidden = introI === INTRO.length - 1;
+}
+function closeIntro() { store('sawgrass.intro', 1); $('#intro').close(); }
 
 /* ---------- corrigir loja no lugar errado ---------- */
 // Correções ficam no aparelho ({id: {x, y, name}}) e podem ser enviadas ao criador do app.

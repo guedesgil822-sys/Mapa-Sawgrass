@@ -306,6 +306,17 @@ const D = {
   'Uber / táxi': ['Uber / taxi', 'Uber / taxi', 'Uber / taxi', 'Uber / Taxi'],
   'O shopping não tem um ponto oficial de embarque: os carros param nas entradas. Confira o local no app antes de sair; táxis também param nas entradas principais.': ['The mall has no official rideshare zone: cars stop at the entrances. Check the spot in the app before heading out; taxis also stop at the main entrances.', 'El centro comercial no tiene un punto oficial: los autos paran en las entradas. Confirma el lugar en la app antes de salir; los taxis también paran en las entradas principales.', 'Pas de zone officielle : les voitures s’arrêtent aux entrées. Vérifiez le point dans l’app avant de sortir ; les taxis s’arrêtent aussi aux entrées principales.', 'Es gibt keinen offiziellen Abholpunkt: Autos halten an den Eingängen. Prüfe den Ort in der App; Taxis halten ebenfalls an den Haupteingängen.'],
 
+  // ---------- tutorial ----------
+  "Bem-vindo ao Sawgrass Mills": ["Welcome to Sawgrass Mills", "Bienvenido a Sawgrass Mills", "Bienvenue à Sawgrass Mills", "Willkommen in Sawgrass Mills"],
+  "Busque qualquer loja em \"Para onde você vai?\" e toque em \"Ir ➜\": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.": ["Search any store in “Where are you going?” and tap “Go ➜”: the app draws the walking route, step by step. Turn on GPS (◎) to start from where you are.", "Busca cualquier tienda en “¿A dónde vas?” y toca “Ir ➜”: la app traza la ruta a pie, paso a paso. Activa el GPS (◎) para salir desde donde estás.", "Cherchez un magasin dans « Où allez-vous ? » et touchez « Aller ➜ » : l’app trace l’itinéraire à pied, étape par étape. Activez le GPS (◎) pour partir d’où vous êtes.", "Suche ein Geschäft unter „Wohin möchtest du?“ und tippe auf „Los ➜“: Die App zeigt den Fußweg Schritt für Schritt. Mit GPS (◎) startest du an deinem Standort."],
+  "Marque suas lojas": ["Mark your stores", "Marca tus tiendas", "Marquez vos magasins", "Markiere deine Geschäfte"],
+  "Na busca, toque nas lojas para marcar várias. Depois use \"🧭 Roteiro\" para visitar todas na melhor ordem, e \"📍 Perto de mim\" para achar banheiro, comida ou caixa eletrônico.": ["In Search, tap stores to mark several. Then use “🧭 Tour” to visit them all in the best order, and “📍 Near me” to find restrooms, food or ATMs.", "En Buscar, toca las tiendas para marcar varias. Luego usa “🧭 Recorrido” para visitarlas en el mejor orden y “📍 Cerca de mí” para encontrar baños, comida o cajeros.", "Dans Chercher, touchez les magasins pour en marquer plusieurs. Puis « 🧭 Parcours » les visite dans le meilleur ordre, et « 📍 Près de moi » trouve toilettes, restauration ou distributeurs.", "Tippe in der Suche Geschäfte an, um mehrere zu markieren. „🧭 Tour“ besucht alle in der besten Reihenfolge, „📍 In meiner Nähe“ findet Toiletten, Essen oder Geldautomaten."],
+  "Com o grupo e nas compras": ["With your group and shopping", "Con tu grupo y en las compras", "En groupe et pour vos achats", "Mit der Gruppe und beim Einkaufen"],
+  "Crie um grupo para conversar e marcar o encontro, salve onde parou o carro e use \"🛍️ Compras\" para converter preços (com imposto), ver tamanhos e fazer sua lista.": ["Create a group to chat and set a meet-up, save where you parked, and use “🛍️ Shopping” to convert prices (with tax), check sizes and keep your list.", "Crea un grupo para conversar y quedar, guarda dónde dejaste el auto y usa “🛍️ Compras” para convertir precios (con impuesto), ver tallas y hacer tu lista.", "Créez un groupe pour discuter et fixer un rendez-vous, notez où vous êtes garé et utilisez « 🛍️ Achats » pour convertir les prix (taxe incluse), voir les tailles et faire votre liste.", "Erstelle eine Gruppe zum Chatten und Treffen, speichere deinen Parkplatz und nutze „🛍️ Einkaufen“ für Preise (mit Steuer), Größen und deine Liste."],
+  "Pular": ["Skip", "Saltar", "Passer", "Überspringen"],
+  "Próximo": ["Next", "Siguiente", "Suivant", "Weiter"],
+  "Começar": ["Start", "Empezar", "Commencer", "Los geht’s"],
+  "👋 Como usar o app": ["👋 How to use the app", "👋 Cómo usar la app", "👋 Comment utiliser l’app", "👋 So nutzt du die App"],
   // ---------- correções ----------
   '📍 local aproximado': ['📍 approximate location', '📍 ubicación aproximada', '📍 emplacement approximatif', '📍 ungefähre Lage'],
   '📍 Loja no lugar errado?': ['📍 Store in the wrong place?', '📍 ¿Tienda en el lugar equivocado?', '📍 Magasin mal placé ?', '📍 Geschäft am falschen Ort?'],
@@ -379,6 +390,16 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  "Bem-vindo ao Sawgrass Mills": ["欢迎来到 Sawgrass Mills", "Sawgrass Millsへようこそ"],
+  "Busque qualquer loja em \"Para onde você vai?\" e toque em \"Ir ➜\": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.": ["在“您要去哪里？”中搜索店铺并点击“前往 ➜”：应用会逐步显示步行路线。开启 GPS（◎）即可从当前位置出发。", "「どこへ行きますか？」で店を検索して「行く ➜」をタップすると、徒歩ルートを順番に案内します。GPS（◎）をオンにすると現在地から出発できます。"],
+  "Marque suas lojas": ["标记您的店铺", "お店をマーク"],
+  "Na busca, toque nas lojas para marcar várias. Depois use \"🧭 Roteiro\" para visitar todas na melhor ordem, e \"📍 Perto de mim\" para achar banheiro, comida ou caixa eletrônico.": ["在搜索中点击店铺可多选。然后用“🧭 路线”按最佳顺序逛完，用“📍 附近”查找洗手间、餐饮或取款机。", "検索で店をタップして複数マーク。「🧭 ルート」で最適な順に回り、「📍 近くを探す」でトイレ・食事・ATMを探せます。"],
+  "Com o grupo e nas compras": ["结伴同行与购物", "グループと買い物"],
+  "Crie um grupo para conversar e marcar o encontro, salve onde parou o carro e use \"🛍️ Compras\" para converter preços (com imposto), ver tamanhos e fazer sua lista.": ["创建群组聊天并约定集合，记录停车位置，用“🛍️ 购物”换算价格（含税）、查尺码、记清单。", "グループでチャットや待ち合わせ、駐車場所の保存、「🛍️ ショッピング」で価格換算（税込）・サイズ確認・買い物リスト。"],
+  "Pular": ["跳过", "スキップ"],
+  "Próximo": ["下一步", "次へ"],
+  "Começar": ["开始", "はじめる"],
+  "👋 Como usar o app": ["👋 使用说明", "👋 使い方"],
   '📍 local aproximado': ['📍 大致位置', '📍 おおよその位置'],
   '📍 Loja no lugar errado?': ['📍 店铺位置不对？', '📍 店の位置が違う？'],
   'Toque no mapa onde a {x} fica de verdade.': ['请在地图上点击 {x} 的实际位置。', '{x}の本当の場所を地図でタップしてください。'],
