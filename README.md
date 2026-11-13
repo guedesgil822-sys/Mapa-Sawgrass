@@ -130,6 +130,18 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Mapa escuro, animações, recentes e letra maior
+
+- **Mapa escuro:** a planta escurece junto e as lojas mantêm as cores, só que mais escuras.
+- **Aparência:** no botão de idioma (bandeira), escolha 🔄 Automático (segue o celular), ☀️ Claro ou 🌙 Escuro.
+- **Animações:**
+  - a rota se desenha da origem até o destino;
+  - o painel e a faixa entram deslizando;
+  - os botões afundam um pouco ao tocar.
+  - Tudo isso desliga quando o celular pede "reduzir movimento".
+- **Recentes:** os 5 últimos destinos aparecem no topo da busca.
+- **Letra maior:** opção no botão de idioma (bandeira). Aumenta painéis, botões e textos em 15%.
+
 ## Visual (vidro + navegação)
 
 - **No mapa:** busca, filtros, botões e painel em vidro translúcido, e a barra de baixo é uma doca flutuante.

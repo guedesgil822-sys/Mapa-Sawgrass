@@ -13,6 +13,7 @@ const el = (tag, cls, text) => {
 const DRAFT_KEY = 'sawgrass.draft';
 const MARK_KEY = 'sawgrass.marcadas';
 const NAME_KEY = 'sawgrass.nome';
+const RECENT_KEY = 'sawgrass.recentes';
 const FIX_KEY = 'sawgrass.correcoes';
 const GROUP_KEY = 'sawgrass.grupo';
 // banco do grupo (Firebase Realtime Database, via REST + eventos; sem biblioteca)
@@ -28,11 +29,19 @@ const ICON = {
 const state = { tour: null, meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false, edit: false };
 let mall, view, layers, picking = 'from', group = '', onlyMarked = false;
 let cullRaf = 0;
+let drawnKey = '', drawnAt = 0;
 // shopping de piso único: esconde seletor e referências ao piso
 const multi = () => mall.floors.length > 1;
 const markers = [];
 // lojas marcadas na busca (destaque no mapa); guardadas no aparelho
 const marked = new Set();
+// destinos recentes (os 5 últimos), no topo da busca
+let recents = [];
+try { recents = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch { /* sem armazenamento */ }
+function addRecent(p) {
+  recents = [p.id, ...recents.filter((id) => id !== p.id)].slice(0, 5);
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(recents)); } catch { /* sem armazenamento */ }
+}
 const saveMarked = () => { try { localStorage.setItem(MARK_KEY, JSON.stringify([...marked])); } catch { /* sem armazenamento */ } };
 // GPS: posição atual no mapa { x, y, acc (m), near (POI mais próxima), inside }
 const gps = { watch: null, me: null, centered: false, heading: null };
@@ -146,6 +155,17 @@ function bindUI() {
   const goPlace = (cat) => { const p = mall.pois.find((q) => q.cat === cat); if (!p) return; $('#sos').close(); state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); };
   $('#sos-sec').onclick = () => goPlace('Administração');
   $('#sos-info').onclick = () => goPlace('Atendimento e cartões-presente');
+  // aparência: automático (segue o celular), claro ou escuro
+  const theme = (t) => {
+    if (t === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+    for (const b of $('#theme-seg').children) { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-checked', String(b.dataset.t === t)); }
+  };
+  theme(['light', 'dark'].includes(localStorage.getItem('sawgrass.tema')) ? localStorage.getItem('sawgrass.tema') : 'auto');
+  for (const b of $('#theme-seg').children) b.onclick = () => { theme(b.dataset.t); try { localStorage.setItem('sawgrass.tema', b.dataset.t); } catch { /* sem armazenamento */ } };
+  // letra maior: aumenta botões, painéis e textos (o mapa continua com o próprio zoom)
+  const big = (on) => { document.documentElement.classList.toggle('big', on); $('#big-text').checked = on; };
+  big(localStorage.getItem('sawgrass.letra') === '1');
+  $('#big-text').onchange = (e) => { big(e.target.checked); try { localStorage.setItem('sawgrass.letra', e.target.checked ? '1' : '0'); } catch { /* sem armazenamento */ } };
   $('#intro-again').onclick = () => { $('#lang').close(); openIntro(); };
   $('#move-cancel').onclick = () => { moving = null; $('#move-bar').hidden = true; };
   $('#fix-chip').onclick = openFixes;
@@ -258,8 +278,10 @@ function renderResults() {
   ul.appendChild(el('li', 'count', tx(onlyMarked ? (one ? '{n} selecionada · toque para desmarcar' : '{n} selecionadas · toque para desmarcar')
     : (one ? '{n} lugar' : '{n} lugares'), { n: list.length })));
   let letter = null;
-  for (const p of list) {
-    if (!q) {
+  const rec = !q && !onlyMarked && !group ? recents.map((id) => mall.poiById.get(id)).filter(Boolean) : [];
+  if (rec.length) ul.appendChild(el('li', 'sec recent', tx('🕘 Recentes')));
+  for (const [p, isRec] of [...rec.map((p) => [p, true]), ...list.map((p) => [p, false])]) {
+    if (!q && !isRec) {
       const k = sortKey(p)[0]?.toUpperCase() || '#';
       const l = /[A-Z]/.test(k) ? k : '#';
       if (l !== letter) { letter = l; ul.appendChild(el('li', 'sec', l)); }
@@ -756,8 +778,8 @@ function setFloor(fid, refit) {
     drawFloor(f);
   }
   for (const b of $('#floors').children) b.setAttribute('aria-pressed', b.dataset.f === fid);
+  if (refit) fitCurrent();   // enquadra antes: a animação da rota usa o zoom final
   drawRoute();
-  if (refit) fitCurrent();
 }
 
 function drawFloor(f) {
@@ -844,6 +866,7 @@ function update(refit) {
     state.route = mall.route(state.from.id, state.to.id, { accessible: state.accessible });
   }
   if (refit) { state.step = 0; state.edit = false; }
+  if (refit && state.to && mall.poiById.get(state.to.id) === state.to) addRecent(state.to);
   // com rota: faixa de instrução no topo (origem/destino ficam atrás do lápis)
   const nav = !!state.route && !state.edit;
   $('#nav-banner').hidden = !nav;
@@ -1045,13 +1068,28 @@ function drawRoute() {
       markers.push({ x: p.x, y: p.y, cls: 'pick' });
     }
   }
+  // rota nova: a linha se desenha da origem até o destino
+  const key = r ? `${state.from.id}>${state.to.id}>${state.accessible}>${state.floor}` : '';
+  if (key !== drawnKey) { drawnKey = key; drawnAt = performance.now(); }
+  // redesenhos logo depois (painel, GPS…) continuam a mesma animação de onde ela estava
+  const since = performance.now() - drawnAt;
+  const fresh = key && since < 1200 && !matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (r) {
     r.legs.forEach((leg, i) => {
       if (leg.floor !== state.floor || leg.pts.length < 1) return;
       const d = leg.pts.map((p) => `${p.x},${p.y}`).join(' ');
       if (leg.pts.length > 1) {
-        svgEl('polyline', { points: d, class: 'route-case' }, layers.route);
-        svgEl('polyline', { points: d, class: 'route-line' }, layers.route);
+        const lines = [svgEl('polyline', { points: d, class: 'route-case' }, layers.route), svgEl('polyline', { points: d, class: 'route-line' }, layers.route)];
+        if (fresh) {
+          let len = 0;
+          for (let j = 1; j < leg.pts.length; j++) len += Math.hypot(leg.pts[j].x - leg.pts[j - 1].x, leg.pts[j].y - leg.pts[j - 1].y);
+          for (const ln of lines) {   // traço na escala da tela (a linha não muda de espessura com o zoom)
+            ln.style.setProperty('--dash', `${Math.ceil(len * view.k * 1.05) + 20}px`);
+            ln.style.animationDelay = `${0.15 - since / 1000}s`;
+            ln.classList.add('draw');
+            ln.addEventListener('animationend', () => ln.classList.remove('draw'), { once: true });
+          }
+        }
       }
       const nextLeg = r.legs[i + 1], prevLeg = r.legs[i - 1];
       if (nextLeg) {
