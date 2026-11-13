@@ -550,12 +550,10 @@ button { cursor: pointer; }
 
 /* ---------- 19 · mapa escuro (acompanha o modo escuro do celular) ---------- */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) #map { background: #121417; }
-  :root:not([data-theme="light"]) .mv-content img { filter: invert(.9) hue-rotate(180deg) saturate(.85) brightness(.95); }
+  :root:not([data-theme="light"]) #map { background: #14171c; }
   :root:not([data-theme="light"]) .lbl:not(.dark) { fill: #eef2f8; stroke: rgba(10, 14, 22, .75); }
 }
-:root[data-theme="dark"] #map { background: #121417; }
-:root[data-theme="dark"] .mv-content img { filter: invert(.9) hue-rotate(180deg) saturate(.85) brightness(.95); }
+:root[data-theme="dark"] #map { background: #14171c; }
 :root[data-theme="dark"] .lbl:not(.dark) { fill: #eef2f8; stroke: rgba(10, 14, 22, .75); }
 
 /* ---------- 20 · animações suaves ---------- */

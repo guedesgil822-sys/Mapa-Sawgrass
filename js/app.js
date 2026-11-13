@@ -159,6 +159,7 @@ function bindUI() {
   const theme = (t) => {
     if (t === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
     for (const b of $('#theme-seg').children) { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-checked', String(b.dataset.t === t)); }
+    refreshFloorImage();
   };
   theme(['light', 'dark'].includes(localStorage.getItem('sawgrass.tema')) ? localStorage.getItem('sawgrass.tema') : 'auto');
   for (const b of $('#theme-seg').children) b.onclick = () => { theme(b.dataset.t); try { localStorage.setItem('sawgrass.tema', b.dataset.t); } catch { /* sem armazenamento */ } };
@@ -768,13 +769,23 @@ function showPoi(p) {
 }
 
 /* ---------- piso ---------- */
+// planta escura própria (tools/make_dark.py): linhas de vagas, ruas e lojas mais visíveis que a inversão
+const DARK_MAPS = new Set(['maps/l1.svg']);
+const isDark = () => { const t = document.documentElement.dataset.theme; return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; };
+const floorSrc = (f) => (isDark() && DARK_MAPS.has(f.image) ? f.image.replace(/\.svg$/, '-dark.svg') : f.image);
+function refreshFloorImage() {
+  const f = state.floor && mall?.floorById.get(state.floor);
+  if (f) view.setFloor(floorSrc(f), f.width, f.height);
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', refreshFloorImage);
+
 function setFloor(fid, refit) {
   const f = mall.floorById.get(fid);
   if (!f) return;
   const changed = state.floor !== fid;
   state.floor = fid;
   if (changed) {
-    view.setFloor(f.image, f.width, f.height);
+    view.setFloor(floorSrc(f), f.width, f.height);
     drawFloor(f);
   }
   for (const b of $('#floors').children) b.setAttribute('aria-pressed', b.dataset.f === fid);

@@ -132,7 +132,7 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
 
 ## Mapa escuro, animações, recentes e letra maior
 
-- **Mapa escuro:** a planta escurece junto e as lojas mantêm as cores, só que mais escuras.
+- **Mapa escuro:** usa uma planta escura própria (`maps/l1-dark.svg`, gerada por `tools/make_dark.py`): contornos das lojas, vagas, ruas e nomes ficam claros sobre o fundo escuro. Rode o script de novo se `l1.svg` mudar.
 - **Aparência:** no botão de idioma (bandeira), escolha 🔄 Automático (segue o celular), ☀️ Claro ou 🌙 Escuro.
 - **Animações:**
   - a rota se desenha da origem até o destino;
