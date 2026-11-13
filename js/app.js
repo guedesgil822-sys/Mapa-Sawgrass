@@ -189,10 +189,19 @@ function openPicker(which) {
   picking = which;
   $('#q').placeholder = { from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
     find: 'Buscar loja, serviço ou categoria', meet: 'Onde vão se encontrar?' }[which];
-  $('#mark-hint').hidden = which !== 'find';
+  // dica do que o toque faz em cada modo
+  $('#mark-hint').textContent = {
+    from: 'Toque na loja mais perto de você.',
+    to: 'Toque numa loja para traçar a rota. Para marcar várias, use a aba Buscar.',
+    find: 'Toque nas lojas para marcar ou desmarcar (✓). Elas ficam em destaque no mapa.',
+    meet: 'Toque no lugar do encontro.',
+  }[which];
+  $('#mark-hint').hidden = false;
   renderResults();
   $('#picker').showModal();
-  $('#q').focus();
+  // no celular o teclado cobre metade da lista: só abre se a pessoa tocar na busca
+  if (!matchMedia('(pointer: coarse)').matches) $('#q').focus();
+  else $('#results').scrollTop = 0;
 }
 
 function renderResults() {
