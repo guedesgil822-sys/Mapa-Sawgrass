@@ -299,7 +299,7 @@ function showMarked() {
   if (!ps.length) return;
   if (!ps.some((p) => p.f === state.floor)) setFloor(ps[0].f, false);
   state.picked = null; update(false);
-  fitPoints(ps.filter((p) => p.f === state.floor), 60 * mall.ppm);
+  fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
 }
 
 /* ---------- logos das marcas ---------- */
@@ -330,7 +330,7 @@ function showPoi(p) {
   update(false);
   let pts = [{ x: p.x, y: p.y }];
   if (p.poly?.length >= 6) pts = p.poly.reduce((a, v, i) => (i % 2 ? a[a.length - 1].y = v : a.push({ x: v, y: 0 }), a), []);
-  fitPoints(pts, 90 * mall.ppm);
+  fitPoints(pts, 220 * mall.ppm);
 }
 
 /* ---------- piso ---------- */
@@ -554,7 +554,7 @@ function goStep(i) {
   const st = r.steps[i];
   // ao chegar num passo de troca de piso, o mapa mostra onde ela fica
   if (st.floor !== state.floor) setFloor(st.floor, false); else drawRoute();
-  fitPoints(st.pts, 18 * mall.ppm);
+  fitPoints(st.pts, 70 * mall.ppm);
 }
 
 /* ---------- rota no mapa ---------- */
@@ -727,7 +727,7 @@ function saveMeet() {
   persistMeet();
   $('#meet').close();
   state.picked = null; update(false);
-  fitPoints([state.meet], 80 * mall.ppm);
+  fitPoints([state.meet], 200 * mall.ppm);
 }
 
 const LOTS = () => mall.pois.filter((p) => p.group === 'Estacionamento');
@@ -770,7 +770,7 @@ function saveCar() {
   state.car = { lot, note: $('#car-note').value.trim(), t: Date.now(), ...(carPos || {}) };
   persistCar();
   $('#car').close();
-  fitPoints([CAR], 80 * mall.ppm);
+  fitPoints([CAR], 200 * mall.ppm);
 }
 
 function goToCar() {
@@ -1243,7 +1243,8 @@ function fitCurrent() {
   if (!pts.length) {
     for (const p of [state.from, state.to]) if (p && p.f === f.id) pts.push(p);
   }
-  if (pts.length) return fitPoints(pts, 40 * mall.ppm);
+  // só origem/destino (sem rota): mostra ~250 m em volta para dar contexto
+  if (pts.length) return fitPoints(pts, (state.route ? 60 : 250) * mall.ppm);
   // só as lojas (sem estacionamentos): o prédio enche a largura da tela
   const all = mall.pois.filter((p) => p.f === f.id && p.poly && p.group !== 'Estacionamento')
     .flatMap((p) => p.poly.reduce((a, v, i) => (i % 2 ? (a[a.length - 1].y = v) : a.push({ x: v, y: 0 }), a), []));
