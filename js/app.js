@@ -155,6 +155,13 @@ function bindUI() {
   const goPlace = (cat) => { const p = mall.pois.find((q) => q.cat === cat); if (!p) return; $('#sos').close(); state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); };
   $('#sos-sec').onclick = () => goPlace('Administração');
   $('#sos-info').onclick = () => goPlace('Atendimento e cartões-presente');
+  // aparência: automático (segue o celular), claro ou escuro
+  const theme = (t) => {
+    if (t === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+    for (const b of $('#theme-seg').children) { b.classList.toggle('on', b.dataset.t === t); b.setAttribute('aria-checked', String(b.dataset.t === t)); }
+  };
+  theme(['light', 'dark'].includes(localStorage.getItem('sawgrass.tema')) ? localStorage.getItem('sawgrass.tema') : 'auto');
+  for (const b of $('#theme-seg').children) b.onclick = () => { theme(b.dataset.t); try { localStorage.setItem('sawgrass.tema', b.dataset.t); } catch { /* sem armazenamento */ } };
   // letra maior: aumenta botões, painéis e textos (o mapa continua com o próprio zoom)
   const big = (on) => { document.documentElement.classList.toggle('big', on); $('#big-text').checked = on; };
   big(localStorage.getItem('sawgrass.letra') === '1');

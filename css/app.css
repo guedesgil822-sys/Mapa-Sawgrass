@@ -577,7 +577,7 @@ button { cursor: pointer; }
 /* ---------- 23 · letra maior ---------- */
 .big .top, .big #sheet, .big .tabbar, .big .zoom, .big #floors, .big dialog { zoom: 1.15; }
 .big .top { max-width: 460px; }
-.big-opt { align-self: flex-start; margin-top: 6px; cursor: pointer; }
+.big-opt { align-self: flex-start; margin-top: 14px; cursor: pointer; }
 /* letra maior: os 4 botões da rota em duas linhas (‹ e Próximo embaixo) */
 .big .nav-acts { grid-template-columns: 1fr 1fr 1fr; }
 .big .nav-acts .voice { order: -2; grid-column: span 1; }
@@ -585,3 +585,8 @@ button { cursor: pointer; }
 .big .nav-acts:has(.voice[hidden]) .list { grid-column: span 3; }
 .big .nav-acts .btn.primary { grid-column: span 2; }
 @media (min-width: 760px) { .big .nav-acts .btn.primary { grid-column: span 2; } .big .nav-acts { grid-template-columns: 1fr 1fr 1fr; } }
+
+/* ---------- aparência: automático / claro / escuro ---------- */
+.opt-h { margin: 16px 0 6px; font-size: 14px; color: var(--ink-2); }
+.theme-seg { grid-template-columns: repeat(3, 1fr); }
+.theme-seg button { font-size: 14px; padding: 11px 2px; }

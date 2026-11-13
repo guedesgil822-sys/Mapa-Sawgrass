@@ -132,7 +132,8 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
 
 ## Mapa escuro, animações, recentes e letra maior
 
-- **Mapa escuro:** no modo escuro do celular, a planta escurece junto e as lojas mantêm as cores, só que mais escuras.
+- **Mapa escuro:** a planta escurece junto e as lojas mantêm as cores, só que mais escuras.
+- **Aparência:** no botão de idioma (bandeira), escolha 🔄 Automático (segue o celular), ☀️ Claro ou 🌙 Escuro.
 - **Animações:**
   - a rota se desenha da origem até o destino;
   - o painel e a faixa entram deslizando;
