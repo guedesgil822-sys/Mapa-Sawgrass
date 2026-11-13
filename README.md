@@ -130,6 +130,17 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Enviar, cota, frases, fechamento e banheiro
+
+- **📤 Enviar:** no painel da loja (botão Enviar) e no da rota (📤). O link abre o mapa já na loja ou com a rota traçada (`#loja=ID`, `#de=ID&para=ID`).
+- **🛃 Cota da Receita:** na Lista de compras, soma o que foi marcado como comprado (com o imposto de 7%) e compara com US$ 1.000 por viajante (chegada de avião ou navio).
+  - Escolha quantos viajantes são.
+  - Avisa quando chega a 80% e quando passa do limite, e estima o imposto de 50% sobre o excedente.
+  - Aparece em português ou com a moeda em reais.
+- **🗣️ Frases:** aba em Compras com frases para usar nas lojas (provador, tamanho, desconto, troca, recibo). Ao tocar, o celular fala a frase em inglês, e a tradução aparece no idioma do app.
+- **⏰ Fechamento:** 30 min antes de o shopping fechar, aparece um aviso que fica na tela e vibra, uma vez por dia. Lembra onde está o carro, se ele estiver salvo.
+- **🚻 Banheiro mais perto:** botão ao lado do SOS que já traça a rota. Usa o GPS ou a origem escolhida; sem nenhum dos dois, pergunta onde você está.
+
 ## Sem internet
 
 - Quando a conexão cai, aparece um aviso amarelo no topo: o mapa, a busca e as rotas continuam funcionando, porque tudo fica guardado no celular.

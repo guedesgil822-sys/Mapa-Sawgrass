@@ -94,8 +94,11 @@ async function init() {
   readShared(h);
   resumeGroup(h.get('g'));
 
-  setFloor(state.from?.f || mall.floors[0].id, false);
+  // link de loja enviado por alguém: abre o mapa já mostrando a loja
+  const shared = !state.to && mall.poiById.get(h.get('loja'));
+  setFloor(shared?.f || state.from?.f || mall.floors[0].id, false);
   update(true);
+  if (shared) { state.picked = shared; update(false); fitPoints([shared], 120 * mall.ppm); }
   renderMarked();
   renderStatus();
   setInterval(renderStatus, 30000);
@@ -153,6 +156,7 @@ function bindUI() {
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
   $('#sos-btn').onclick = () => $('#sos').showModal();
+  $('#wc-btn').onclick = goNearestWc;
   setupInstall();
   // sem internet: o app segue funcionando (tudo fica guardado no celular); avisa o que depende da conexão
   const net = () => { $('#net-bar').hidden = navigator.onLine; };
@@ -335,6 +339,7 @@ function renderResults() {
       if (picking === 'meet') { meetDraft = p; return openMeet(p); }
       state[picking] = p; state.picked = null;
       if (tourPending && picking === 'from') { tourPending = false; return startTour(); }
+      if (wcPending && picking === 'from') { wcPending = false; state.from = p; return goNearestWc(); }
       if (nearPending && picking === 'from') { nearPending = false; state.from = p; update(false); return openNear(); }
       state.tour = null; // escolha manual encerra o roteiro
       if (picking === 'to') gpsAsOrigin();
@@ -527,6 +532,22 @@ function renderHours() {
   else txt = tx('🕘 Aberto até {h}', { h: hh(c) });
   b.textContent = txt;
   b.className = 'chip hours ' + cls + (min < o * 60 || min >= c * 60 ? ' closed' : '');
+  // 30 min antes de fechar: aviso que fica na tela e vibra (uma vez por dia)
+  const left = c * 60 - min;
+  if (min >= o * 60 && left > 0 && left <= 30) {
+    const key = 'sawgrass.fecha.' + new Date().toDateString();
+    if (!load(key)) {
+      store(key, 1);
+      const car = state.car && mall.poiById.get(state.car.lot);
+      const msg = tx('⏰ O shopping fecha em {n} min (às {h}).', { n: left, h: hh(c) })
+        + (car ? ' ' + tx('Seu carro: {x}.', { x: td(car.name.replace(/^Estacionamento · /, '')) }) : '');
+      toast(msg);
+      if ('Notification' in window && Notification.permission === 'granted') {
+        navigator.serviceWorker?.ready.then((r) => r.showNotification('Sawgrass Mills', { body: msg, tag: 'fecha' }))
+          .catch(() => { try { new Notification('Sawgrass Mills', { body: msg }); } catch { /* sem suporte */ } });
+      }
+    }
+  }
 }
 function openHours() {
   const t = $('#hours-table'), { day } = floridaNow();
@@ -568,7 +589,21 @@ function meetAlerts() {
 }
 
 /* ---------- mais perto de mim ---------- */
-let nearPending = false, nearCat = null;
+let nearPending = false, nearCat = null, wcPending = false;
+// 🚻 um toque: rota até o banheiro mais perto (pergunta onde você está se não houver GPS nem origem)
+function goNearestWc() {
+  const o = nearOrigin();
+  if (!o) { wcPending = true; return openPicker('from'); }
+  let best = null, bm = Infinity;
+  for (const p of mall.pois) {
+    if (p.f !== o.f || p === o || p.cat !== 'Banheiro') continue;
+    const m = walk(o, p);
+    if (m < bm) { bm = m; best = p; }
+  }
+  if (!best) return toast(tx('Nada encontrado.'));
+  state.tour = null; state.from = o; state.to = best; state.picked = null;
+  update(true);
+}
 // categorias: o que procurar e como reconhecer nos dados
 const NEAR = [
   { id: 'wc', ico: '🚻', label: 'Banheiro', ok: (p) => p.cat === 'Banheiro' },
@@ -789,6 +824,32 @@ function refreshFloorImage() {
   if (f) view.setFloor(floorSrc(f), f.width, f.height);
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', refreshFloorImage);
+
+/* ---------- enviar loja ou rota (WhatsApp etc.) ---------- */
+const SITE = 'https://guedesgil822-sys.github.io/Mapa-Sawgrass/';
+const siteBase = () => (/^https?:$/.test(location.protocol) && location.hostname.endsWith('github.io') ? location.origin + location.pathname : SITE);
+async function shareText(title, text) {
+  if (navigator.share) {
+    try { await navigator.share({ title, text }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(text); toast(tx('✅ Link copiado. Cole no WhatsApp.')); }
+  catch { prompt(tx('Copie o link:'), text); }
+}
+function sendPlace(p) {
+  const url = `${siteBase()}#loja=${encodeURIComponent(p.id)}`;
+  shareText(td(p.name), tx('📍 {x} no Sawgrass Mills. Veja no mapa: {u}', { x: td(p.name), u: url }));
+}
+function sendRoute() {
+  const r = state.route;
+  if (!r || !state.to) return;
+  const h = new URLSearchParams();
+  if (state.from && mall.poiById.get(state.from.id) === state.from) h.set('de', state.from.id);
+  if (mall.poiById.get(state.to.id) === state.to) h.set('para', state.to.id);
+  if (state.accessible) h.set('acessivel', '1');
+  const url = `${siteBase()}#${h}`;
+  const from = state.from === ME ? tx('onde estou') : td(state.from.name);
+  shareText(tx('Rota no Sawgrass Mills'), tx('🧭 Rota de {a} até {b} ({t} · {d}): {u}', { a: from, b: td(state.to.name), t: fmtTime(r.seconds), d: fmtDist(r.meters), u: url }));
+}
 
 /* ---------- busca por voz ---------- */
 function setupVoiceSearch() {
@@ -1018,8 +1079,10 @@ function renderSheet() {
     m.onclick = () => { toggleMarked(p); renderSheet(); };
     const e = el('button', 'btn small', tx(state.meet === p ? '🤝 Editar encontro' : '🤝 Encontro aqui'));
     e.onclick = () => openMeet(p);
+    const sh = el('button', 'btn small', tx('📤 Enviar'));
+    sh.onclick = () => sendPlace(p);
     const row = el('div', 'actions');
-    row.append(m, e);
+    row.append(m, e, sh);
     const wrong = el('button', 'btn link small', tx('📍 Loja no lugar errado?'));
     wrong.onclick = () => startMove(p);
     s.append(head, act, row, wrong);
@@ -1059,7 +1122,11 @@ function renderSheet() {
   g.append(el('h2', 'eta', fmtTime(r.seconds)), el('p', '', sub.join(' · ')));
   const end = el('button', 'btn end', tx('Encerrar'));
   end.onclick = () => $('#trip-clear').click();
-  head.append(g, end);
+  const send = el('button', 'icon-btn send', '📤');
+  send.setAttribute('aria-label', tx('Enviar rota'));
+  send.title = tx('Enviar rota');
+  send.onclick = sendRoute;
+  head.append(g, send, end);
 
   const acts = el('div', 'nav-acts');
   const prev = el('button', 'btn', '‹');

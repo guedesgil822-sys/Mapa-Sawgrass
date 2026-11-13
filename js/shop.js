@@ -190,7 +190,11 @@ function renderList() {
     for (const it of its) {
       const li = el('li', 'list-item' + (it.done ? ' done' : ''));
       const cb = el('input'); cb.type = 'checkbox'; cb.checked = it.done; cb.setAttribute('aria-label', it.t);
-      cb.onchange = () => { it.done = cb.checked; saveList(); renderList(); };
+      cb.onchange = () => {
+        const before = cotaUsed();
+        it.done = cb.checked; saveList(); renderList();
+        cotaWarn(before, cotaUsed());
+      };
       const pr = el('input', 'list-usd'); pr.value = it.usd ?? ''; pr.placeholder = 'US$'; pr.inputMode = 'decimal';
       pr.onchange = () => { it.usd = num(pr.value); saveList(); renderList(); };
       const conv2 = el('small', '', it.usd ? '≈ ' + money(toLocal(it.usd), cur) : '');
@@ -213,11 +217,118 @@ function renderList() {
     el('small', '', conv.tax ? tx('Valores com o imposto de 7%.') : ''),
   );
   pane.appendChild(tot);
+  if (showCota()) pane.appendChild(cotaBox());
   if (items.some((i) => i.done)) {
     const clr = el('button', 'btn link', tx('Limpar comprados')); clr.type = 'button';
     clr.onclick = () => { items = items.filter((i) => !i.done); saveList(); renderList(); };
     pane.appendChild(clr);
   }
+}
+
+/* ---------- frases úteis em inglês (o celular fala para o vendedor) ---------- */
+// [inglês, pt, es, fr, de, zh, ja]
+const PHRASES = [
+  ['Provador e tamanhos', [
+    ['Where is the fitting room?', 'Onde fica o provador?', '¿Dónde está el probador?', 'Où est la cabine d’essayage ?', 'Wo ist die Umkleide?', '试衣间在哪里？', '試着室はどこですか？'],
+    ['Can I try this on?', 'Posso experimentar?', '¿Me lo puedo probar?', 'Je peux l’essayer ?', 'Kann ich das anprobieren?', '我可以试穿吗？', '試着してもいいですか？'],
+    ['Do you have this in a larger size?', 'Tem um tamanho maior?', '¿Lo tiene en una talla más grande?', 'Vous l’avez en plus grand ?', 'Haben Sie das eine Nummer größer?', '有大一号的吗？', 'もっと大きいサイズはありますか？'],
+    ['Do you have this in a smaller size?', 'Tem um tamanho menor?', '¿Lo tiene en una talla más pequeña?', 'Vous l’avez en plus petit ?', 'Haben Sie das eine Nummer kleiner?', '有小一号的吗？', 'もっと小さいサイズはありますか？'],
+    ['Do you have it in another color?', 'Tem em outra cor?', '¿Lo tiene en otro color?', 'Vous l’avez dans une autre couleur ?', 'Gibt es das in einer anderen Farbe?', '有别的颜色吗？', '他の色はありますか？'],
+  ]],
+  ['Preço e pagamento', [
+    ['How much is this?', 'Quanto custa?', '¿Cuánto cuesta?', 'Combien ça coûte ?', 'Wie viel kostet das?', '这个多少钱？', 'これはいくらですか？'],
+    ['Are there any discounts today?', 'Tem algum desconto hoje?', '¿Hay algún descuento hoy?', 'Il y a des réductions aujourd’hui ?', 'Gibt es heute Rabatte?', '今天有折扣吗？', '今日は割引がありますか？'],
+    ['Is this price already discounted?', 'Esse preço já está com desconto?', '¿Este precio ya tiene descuento?', 'Ce prix est déjà réduit ?', 'Ist der Preis schon reduziert?', '这个价格已经打折了吗？', 'この値段はもう割引済みですか？'],
+    ['Do you have a tourist discount?', 'Tem desconto para turista?', '¿Tienen descuento para turistas?', 'Vous avez une réduction pour touristes ?', 'Gibt es einen Touristenrabatt?', '有游客折扣吗？', '観光客向けの割引はありますか？'],
+    ['Can I pay by card?', 'Posso pagar com cartão?', '¿Puedo pagar con tarjeta?', 'Je peux payer par carte ?', 'Kann ich mit Karte zahlen?', '可以刷卡吗？', 'カードで払えますか？'],
+    ['I’m just looking, thank you.', 'Só estou olhando, obrigado.', 'Solo estoy mirando, gracias.', 'Je regarde seulement, merci.', 'Ich schaue nur, danke.', '我只是看看，谢谢。', '見ているだけです、ありがとう。'],
+  ]],
+  ['Trocas e nota', [
+    ['What is your return policy?', 'Como funciona a troca?', '¿Cuál es la política de devoluciones?', 'Quelle est votre politique de retour ?', 'Wie ist Ihre Rückgaberegelung?', '退换货政策是什么？', '返品のルールは？'],
+    ['Can I exchange it at another store?', 'Posso trocar em outra loja da marca?', '¿Lo puedo cambiar en otra tienda?', 'Je peux l’échanger dans un autre magasin ?', 'Kann ich es in einer anderen Filiale umtauschen?', '可以在别的分店换吗？', '他の店舗で交換できますか？'],
+    ['Can I have the receipt, please?', 'Pode me dar o recibo, por favor?', '¿Me da el recibo, por favor?', 'Je peux avoir le reçu, s’il vous plaît ?', 'Kann ich bitte den Beleg haben?', '请给我收据。', 'レシートをください。'],
+    ['Could I have a bag, please?', 'Pode me dar uma sacola, por favor?', '¿Me da una bolsa, por favor?', 'Je peux avoir un sac, s’il vous plaît ?', 'Kann ich bitte eine Tüte haben?', '请给我一个袋子。', '袋をもらえますか？'],
+  ]],
+  ['Ajuda', [
+    ['Where is the restroom?', 'Onde fica o banheiro?', '¿Dónde está el baño?', 'Où sont les toilettes ?', 'Wo ist die Toilette?', '洗手间在哪里？', 'トイレはどこですか？'],
+    ['Could you say that again more slowly?', 'Pode repetir mais devagar?', '¿Puede repetirlo más despacio?', 'Vous pouvez répéter plus lentement ?', 'Können Sie das langsamer wiederholen?', '请再慢一点说一遍。', 'もう一度ゆっくり言ってもらえますか？'],
+    ['I don’t speak English very well.', 'Não falo inglês muito bem.', 'No hablo inglés muy bien.', 'Je ne parle pas très bien anglais.', 'Ich spreche nicht so gut Englisch.', '我英语说得不太好。', '英語があまり話せません。'],
+  ]],
+];
+const PH_IDX = { pt: 1, es: 2, fr: 3, de: 4, zh: 5, ja: 6 };
+function speakEn(text, btn) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.9;
+  const en = speechSynthesis.getVoices().find((v) => v.lang?.startsWith('en-US')) || speechSynthesis.getVoices().find((v) => v.lang?.startsWith('en'));
+  if (en) u.voice = en;
+  document.querySelectorAll('.phrase.on').forEach((x) => x.classList.remove('on'));
+  btn.classList.add('on');
+  u.onend = u.onerror = () => btn.classList.remove('on');
+  speechSynthesis.speak(u);
+}
+function renderPhrases() {
+  const pane = $('#shop-phrases');
+  if (!pane || pane.dataset.lang === getLang()) return;
+  pane.dataset.lang = getLang(); pane.textContent = '';
+  pane.append(el('p', 'cv-note', tx('Toque na frase: o celular fala em inglês. Ou mostre a tela para o vendedor.')));
+  const k = PH_IDX[getLang()];
+  for (const [title, list] of PHRASES) {
+    pane.append(el('h3', 'ph-h', tx(title)));
+    for (const ph of list) {
+      const b = el('button', 'phrase'); b.type = 'button';
+      b.append(el('span', 'ph-ic', '🔊'));
+      const t = el('span', 'ph-t'); t.append(el('b', '', ph[0]));
+      if (k) t.append(el('small', '', ph[k]));
+      b.append(t);
+      b.onclick = () => speakEn(ph[0], b);
+      pane.append(b);
+    }
+  }
+}
+
+/* ---------- cota de isenção da Receita Federal (bagagem) ---------- */
+// US$ 1.000 por viajante chegando ao Brasil de avião ou navio; acima disso, 50% sobre o excedente.
+// Conta o que foi marcado como comprado, com o imposto da loja (o valor pago).
+const COTA = 1000, COTA_TAX = 0.5;
+const showCota = () => getLang() === 'pt' || cur === 'BRL';
+let people = load('sawgrass.cota.pessoas', 1);
+const cotaUsed = () => items.filter((i) => i.done).reduce((s, i) => s + (i.usd || 0), 0) * (conv.tax ? 1 + SALES_TAX : 1);
+function cotaWarn(before, after) {
+  if (!showCota()) return;
+  const lim = COTA * people;
+  if (before <= lim && after > lim) toastShop(tx('🛃 Passou da cota de US$ {n}! O excedente paga 50% na Receita.', { n: lim.toLocaleString('pt-BR') }));
+  else if (before < lim * 0.8 && after >= lim * 0.8 && after <= lim) toastShop(tx('🛃 Atenção: já usou 80% da cota de US$ {n}.', { n: lim.toLocaleString('pt-BR') }));
+}
+function toastShop(msg) {
+  let t = $('#shop-toast');
+  if (!t) { t = el('p', 'shop-toast'); t.id = 'shop-toast'; t.setAttribute('role', 'status'); $('#shop-list').before(t); }
+  t.textContent = msg; t.hidden = false;
+  navigator.vibrate?.(150);
+  clearTimeout(toastShop.t); toastShop.t = setTimeout(() => { t.hidden = true; }, 6000);
+}
+function cotaBox() {
+  const lim = COTA * people, used = cotaUsed(), pct = used / lim;
+  const box = el('div', 'cota ' + (pct > 1 ? 'over' : pct >= 0.8 ? 'warn' : 'ok'));
+  const head = el('div', 'cota-head');
+  head.append(el('b', '', tx('🛃 Cota da Receita')));
+  const sel = el('select'); sel.setAttribute('aria-label', tx('Viajantes'));
+  for (let n = 1; n <= 6; n++) sel.append(new Option(n === 1 ? tx('1 viajante') : tx('{n} viajantes', { n }), n));
+  sel.value = people;
+  sel.onchange = () => { people = +sel.value; save('sawgrass.cota.pessoas', people); renderList(); };
+  head.append(sel);
+  const bar = el('div', 'cota-bar'); const fill = el('i'); fill.style.width = Math.min(100, pct * 100) + '%'; bar.append(fill);
+  const line = el('div', 'cota-line', tx('Usado {a} de {b}', { a: money(used, 'USD'), b: money(lim, 'USD') }));
+  box.append(head, bar, line);
+  if (pct > 1) {
+    const ex = used - lim;
+    box.append(el('div', 'cota-msg', tx('Passou {x}. Imposto estimado: {t} (≈ {l}).', { x: money(ex, 'USD'), t: money(ex * COTA_TAX, 'USD'), l: money(toLocal(ex * COTA_TAX, { tax: false, iof: false }), cur) })));
+  } else {
+    box.append(el('div', 'cota-msg', tx('Ainda cabem {x}.', { x: money(lim - used, 'USD') })));
+  }
+  box.append(el('small', '', tx('US$ 1.000 por viajante chegando de avião ou navio (por terra: US$ 500). Notebook e celular novos entram na conta. Confira as regras no site da Receita antes de viajar.')));
+  return box;
 }
 
 /* ---------- janela ---------- */
@@ -229,7 +340,7 @@ export function openShop(tab = 'conv') {
     b.onclick = () => openShop(b.dataset.tab);
   }
   for (const s of document.querySelectorAll('.shop-pane')) s.hidden = s.id !== 'shop-' + tab;
-  renderConv(); renderList();
+  renderConv(); renderList(); renderPhrases();
   $('#deal-go').onclick = () => { const g = hooks.guest(); if (g) { $('#shop').close(); hooks.goTo(g); } };
   if (!$('#shop').open) $('#shop').showModal();
 }
