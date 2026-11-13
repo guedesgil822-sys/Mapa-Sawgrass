@@ -35,6 +35,16 @@ salvas no aparelho. **Ver no mapa** enquadra todas; **Limpar** (na busca ou no
 botão "✕ Limpar" da tela principal) apaga a seleção. Tocando numa loja no mapa,
 o painel mostra "Estou aqui", "Ir para cá" e "Marcar/Desmarcar".
 
+## Compartilhar com o grupo
+
+**📤 Compartilhar** monta uma mensagem com link (WhatsApp ou qualquer app; sem
+suporte, copia o texto). Pode levar as lojas marcadas, o ponto de encontro
+(toque numa loja no mapa › "🤝 Encontro aqui") e onde você está (GPS, uma foto
+do momento com seu nome e a hora). Tudo vai no próprio link
+(`#enc=…&m=…&px=x,y&h=…&quem=…`), sem servidor. Quem abre vê o encontro como
+destino, as lojas em amarelo e a sua posição em roxo, e pode "Guardar" as lojas
+ou ver a rota até o encontro pelo GPS.
+
 ## Rodar
 
 Site estático, sem build e sem dependências:

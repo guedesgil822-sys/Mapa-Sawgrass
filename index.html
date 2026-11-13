@@ -27,10 +27,19 @@
   <div class="opts">
     <button type="button" class="chip find" id="find">🔎 Buscar loja</button>
     <label class="chip toggle"><input type="checkbox" id="accessible"><span>♿ Sem escada rolante</span></label>
+    <button type="button" class="chip share" id="share-btn">📤 Compartilhar</button>
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
     <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
+  </div>
+  <div class="card shared-bar" id="shared-bar" hidden role="status">
+    <div class="shared-txt" id="shared-txt"></div>
+    <div class="shared-act">
+      <button type="button" class="chip" id="shared-keep" hidden>Guardar lojas</button>
+      <button type="button" class="chip" id="shared-gps" hidden>📍 Ver rota até o encontro</button>
+      <button type="button" class="icon-btn" id="shared-close" aria-label="Fechar">✕</button>
+    </div>
   </div>
   <div class="card gps-bar" id="gps-bar" hidden role="status">
     <span class="gps-txt" id="gps-txt"></span>
@@ -60,6 +69,22 @@
     <button type="button" class="btn" id="mark-clear">Limpar</button>
     <button type="button" class="btn primary" id="mark-show">Ver no mapa</button>
   </div>
+</dialog>
+
+<dialog id="share">
+  <form method="dialog" class="share-box">
+    <h2>Compartilhar com o grupo</h2>
+    <label class="share-opt" id="sh-marked-row"><input type="checkbox" id="sh-marked" checked><span id="sh-marked-txt"></span></label>
+    <label class="share-opt" id="sh-meet-row"><input type="checkbox" id="sh-meet" checked><span id="sh-meet-txt"></span></label>
+    <label class="share-opt" id="sh-me-row"><input type="checkbox" id="sh-me" checked><span>📍 Onde estou agora (GPS)</span></label>
+    <p class="share-empty" id="sh-empty">Marque lojas na busca ou escolha um ponto de encontro (toque numa loja no mapa › “🤝 Encontro aqui”). Você também pode mandar só o link do mapa.</p>
+    <label class="share-name">Seu nome <input type="text" id="sh-name" maxlength="20" placeholder="Ex.: Gil" autocomplete="given-name"></label>
+    <div class="actions">
+      <button class="btn" value="cancel">Cancelar</button>
+      <button class="btn primary" type="button" id="sh-send">Enviar</button>
+    </div>
+    <p class="share-done" id="sh-done" hidden></p>
+  </form>
 </dialog>
 
 <script type="module" src="js/app.js"></script>

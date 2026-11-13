@@ -10,12 +10,13 @@ const el = (tag, cls, text) => {
 };
 const DRAFT_KEY = 'sawgrass.draft';
 const MARK_KEY = 'sawgrass.marcadas';
+const NAME_KEY = 'sawgrass.nome';
 const ICON = {
   start: '●', straight: '↑', right: '↱', left: '↰', 'slight-right': '↗', 'slight-left': '↖',
   uturn: '↶', arrive: '⚑',
 };
 
-const state = { from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
+const state = { meet: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
 let mall, view, layers, picking = 'from', group = '';
 let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
@@ -63,10 +64,15 @@ async function init() {
   $('#accessible').checked = state.accessible;
 
   try { for (const id of JSON.parse(localStorage.getItem(MARK_KEY) || '[]')) if (mall.poiById.has(id)) marked.add(id); } catch { /* ignora */ }
+  readShared(h);
 
   setFloor(state.from?.f || mall.floors[0].id, false);
   update(true);
   renderMarked();
+  if (state.shared) { // enquadra tudo o que foi compartilhado
+    const pts = [state.meet, state.shared.who, ...state.shared.marks.map((id) => mall.poiById.get(id))].filter(Boolean);
+    requestAnimationFrame(() => { const m = 25 * mall.ppm; fitPoints(pts.flatMap((p) => [{ x: p.x - m, y: p.y - m }, { x: p.x + m, y: p.y + m }])); });
+  }
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -82,6 +88,14 @@ function bindUI() {
   $('#marked-clear').onclick = clearMarked;
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
   $('#marked-chip').onclick = showMarked;
+  $('#share-btn').onclick = openShare;
+  $('#sh-send').onclick = sendShare;
+  $('#shared-close').onclick = () => { $('#shared-bar').hidden = true; };
+  $('#shared-keep').onclick = () => {
+    for (const id of state.shared?.marks || []) marked.add(id);
+    saveMarked(); renderMarked(); $('#shared-keep').hidden = true;
+  };
+  $('#shared-gps').onclick = () => { state.to = state.meet; if (gps.watch == null) startGps(); else { gpsAsOrigin(); update(true); } };
   $('#swap').onclick = () => { [state.from, state.to] = [state.to, state.from]; update(true); };
   $('#accessible').onchange = (e) => { state.accessible = e.target.checked; update(true); };
   $('#zin').onclick = () => view.zoomBy(1.6);
@@ -379,10 +393,13 @@ function renderSheet() {
     const b = el('button', 'btn primary', 'Ir para cá');
     b.onclick = () => { state.to = p; state.picked = null; gpsAsOrigin(); update(true); };
     act.append(a, b);
-    const m = el('button', 'btn small mark-toggle', marked.has(p.id) ? '★ Desmarcar' : '☆ Marcar');
+    const m = el('button', 'btn small', marked.has(p.id) ? '★ Desmarcar' : '☆ Marcar');
     m.onclick = () => { toggleMarked(p); renderSheet(); };
-    act.append(m);
-    s.append(head, act);
+    const e = el('button', 'btn small', state.meet === p ? '🤝 Cancelar encontro' : '🤝 Encontro aqui');
+    e.onclick = () => { state.meet = state.meet === p ? null : p; renderSheet(); drawRoute(); };
+    const row = el('div', 'actions');
+    row.append(m, e);
+    s.append(head, act, row);
     s.hidden = false;
     return;
   }
@@ -501,6 +518,13 @@ function drawRoute() {
       svgEl('polyline', { points: st.pts.map((p) => `${p.x},${p.y}`).join(' '), class: 'route-step' }, layers.route);
     }
   }
+  if (state.meet && state.meet.f === state.floor) {
+    const p = state.meet;
+    if (p.poly?.length >= 6 && p !== state.to) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel meet' }, layers.sel);
+    markers.push({ x: p.x, y: p.y, cls: 'meet', text: '🤝', title: 'Ponto de encontro: ' + p.name });
+  }
+  const fr = state.shared?.who;
+  if (fr && fr.f === state.floor) markers.push({ x: fr.x, y: fr.y, cls: 'friend', text: `${fr.name || 'Amigo'}${fr.time ? ' · ' + fr.time : ''}`, title: 'Posição compartilhada' });
   if (state.from !== ME) mark(state.from, 'from');
   mark(state.to, 'to');
   if (gps.me) {
@@ -536,6 +560,80 @@ function placeMarkers() {
     d.style.left = s.x + 'px';
     d.style.top = s.y + 'px';
   });
+}
+
+/* ---------- compartilhar com o grupo ---------- */
+// Tudo vai no próprio link (sem servidor): #m=ids&enc=id&quem=Nome&px=x,y&h=15:42
+const baseUrl = () => (framed ? WEB_URL : location.origin + location.pathname);
+const myName = () => { try { return localStorage.getItem(NAME_KEY) || ''; } catch { return ''; } };
+
+function openShare() {
+  const n = marked.size, names = [...marked].map((id) => mall.poiById.get(id)?.name).filter(Boolean);
+  $('#sh-marked-row').hidden = !n;
+  $('#sh-marked-txt').textContent = `★ Lojas marcadas (${n}): ${names.slice(0, 4).join(', ')}${n > 4 ? '…' : ''}`;
+  $('#sh-meet-row').hidden = !state.meet;
+  $('#sh-meet-txt').textContent = `🤝 Encontro: ${state.meet?.name || ''}`;
+  $('#sh-me-row').hidden = !gps.me;
+  $('#sh-empty').hidden = !!(n || state.meet || gps.me);
+  $('#sh-name').value = myName();
+  $('#sh-done').hidden = true;
+  $('#share').showModal();
+}
+
+function buildShare() {
+  const name = $('#sh-name').value.trim();
+  try { localStorage.setItem(NAME_KEY, name); } catch { /* sem armazenamento */ }
+  const h = new URLSearchParams(), lines = ['🛍️ Sawgrass Mills'];
+  if (!$('#sh-meet-row').hidden && $('#sh-meet').checked) {
+    h.set('enc', state.meet.id); lines.push(`🤝 Encontro: ${state.meet.name}`);
+  }
+  if (!$('#sh-marked-row').hidden && $('#sh-marked').checked) {
+    const ids = [...marked];
+    h.set('m', ids.join(','));
+    lines.push(`★ Lojas: ${ids.map((id) => mall.poiById.get(id)?.name).join(', ')}`);
+  }
+  if (!$('#sh-me-row').hidden && $('#sh-me').checked && gps.me) {
+    const t = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    h.set('px', `${Math.round(gps.me.x)},${Math.round(gps.me.y)}`); h.set('h', t);
+    lines.push(`📍 ${name || 'Eu'} estava perto de ${gps.me.near?.name || 'aqui'} às ${t}`);
+  }
+  if (name) h.set('quem', name);
+  const url = baseUrl() + (h.size ? '#' + h : '');
+  lines.push('Abra o mapa: ' + url);
+  return { title: 'Sawgrass Mills', text: lines.join('\n'), url };
+}
+
+async function sendShare() {
+  const data = buildShare();
+  const done = (msg) => { $('#sh-done').textContent = msg; $('#sh-done').hidden = false; };
+  if (navigator.share) {
+    try { await navigator.share({ title: data.title, text: data.text }); $('#share').close(); return; }
+    catch (e) { if (e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(data.text); done('Copiado! Cole no WhatsApp do grupo.'); }
+  catch { open('https://wa.me/?text=' + encodeURIComponent(data.text), '_blank', 'noopener'); }
+}
+
+// quem recebe o link: mostra encontro, lojas e a posição de quem mandou
+function readShared(h) {
+  const marks = (h.get('m') || '').split(',').filter((id) => mall.poiById.has(id));
+  const meet = mall.poiById.get(h.get('enc')) || null;
+  const name = (h.get('quem') || '').slice(0, 20);
+  const px = (h.get('px') || '').split(',').map(Number);
+  const who = px.length === 2 && px.every(Number.isFinite)
+    ? { name, x: px[0], y: px[1], time: (h.get('h') || '').slice(0, 5), f: mall.floors[0].id } : null;
+  if (!marks.length && !meet && !who) return;
+  state.shared = { marks, who };
+  state.meet = meet;
+  for (const id of marks) marked.add(id); // aparecem no mapa; só ficam salvas se tocar em "Guardar"
+  const from = name ? `${name} compartilhou` : 'Compartilhado com você';
+  const bits = [meet && `🤝 encontro na ${meet.name}`, marks.length && `★ ${marks.length} lojas`, who && `📍 posição às ${who.time}`].filter(Boolean);
+  $('#shared-txt').textContent = `${from}: ${bits.join(' · ')}`;
+  $('#shared-keep').hidden = !marks.length;
+  $('#shared-keep').textContent = `Guardar ${marks.length} ${marks.length === 1 ? 'loja' : 'lojas'}`;
+  $('#shared-gps').hidden = !meet;
+  $('#shared-bar').hidden = false;
+  if (meet) state.to = meet;
 }
 
 /* ---------- GPS ---------- */
