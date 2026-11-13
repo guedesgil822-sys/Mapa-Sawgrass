@@ -130,6 +130,22 @@ PLACES = [
 ]
 
 
+# Estacionamentos: a planta não os desenha; ficam do lado de fora de cada
+# entrada. (nome, ponto do estacionamento, ponto da entrada), em pt da página.
+PARKING = [
+    ("Estacionamento · Entrada 1", (165, 2880), (305, 2870)),
+    ("Estacionamento · Praça de alimentação", (600, 2650), (602, 2734)),
+    ("Estacionamento · Entrada 2", (985, 3330), (890, 3250)),
+    ("Estacionamento · Entrada 3", (2075, 3905), (2075, 3800)),
+    ("Estacionamento · Entrada 4", (2905, 3765), (2780, 3780)),
+    ("Estacionamento · JCPenney / BrandsMart", (2790, 4075), (2720, 4000)),
+    ("Estacionamento · Oasis (oeste)", (1935, 2895), (2035, 2895)),
+    ("Estacionamento · Oasis (leste)", (2530, 3000), (2430, 2970)),
+    ("Estacionamento · Oasis (noroeste)", (2120, 2545), (2215, 2545)),
+    ("Estacionamento · Oasis (norte)", (2570, 2405), (2475, 2420)),
+]
+
+
 def run(*a):
     subprocess.run(a, check=True, capture_output=True)
 
@@ -613,6 +629,16 @@ def main():
             named_polys.append(poly)
     for name, group, cat, (px, py) in PLACES:
         add(name, group, cat, (px - X0, py - Y0), None, False)
+    # estacionamentos: caminho a pé lá fora, da entrada até o estacionamento
+    for name, (px, py), (ex, ey) in PARKING:
+        cid = attach((ex - X0, ey - Y0))
+        nodes.append({"id": len(nodes), "f": FLOOR, "x": ex - X0, "y": ey - Y0, "t": "c"})
+        gate = len(nodes) - 1
+        edges.append({"a": cid, "b": gate, "t": "walk"})
+        nodes.append({"id": len(nodes), "f": FLOOR, "x": px - X0, "y": py - Y0, "t": "door"})
+        edges.append({"a": gate, "b": len(nodes) - 1, "t": "walk"})
+        pois.append({"id": f"p{len(pois)}", "name": name, "f": FLOOR, "x": px - X0, "y": py - Y0,
+                     "node": len(nodes) - 1, "group": "Estacionamento", "cat": "Estacionamento"})
 
     # numeração final dos nós/arestas usados
     alive = {e["a"] for e in edges} | {e["b"] for e in edges}
