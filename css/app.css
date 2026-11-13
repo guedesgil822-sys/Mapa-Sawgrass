@@ -321,3 +321,15 @@ button { cursor: pointer; }
 .mark-bar .btn.sel { border-color: var(--focus); }
 .mark-bar .btn.sel.on { background: var(--focus); color: #3d2600; -webkit-text-fill-color: #3d2600; }
 .mark-bar .btn { white-space: nowrap; }
+
+/* ---------- idioma ---------- */
+.lang-btn { position: absolute; z-index: 2; top: calc(10px + env(safe-area-inset-top) + 6px); right: 16px; width: 42px; height: 40px; border-radius: 12px; border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink) 8%, var(--panel)); font-size: 22px; display: grid; place-items: center; cursor: pointer; }
+#search-pill { padding-right: 64px; }
+.top:has(#search-pill[hidden]) .lang-btn { display: none; }
+.lang-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.lang-opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: none; color: var(--ink); font-size: 17px; font-weight: 600; cursor: pointer; text-align: left; }
+.lang-opt .fl { font-size: 26px; line-height: 1; }
+.lang-opt .nm { flex: 1; }
+.lang-opt .ok { font-weight: 800; color: var(--tab-on); -webkit-text-fill-color: currentColor; }
+.lang-opt.on { border-color: var(--tab-on); }
