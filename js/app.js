@@ -530,6 +530,22 @@ function renderHours() {
   else txt = tx('🕘 Aberto até {h}', { h: hh(c) });
   b.textContent = txt;
   b.className = 'chip hours ' + cls + (min < o * 60 || min >= c * 60 ? ' closed' : '');
+  // 30 min antes de fechar: aviso que fica na tela e vibra (uma vez por dia)
+  const left = c * 60 - min;
+  if (min >= o * 60 && left > 0 && left <= 30) {
+    const key = 'sawgrass.fecha.' + new Date().toDateString();
+    if (!load(key)) {
+      store(key, 1);
+      const car = state.car && mall.poiById.get(state.car.lot);
+      const msg = tx('⏰ O shopping fecha em {n} min (às {h}).', { n: left, h: hh(c) })
+        + (car ? ' ' + tx('Seu carro: {x}.', { x: td(car.name.replace(/^Estacionamento · /, '')) }) : '');
+      toast(msg);
+      if ('Notification' in window && Notification.permission === 'granted') {
+        navigator.serviceWorker?.ready.then((r) => r.showNotification('Sawgrass Mills', { body: msg, tag: 'fecha' }))
+          .catch(() => { try { new Notification('Sawgrass Mills', { body: msg }); } catch { /* sem suporte */ } });
+      }
+    }
+  }
 }
 function openHours() {
   const t = $('#hours-table'), { day } = floridaNow();
