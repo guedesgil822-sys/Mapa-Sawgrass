@@ -11,6 +11,10 @@ const el = (tag, cls, text) => {
 const DRAFT_KEY = 'sawgrass.draft';
 const MARK_KEY = 'sawgrass.marcadas';
 const NAME_KEY = 'sawgrass.nome';
+const GROUP_KEY = 'sawgrass.grupo';
+// banco do grupo (Firebase Realtime Database, via REST + eventos; sem biblioteca)
+const DB_URL = 'https://sawgrass-58fe7-default-rtdb.firebaseio.com';
+const GROUP_TTL = 24 * 3600 * 1000;
 const MEET_KEY = 'sawgrass.encontro';
 const CAR_KEY = 'sawgrass.carro';
 const ICON = {
@@ -70,6 +74,7 @@ async function init() {
   try { for (const id of JSON.parse(localStorage.getItem(MARK_KEY) || '[]')) if (mall.poiById.has(id)) marked.add(id); } catch { /* ignora */ }
   loadMeetCar();
   readShared(h);
+  resumeGroup(h.get('g'));
 
   setFloor(state.from?.f || mall.floors[0].id, false);
   update(true);
@@ -96,9 +101,10 @@ function bindUI() {
   $('#tab-find').onclick = () => openPicker('find');
   $('#tab-meet').onclick = () => openMeet();
   $('#tab-car').onclick = () => openCar();
-  $('#tab-share').onclick = openShare;
+  $('#tab-share').onclick = openGroup;
+  bindGroup();
   // aba acesa = janela aberta no momento (ou Mapa)
-  const TAB_OF = { picker: 'tab-find', meet: 'tab-meet', car: 'tab-car', share: 'tab-share' };
+  const TAB_OF = { picker: 'tab-find', meet: 'tab-meet', car: 'tab-car', share: 'tab-share', group: 'tab-share' };
   const syncTabs = () => {
     const open = Object.keys(TAB_OF).find((d) => $('#' + d).open && (d !== 'picker' || picking === 'find'));
     for (const b of $('#tabbar').children) b.classList.toggle('on', b.id === (open ? TAB_OF[open] : 'tab-map'));
@@ -569,6 +575,11 @@ function drawRoute() {
     if (n) svgEl('line', { x1: n.x, y1: n.y, x2: CAR.x, y2: CAR.y, class: 'car-link' }, layers.route);
     markers.push({ x: CAR.x, y: CAR.y, cls: 'car', text: '🚗', title: 'Meu carro' });
   }
+  for (const [uid, p] of Object.entries(grp.data?.pos || {})) {
+    if (uid === grp.uid || !p || Date.now() - p.ts > 15 * 60000 || !Number.isFinite(p.x)) continue;
+    const t = new Date(p.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    markers.push({ x: p.x, y: p.y, cls: 'friend', text: `${p.n || 'Amigo'} · ${t}`, title: 'Posição no grupo' });
+  }
   const fr = state.shared?.who;
   if (fr && fr.f === state.floor) markers.push({ x: fr.x, y: fr.y, cls: 'friend', text: `${fr.name || 'Amigo'}${fr.time ? ' · ' + fr.time : ''}`, title: 'Posição compartilhada' });
   if (state.from !== ME) mark(state.from, 'from');
@@ -634,7 +645,10 @@ function loadMeetCar() {
   if (c && mall.poiById.has(c.lot)) { state.car = c; placeCar(); }
 }
 
-function persistMeet() { store(MEET_KEY, state.meet ? { id: state.meet.id, time: state.meetTime } : null); renderStatus(); drawRoute(); }
+function persistMeet(fromGroup) {
+  store(MEET_KEY, state.meet ? { id: state.meet.id, time: state.meetTime } : null); renderStatus(); drawRoute();
+  if (!fromGroup && grp.code) dbReq('PUT', `grupos/${grp.code}/enc`, state.meet ? { id: state.meet.id, h: state.meetTime || '' } : null).catch(() => {});
+}
 function persistCar() { store(CAR_KEY, state.car); if (state.car) placeCar(); renderStatus(); drawRoute(); }
 
 function placeCar() {
@@ -726,6 +740,208 @@ function goToCar() {
   state.to = CAR; state.picked = null;
   gpsAsOrigin();
   update(true);
+}
+
+/* ---------- grupo com conversa (Firebase) ---------- */
+// /grupos/{código}: { exp, nome, dono, enc:{id,h}, msgs:{id:{n,t,ts,u}}, pos:{uid:{n,x,y,ts}} }
+const grp = { code: null, uid: null, owner: false, data: null, es: null, seen: 0, lastPos: 0 };
+const ALPHA = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'; // sem 0/O/1/I/L para não confundir
+const fmtCode = (c) => c.replace(/^(SAW)(\w{4})(\w{4})$/, '$1-$2-$3');
+const cleanCode = (t) => (t || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const randCode = () => 'SAW' + Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => ALPHA[b % ALPHA.length]).join('');
+
+async function dbReq(method, path, body) {
+  const r = await fetch(`${DB_URL}/${path}.json`, { method, body: body === undefined ? undefined : JSON.stringify(body) });
+  const j = await r.json().catch(() => null);
+  if (!r.ok) throw new Error(j?.error || r.status);
+  return j;
+}
+
+function myUid() {
+  let u = load('sawgrass.uid');
+  if (!u) { u = Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, '0')).join(''); store('sawgrass.uid', u); }
+  return u;
+}
+
+function bindGroup() {
+  $('#gr-close').onclick = () => $('#group').close();
+  $('#gr-create').onclick = createGroup;
+  $('#gr-join').onclick = () => joinGroup(cleanCode($('#gr-code').value));
+  $('#gr-link').onclick = () => { $('#group').close(); openShare(); };
+  $('#gr-invite').onclick = inviteGroup;
+  $('#gr-form').onsubmit = (e) => { e.preventDefault(); sendMsg(); };
+  $('#gr-leave').onclick = () => leaveGroup('Você saiu do grupo.');
+  $('#gr-del').onclick = () => { $('#gr-confirm').hidden = false; };
+  $('#gr-del-ok').onclick = deleteGroup;
+  $('#gr-pos').onchange = (e) => {
+    store('sawgrass.grupo.pos', e.target.checked);
+    if (e.target.checked) { if (gps.watch == null) startGps(); else { grp.lastPos = 0; sendMyPos(); } }
+    else if (grp.code) dbReq('DELETE', `grupos/${grp.code}/pos/${grp.uid}`).catch(() => {});
+  };
+  $('#chat-bar').onclick = openGroup;
+}
+
+function groupErr(msg) { $('#gr-err').textContent = msg; $('#gr-err').hidden = !msg; }
+const needName = () => {
+  const n = $('#gr-name').value.trim();
+  if (!n) { groupErr('Escreva seu nome para o grupo saber quem é você.'); $('#gr-name').focus(); return null; }
+  try { localStorage.setItem(NAME_KEY, n); } catch { /* sem armazenamento */ }
+  return n;
+};
+
+function openGroup() {
+  $('#gr-name').value = myName();
+  groupErr('');
+  renderGroup();
+  if (!$('#group').open) $('#group').showModal();
+  if (grp.code) { grp.seen = msgList().length; renderChatBar(); scrollChat(); }
+}
+
+async function createGroup() {
+  const name = needName(); if (!name) return;
+  const code = randCode(), uid = myUid();
+  try {
+    await dbReq('PUT', `grupos/${code}`, { exp: Date.now() + GROUP_TTL - 60000, nome: `Grupo de ${name}`, dono: uid,
+      ...(state.meet ? { enc: { id: state.meet.id, h: state.meetTime || '' } } : {}),
+      msgs: { first: { n: name, t: `${name} criou o grupo 👋`, ts: { '.sv': 'timestamp' }, u: uid } } });
+  } catch (e) { return groupErr(framed ? 'Aqui dentro do Claude o grupo não funciona. Toque em “🌐 Abrir no navegador”.' : 'Não deu para criar o grupo. Confira a internet e tente de novo.'); }
+  startGroup(code, true);
+  inviteGroup();
+}
+
+async function joinGroup(code) {
+  if (code.length < 10) return groupErr('O código tem 11 letras, como SAW-K7Q2-M9XD.');
+  const name = needName(); if (!name) return;
+  let g = null;
+  try { g = await dbReq('GET', `grupos/${code}`); } catch { /* sem permissão = expirado ou não existe */ }
+  if (!g) return groupErr('Grupo não encontrado. Ele pode ter sido excluído ou passado de 24 h.');
+  dbReq('POST', `grupos/${code}/msgs`, { n: name, t: `${name} entrou no grupo`, ts: { '.sv': 'timestamp' }, u: myUid() }).catch(() => {});
+  startGroup(code, g.dono === myUid());
+}
+
+function startGroup(code, owner) {
+  grp.es?.close();
+  Object.assign(grp, { code, uid: myUid(), owner, data: null, seen: 0, lastPos: 0 });
+  store(GROUP_KEY, { code, owner });
+  $('#gr-pos').checked = !!load('sawgrass.grupo.pos');
+  // escuta ao vivo (Server-Sent Events do Realtime Database)
+  const es = new EventSource(`${DB_URL}/grupos/${code}.json`);
+  grp.es = es;
+  const apply = (e, patch) => {
+    const { path, data } = JSON.parse(e.data);
+    const keys = path.split('/').filter(Boolean);
+    if (!keys.length) {
+      if (patch) grp.data = { ...(grp.data || {}), ...data }; else grp.data = data;
+    } else {
+      grp.data = grp.data || {};
+      let o = grp.data;
+      for (const k of keys.slice(0, -1)) o = o[k] = o[k] && typeof o[k] === 'object' ? o[k] : {};
+      const last = keys.at(-1);
+      if (patch) o[last] = { ...(o[last] || {}), ...data }; else if (data === null) delete o[last]; else o[last] = data;
+    }
+    if (!grp.data) return leaveGroup('O grupo foi excluído.');
+    onGroupData();
+  };
+  es.addEventListener('put', (e) => apply(e, false));
+  es.addEventListener('patch', (e) => apply(e, true));
+  es.addEventListener('cancel', () => leaveGroup('O grupo terminou (excluído ou passou de 24 h).'));
+  renderGroup();
+}
+
+function resumeGroup(linkCode) {
+  const saved = load(GROUP_KEY);
+  if (linkCode && cleanCode(linkCode) !== saved?.code) {
+    // convite: abre o grupo já com o código preenchido
+    $('#gr-code').value = fmtCode(cleanCode(linkCode));
+    setTimeout(() => { openGroup(); groupErr(myName() ? '' : 'Escreva seu nome e toque em Entrar.'); if (myName()) joinGroup(cleanCode(linkCode)); }, 300);
+    return;
+  }
+  if (saved?.code) startGroup(saved.code, !!saved.owner);
+}
+
+const msgList = () => Object.entries(grp.data?.msgs || {}).map(([id, m]) => ({ id, ...m })).sort((a, b) => (a.ts || 0) - (b.ts || 0));
+
+function onGroupData() {
+  const d = grp.data;
+  // encontro combinado no grupo vale para todos
+  if (d.enc) {
+    const e = mall.poiById.get(d.enc.id) || null;
+    if (e !== state.meet || (d.enc.h || '') !== (state.meetTime || '')) { state.meet = e; state.meetTime = d.enc.h || ''; persistMeet(true); }
+    grp.hadEnc = true;
+  } else if (grp.hadEnc) { // alguém removeu o encontro do grupo
+    grp.hadEnc = false; state.meet = null; state.meetTime = ''; persistMeet(true);
+  }
+  if ($('#group').open) { grp.seen = msgList().length; renderGroup(); scrollChat(); }
+  renderChatBar();
+  drawRoute();
+}
+
+function renderChatBar() {
+  const list = msgList(), last = list.at(-1), unread = Math.max(0, list.length - grp.seen);
+  $('#chat-bar').hidden = !grp.code || !last;
+  if (last) $('#chat-bar-txt').textContent = `${last.u === grp.uid ? 'Você' : last.n}: ${last.t}`;
+  $('#chat-bar-n').hidden = !unread;
+  $('#chat-bar-n').textContent = unread;
+  $('#tab-share').classList.toggle('alert', unread > 0);
+}
+
+function renderGroup() {
+  const inG = !!grp.code;
+  $('#gr-out').hidden = inG; $('#gr-in').hidden = !inG;
+  $('#gr-title').textContent = inG ? `👥 ${grp.data?.nome || 'Grupo'}` : '👥 Grupo';
+  if (!inG) return;
+  $('#gr-code-show').textContent = fmtCode(grp.code);
+  $('#gr-del').hidden = !grp.owner;
+  $('#gr-confirm').hidden = true;
+  const names = [...new Set(msgList().map((m) => m.n))];
+  $('#gr-who').textContent = names.length ? `${names.length} ${names.length === 1 ? 'pessoa' : 'pessoas'}: ${names.join(', ')}` : '';
+  const ul = $('#gr-msgs');
+  ul.textContent = '';
+  for (const m of msgList()) {
+    const li = el('li', m.u === grp.uid ? 'me' : '');
+    const t = m.ts ? new Date(m.ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    li.append(el('small', '', `${m.u === grp.uid ? 'Você' : m.n} · ${t}`), el('span', '', m.t));
+    ul.appendChild(li);
+  }
+}
+
+const scrollChat = () => { const u = $('#gr-msgs'); u.scrollTop = u.scrollHeight; };
+
+async function sendMsg() {
+  const t = $('#gr-text').value.trim();
+  if (!t || !grp.code) return;
+  $('#gr-text').value = '';
+  try { await dbReq('POST', `grupos/${grp.code}/msgs`, { n: myName() || 'Alguém', t, ts: { '.sv': 'timestamp' }, u: grp.uid }); }
+  catch { $('#gr-text').value = t; }
+}
+
+function sendMyPos() {
+  if (!grp.code || !gps.me || !$('#gr-pos').checked || Date.now() - grp.lastPos < 15000) return;
+  grp.lastPos = Date.now();
+  dbReq('PUT', `grupos/${grp.code}/pos/${grp.uid}`, { n: myName() || 'Alguém', x: Math.round(gps.me.x), y: Math.round(gps.me.y), ts: { '.sv': 'timestamp' } }).catch(() => {});
+}
+
+async function inviteGroup() {
+  const url = `${baseUrl()}#g=${grp.code}`;
+  const text = `👥 Entre no meu grupo do Sawgrass Mills\nCódigo: ${fmtCode(grp.code)}\n${url}`;
+  if (navigator.share) { try { await navigator.share({ title: 'Grupo Sawgrass Mills', text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  try { await navigator.clipboard.writeText(text); $('#gr-who').textContent = '✅ Convite copiado. Cole no WhatsApp.'; }
+  catch { $('#gr-who').textContent = `Mande este código: ${fmtCode(grp.code)}`; }
+}
+
+function leaveGroup(msg) {
+  if (grp.code && !msg?.startsWith('O grupo')) dbReq('DELETE', `grupos/${grp.code}/pos/${grp.uid}`).catch(() => {});
+  grp.es?.close();
+  Object.assign(grp, { code: null, data: null, es: null, owner: false, seen: 0 });
+  store(GROUP_KEY, null);
+  renderGroup(); renderChatBar(); drawRoute();
+  if (msg) { groupErr(msg); if (!$('#group').open && msg.startsWith('O grupo')) { openGroup(); groupErr(msg); } }
+}
+
+async function deleteGroup() {
+  const code = grp.code;
+  try { await dbReq('DELETE', `grupos/${code}`); } catch { /* já não existe */ }
+  leaveGroup('Grupo excluído. A conversa foi apagada.');
 }
 
 /* ---------- compartilhar com o grupo ---------- */
@@ -863,6 +1079,7 @@ function onGps(pos) {
   updateMe();
   renderGpsBar();
   if (carWaiting && $('#car').open) carFromGps();
+  sendMyPos();
   if (!gps.centered) { gps.centered = true; centerOnMe(); }
 }
 

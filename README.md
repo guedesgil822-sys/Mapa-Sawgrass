@@ -54,6 +54,21 @@ encontro, o número de lojas marcadas e um ponto quando o carro está salvo):
 
 Encontro e carro ficam salvos no aparelho.
 
+## Grupo com conversa
+
+A aba **Grupo** cria um grupo (código tipo `SAW-K7Q2-M9XD` e link de convite
+`#g=…`) ou entra num existente, só com o nome. Dentro: conversa ao vivo, a
+última mensagem aparece numa faixa no topo do mapa (com contador de não
+lidas), o ponto de encontro fica igual para todos e, opcionalmente, cada um
+mostra a própria posição no mapa do grupo. Quem criou pode **Excluir grupo**,
+que apaga mensagens e posições de todos; o grupo também deixa de existir
+depois de 24 h.
+
+Banco: Firebase Realtime Database (`DB_URL` em `js/app.js`), usado por REST e
+Server-Sent Events, sem biblioteca. Regras do banco: só lê/escreve quem tem o
+código, ninguém lista os grupos, validade máxima de 24 h, mensagens de até 300
+letras. Não funciona dentro do visualizador do Claude (só no site).
+
 ## Compartilhar com o grupo
 
 **📤 Compartilhar** monta uma mensagem com link (WhatsApp ou qualquer app; sem
