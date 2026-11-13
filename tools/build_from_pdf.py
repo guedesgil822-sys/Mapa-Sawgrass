@@ -448,6 +448,8 @@ def base_svg(named_polys):
         if bb is None:
             continue
         bx0, by0, bx1, by1 = bb
+        if bx1 - bx0 > 3300 and by1 - by0 > 4000:   # moldura da página do PDF
+            root.remove(el); continue
         if bx1 < X0 or bx0 > X0 + W or by1 < Y0 or by0 > Y0 + H:
             root.remove(el); continue
         cx, cy = (bx0 + bx1) / 2, (by0 + by1) / 2
