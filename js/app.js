@@ -9,6 +9,7 @@ const el = (tag, cls, text) => {
   return e;
 };
 const DRAFT_KEY = 'sawgrass.draft';
+const MARK_KEY = 'sawgrass.marcadas';
 const ICON = {
   start: '●', straight: '↑', right: '↱', left: '↰', 'slight-right': '↗', 'slight-left': '↖',
   uturn: '↶', arrive: '⚑',
@@ -20,6 +21,9 @@ let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
 const multi = () => mall.floors.length > 1;
 const markers = [];
+// lojas marcadas na busca (destaque no mapa); guardadas no aparelho
+const marked = new Set();
+const saveMarked = () => { try { localStorage.setItem(MARK_KEY, JSON.stringify([...marked])); } catch { /* sem armazenamento */ } };
 // GPS: posição atual no mapa { x, y, acc (m), near (POI mais próxima), inside }
 const gps = { watch: null, me: null, centered: false };
 // aberto dentro de outro app (ex.: visualizador do Claude), onde o GPS fica bloqueado
@@ -56,8 +60,11 @@ async function init() {
   state.accessible = h.get('acessivel') === '1';
   $('#accessible').checked = state.accessible;
 
+  try { for (const id of JSON.parse(localStorage.getItem(MARK_KEY) || '[]')) if (mall.poiById.has(id)) marked.add(id); } catch { /* ignora */ }
+
   setFloor(state.from?.f || mall.floors[0].id, false);
   update(true);
+  renderMarked();
 
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
@@ -69,6 +76,10 @@ function bindUI() {
   $('#f-from').onclick = () => openPicker('from');
   $('#f-to').onclick = () => openPicker('to');
   $('#find').onclick = () => openPicker('find');
+  $('#mark-clear').onclick = () => { clearMarked(); renderResults(); };
+  $('#marked-clear').onclick = clearMarked;
+  $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
+  $('#marked-chip').onclick = showMarked;
   $('#swap').onclick = () => { [state.from, state.to] = [state.to, state.from]; update(true); };
   $('#accessible').onchange = (e) => { state.accessible = e.target.checked; update(true); };
   $('#zin').onclick = () => view.zoomBy(1.6);
@@ -119,12 +130,14 @@ function openPicker(which) {
   picking = which;
   $('#q').placeholder = { from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
     find: 'Buscar loja, serviço ou categoria' }[which];
+  $('#mark-hint').hidden = which !== 'find';
   renderResults();
   $('#picker').showModal();
   $('#q').focus();
 }
 
 function renderResults() {
+  renderMarkBar();
   const ul = $('#results');
   ul.textContent = '';
   const q = $('#q').value.trim();
@@ -149,9 +162,23 @@ function renderResults() {
     box.append(el('div', 'n', p.name), el('div', 'c', p.cat || p.group));
     li.append(box);
     if (multi()) li.append(el('span', 'f', p.f));
+    if (picking === 'find') {
+      const on = marked.has(p.id);
+      li.classList.toggle('on', on);
+      li.setAttribute('role', 'checkbox');
+      li.setAttribute('aria-checked', String(on));
+      li.append(el('span', 'chk', on ? '✓' : ''));
+    }
     const pick = () => {
+      if (picking === 'find') {
+        toggleMarked(p);
+        const on = marked.has(p.id);
+        li.classList.toggle('on', on);
+        li.setAttribute('aria-checked', String(on));
+        li.querySelector('.chk').textContent = on ? '✓' : '';
+        return;
+      }
       $('#picker').close();
-      if (picking === 'find') return showPoi(p);
       state[picking] = p; state.picked = null; update(true);
     };
     li.onclick = pick;
@@ -161,6 +188,38 @@ function renderResults() {
 }
 
 // "The Sports Authority" fica no S; acentos não mudam a ordem
+/* ---------- lojas marcadas ---------- */
+function toggleMarked(p) {
+  if (marked.has(p.id)) marked.delete(p.id); else marked.add(p.id);
+  saveMarked(); renderMarkBar(); renderMarked();
+}
+
+function clearMarked() {
+  marked.clear();
+  saveMarked(); renderMarkBar(); renderMarked();
+}
+
+function renderMarkBar() {
+  const n = marked.size, bar = $('#mark-bar');
+  bar.hidden = picking !== 'find' || !n;
+  $('#mark-show').textContent = `Ver no mapa (${n})`;
+}
+
+function renderMarked() {
+  const n = marked.size;
+  $('#marked-chip').hidden = $('#marked-clear').hidden = !n;
+  $('#marked-chip').textContent = `★ ${n} ${n === 1 ? 'marcada' : 'marcadas'}`;
+  drawRoute();
+}
+
+function showMarked() {
+  const ps = [...marked].map((id) => mall.poiById.get(id)).filter(Boolean);
+  if (!ps.length) return;
+  if (!ps.some((p) => p.f === state.floor)) setFloor(ps[0].f, false);
+  state.picked = null; update(false);
+  fitPoints(ps.filter((p) => p.f === state.floor), 60 * mall.ppm);
+}
+
 const sortKey = (p) => norm(p.name.replace(/^the\s+/i, ''));
 
 /** Mostra uma loja em destaque: vai até ela, pinta o contorno e abre as ações. */
@@ -315,6 +374,9 @@ function renderSheet() {
     const b = el('button', 'btn primary', 'Ir para cá');
     b.onclick = () => { state.to = p; state.picked = null; update(true); };
     act.append(a, b);
+    const m = el('button', 'btn small mark-toggle', marked.has(p.id) ? '★ Desmarcar' : '☆ Marcar');
+    m.onclick = () => { toggleMarked(p); renderSheet(); };
+    act.append(m);
     s.append(head, act);
     s.hidden = false;
     return;
@@ -398,6 +460,12 @@ function drawRoute() {
     if (p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel ' + cls }, layers.sel);
     markers.push({ x: p.x, y: p.y, cls });
   };
+  for (const id of marked) {
+    const p = mall.poiById.get(id);
+    if (!p || p.f !== state.floor || p === state.from || p === state.to) continue;
+    if (p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel mark' }, layers.sel);
+    markers.push({ x: p.x, y: p.y, cls: 'mark', text: '★', title: p.name });
+  }
   if (state.picked && state.picked !== state.from && state.picked !== state.to) {
     const p = state.picked;
     if (p.f === state.floor) {

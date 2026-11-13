@@ -171,3 +171,17 @@ button { cursor: pointer; }
 .gps-txt { flex: 1; min-width: 0; cursor: pointer; }
 .gps-bar .chip { background: var(--pick-fill); color: #fff; border-color: var(--pick-fill); cursor: pointer; box-shadow: none; }
 .chip.open-web { text-decoration: none; background: #0b7d57; color: #fff; border-color: #0b7d57; }
+
+/* ---------- lojas marcadas ---------- */
+.poi-sel.mark { fill: color-mix(in srgb, var(--focus) 45%, transparent); stroke: #b26b00; }
+.mk.mark { width: 26px; height: 26px; border-radius: 50%; background: var(--focus); color: #3d2600; border: 3px solid #fff; display: grid; place-items: center; font-size: 14px; font-weight: 800; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+.chip.marked { background: var(--focus); color: #3d2600; border-color: var(--focus); cursor: pointer; }
+#marked-clear { cursor: pointer; }
+#results li .chk { margin-left: auto; flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-weight: 800; font-size: 15px; }
+#results li.on .chk { background: var(--focus); border-color: var(--focus); color: #3d2600; -webkit-text-fill-color: #3d2600; }
+#results li.on { background: color-mix(in srgb, var(--focus) 14%, transparent); }
+.mark-hint { margin: 0; padding: 0 16px 8px; font-size: 13px; color: var(--ink-2); }
+.mark-bar { display: flex; gap: 10px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel); flex: none; }
+.mark-bar .btn { color: var(--ink); }
+.mark-bar .btn.primary { color: #fff; -webkit-text-fill-color: #fff; }
+.btn.mark-toggle { flex: none; }
