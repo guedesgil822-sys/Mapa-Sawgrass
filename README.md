@@ -14,9 +14,9 @@ somem quando só existe um piso).
 - `editor.html`, `js/editor.js` – editor do grafo (nós, arestas, lojas) com exportação em JSON.
 - `js/graph.js` – dados, busca, rota por A* e instruções. `js/mapview.js` – mapa com arrastar e zoom.
 - `data/mall.json` – piso, nós, arestas e lojas.
-- `maps/l1.svg` – planta em vetor (nítida em qualquer zoom), 2880×1725.
+- `maps/l1.svg` – planta oficial em vetor (nítida em qualquer zoom), 3260×1870.
 - `sw.js`, `manifest.webmanifest`, `icons/` – PWA e cache offline.
-- `tools/fetch_sources.sh`, `tools/build_data.py`, `tools/vectorize.py` – baixam a planta, geram `mall.json` e desenham `maps/l1.svg`.
+- `tools/fetch_sources.sh`, `tools/build_from_pdf.py` – baixam a planta oficial em PDF e geram `mall.json` e `maps/l1.svg`.
 
 ## Rodar
 
@@ -60,30 +60,28 @@ campo e aparecem com nome.
 
 ## Origem dos dados e limites
 
-A planta é o PDF para impressão publicado em
-[all-maps.com/sawgrass-mills-mall-map](https://all-maps.com/sawgrass-mills-mall-map/).
-Diferente do Salvador Norte, ela é só uma imagem, sem dados estruturados: os
-corredores, portas e contornos foram **traçados à mão** em `tools/build_data.py`.
-Resultado: 1 piso, 42 pontos, 147 nós, 147 arestas. Há rota entre todos os pares.
+Fonte: a planta oficial em PDF publicada pela Simon
+([sawgrassmills.pdf](https://www.simon.com/assets/mall/1262/mall_floorplan_doc/sawgrassmills.pdf)),
+que é vetorial. `tools/build_from_pdf.py`:
 
-A imagem original é pequena e borrada, então a planta publicada é redesenhada
-em vetor por `tools/vectorize.py`: contorno dos prédios pela cor de cada ala,
-corredores a partir do grafo, lojas âncora destacadas e nomes em texto. Fica
-nítida em qualquer zoom, mas é esquemática: as divisas das lojas pequenas são
-aproximadas.
+1. lê a lista de lojas do PDF (número, nome e categoria);
+2. acha o número de cada loja na planta por OCR (tesseract), loja por loja;
+3. recorta o contorno exato de cada loja;
+4. monta os corredores pela cor (bege nos internos, cinza nos passeios externos da Oasis e do Colonnade);
+5. liga a porta de cada loja (ponto do contorno mais perto do corredor) ao corredor;
+6. publica o próprio vetor do PDF como planta, sem a lista de lojas e sem os números das lojas que ganharam nome.
 
-O material pertence ao shopping (Simon) e a quem publicou a planta: para uso além
-do pessoal é preciso autorização.
+Resultado: 257 pontos (âncoras, ~220 lojas com contorno, entradas, banheiros e
+praças de alimentação), 893 nós, 897 arestas. Há rota entre todos os pares.
 
-- **Planta antiga.** É a versão da época "The Mills" (com Wannado City, The Sports
-  Authority, Super Target, Bed Bath & Beyond). Várias dessas lojas não existem mais.
-  Confira os nomes no local ou no site do shopping e corrija no editor.
-- **Só lojas âncora, entradas e serviços.** Os números das lojas pequenas não são
-  legíveis na planta, então elas ainda não estão no mapa. A lista impressa na
-  planta ajuda a localizá-las; acrescente pelo editor (ferramenta Loja).
+O material pertence à Simon: para uso além do pessoal é preciso autorização.
+
+- **Planta de 2007.** É a única planta oficial pública em PDF. Muitas lojas mudaram
+  desde então (Wannado City, Sports Authority, Bed Bath & Beyond fecharam). Corrija pelo editor.
+- **48 lojas da lista ficaram sem posição**: o OCR não leu o número delas na planta
+  (números muito pequenos ou encostados nas linhas). Dá para incluí-las pelo editor.
 - **Portas estimadas.** Em lojas grandes a porta pode estar no lado errado.
-- **Colonnade Outlets** (área externa) entra como um ponto só, ligado à Entrada 2.
-- **Escala estimada** (~2 px por metro na imagem publicada): distâncias e tempos são aproximados.
+- **Escala estimada** (~2,4 pt por metro): distâncias e tempos são aproximados.
 - Não foi testado andando dentro do shopping.
 
 ## Regras para quem for mexer
