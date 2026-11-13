@@ -320,6 +320,15 @@ const D = {
   // ---------- voz ----------
   "Ler a rota em voz alta": ["Read the route aloud", "Leer la ruta en voz alta", "Lire l’itinéraire à voix haute", "Route vorlesen"],
   "Desligar voz": ["Turn voice off", "Apagar voz", "Couper la voix", "Sprachausgabe aus"],
+  // ---------- emergência ----------
+  "Emergência": ["Emergency", "Emergencia", "Urgence", "Notfall"],
+  "Polícia, bombeiros e ambulância": ["Police, fire and ambulance", "Policía, bomberos y ambulancia", "Police, pompiers et ambulance", "Polizei, Feuerwehr und Rettungsdienst"],
+  "Segurança do shopping": ["Mall security", "Seguridad del centro comercial", "Sécurité du centre", "Sicherheitsdienst"],
+  "Atrás da administração, na praça de alimentação leste (Garden Food Court).": ["Behind the mall office, in the east food court (Garden Food Court).", "Detrás de la administración, en el patio de comidas este (Garden Food Court).", "Derrière l’administration, dans l’aire de restauration est (Garden Food Court).", "Hinter der Verwaltung, im östlichen Food-Court (Garden Food Court)."],
+  "Simon Guest Services, em frente à Burlington: achados e perdidos, cadeira de rodas e ajuda.": ["Simon Guest Services, across from Burlington: lost and found, wheelchairs and help.", "Simon Guest Services, frente a Burlington: objetos perdidos, sillas de ruedas y ayuda.", "Simon Guest Services, en face de Burlington : objets trouvés, fauteuils roulants et aide.", "Simon Guest Services gegenüber von Burlington: Fundbüro, Rollstühle und Hilfe."],
+  "📞 Ligar": ["📞 Call", "📞 Llamar", "📞 Appeler", "📞 Anrufen"],
+  "🧭 Ir até lá": ["🧭 Take me there", "🧭 Ir allí", "🧭 Y aller", "🧭 Hinführen"],
+  "Criança perdida: avise o segurança ou o funcionário de qualquer loja e diga onde ela foi vista pela última vez. Se estiver num grupo, avise lá também.": ["Lost child: tell security or staff at any store where the child was last seen. If you’re in a group, tell them too.", "Niño perdido: avisa a seguridad o al personal de cualquier tienda y di dónde lo viste por última vez. Si estás en un grupo, avisa también.", "Enfant perdu : prévenez la sécurité ou le personnel d’un magasin et dites où il a été vu pour la dernière fois. Prévenez aussi votre groupe.", "Kind verloren: Sag dem Sicherheitsdienst oder Personal eines Geschäfts, wo es zuletzt gesehen wurde. Informiere auch deine Gruppe."],
   // ---------- tutorial ----------
   "Bem-vindo ao Sawgrass Mills": ["Welcome to Sawgrass Mills", "Bienvenido a Sawgrass Mills", "Bienvenue à Sawgrass Mills", "Willkommen in Sawgrass Mills"],
   "Busque qualquer loja em \"Para onde você vai?\" e toque em \"Ir ➜\": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.": ["Search any store in “Where are you going?” and tap “Go ➜”: the app draws the walking route, step by step. Turn on GPS (◎) to start from where you are.", "Busca cualquier tienda en “¿A dónde vas?” y toca “Ir ➜”: la app traza la ruta a pie, paso a paso. Activa el GPS (◎) para salir desde donde estás.", "Cherchez un magasin dans « Où allez-vous ? » et touchez « Aller ➜ » : l’app trace l’itinéraire à pied, étape par étape. Activez le GPS (◎) pour partir d’où vous êtes.", "Suche ein Geschäft unter „Wohin möchtest du?“ und tippe auf „Los ➜“: Die App zeigt den Fußweg Schritt für Schritt. Mit GPS (◎) startest du an deinem Standort."],
@@ -404,6 +413,14 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  "Emergência": ["紧急", "緊急"],
+  "Polícia, bombeiros e ambulância": ["警察、消防和急救", "警察・消防・救急"],
+  "Segurança do shopping": ["商场保安", "モールの警備"],
+  "Atrás da administração, na praça de alimentação leste (Garden Food Court).": ["在管理处后面，东侧美食广场（Garden Food Court）。", "管理事務所の裏、東側フードコート（Garden Food Court）。"],
+  "Simon Guest Services, em frente à Burlington: achados e perdidos, cadeira de rodas e ajuda.": ["Simon Guest Services（Burlington 对面）：失物招领、轮椅及其他帮助。", "Burlingtonの向かいのSimon Guest Services：遺失物、車いす、各種サポート。"],
+  "📞 Ligar": ["📞 拨打", "📞 電話"],
+  "🧭 Ir até lá": ["🧭 带我去", "🧭 そこへ行く"],
+  "Criança perdida: avise o segurança ou o funcionário de qualquer loja e diga onde ela foi vista pela última vez. Se estiver num grupo, avise lá também.": ["儿童走失：请告知保安或任何店员孩子最后出现的地点。如在群组中，也请通知群组。", "迷子：警備員か近くの店のスタッフに、最後に見かけた場所を伝えてください。グループにいる場合はそちらにも知らせましょう。"],
   "Ler a rota em voz alta": ["语音播报路线", "ルートを読み上げ"],
   "Desligar voz": ["关闭语音", "音声をオフ"],
   "Ofertas": ["优惠", "お得情報"],

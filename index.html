@@ -65,6 +65,7 @@
 
 <nav id="floors" aria-label="Pisos"></nav>
 <div class="zoom">
+  <button type="button" id="sos-btn" class="sos-btn" aria-label="Emergência" title="Emergência">🆘</button>
   <button type="button" id="gps" aria-label="Onde estou (GPS)" title="Onde estou (GPS)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/><path d="M12 1.5v3.5M12 19v3.5M1.5 12h3.5M19 12h3.5"/></svg></button>
   <button type="button" id="zin" aria-label="Aproximar">+</button>
   <button type="button" id="zout" aria-label="Afastar">−</button>
@@ -278,6 +279,22 @@
       <button type="button" class="btn primary" id="intro-next">Próximo</button>
     </div>
   </div>
+</dialog>
+
+<dialog id="sos" class="sheet-dlg">
+  <form method="dialog" class="tools-box sos-box">
+    <div class="tools-head"><h2>🆘 <span>Emergência</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <a class="sos-call red" href="tel:911"><b>911</b><span>Polícia, bombeiros e ambulância</span></a>
+    <div class="sos-card">
+      <div><b>Segurança do shopping</b><span class="num">(954) 846-2322</span><small>Atrás da administração, na praça de alimentação leste (Garden Food Court).</small></div>
+      <div class="sos-acts"><a class="btn small" href="tel:+19548462322">📞 Ligar</a><button type="button" class="btn small primary" id="sos-sec">🧭 Ir até lá</button></div>
+    </div>
+    <div class="sos-card">
+      <div><b>Atendimento ao cliente</b><span class="num">(954) 846-2350</span><small>Simon Guest Services, em frente à Burlington: achados e perdidos, cadeira de rodas e ajuda.</small></div>
+      <div class="sos-acts"><a class="btn small" href="tel:+19548462350">📞 Ligar</a><button type="button" class="btn small primary" id="sos-info">🧭 Ir até lá</button></div>
+    </div>
+    <p class="cv-note"><span>Criança perdida: avise o segurança ou o funcionário de qualquer loja e diga onde ela foi vista pela última vez. Se estiver num grupo, avise lá também.</span></p>
+  </form>
 </dialog>
 
 <dialog id="share">

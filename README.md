@@ -136,6 +136,13 @@ No painel da rota, o botão 🔇/🔊 liga a leitura em voz alta (voz do própri
 celular, no idioma do app): cada passo é falado ao começar a rota e ao tocar
 em "Próximo", e com o GPS o app fala "Você chegou". A escolha fica salva.
 
+## Emergência
+
+O botão vermelho 🆘 (acima do GPS) abre: ligar 911, segurança do shopping
+(954) 846-2322 e Atendimento (954) 846-2350, com "Ir até lá" para cada um, e o
+que fazer com criança perdida. Os números ficam visíveis para copiar, caso a
+ligação direta não funcione.
+
 ## Tutorial
 
 Na primeira abertura aparecem 3 telas rápidas de "como usar" (busca e rota,

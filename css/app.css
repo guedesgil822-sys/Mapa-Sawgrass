@@ -465,3 +465,17 @@ button { cursor: pointer; }
 .deal-card .btn.primary { color: #fff; -webkit-text-fill-color: #fff; }
 .btn.voice { flex: none; width: 44px; padding: 0; font-size: 18px; }
 .btn.voice.on { background: var(--focus); border-color: var(--focus); }
+
+/* ---------- emergência ---------- */
+.zoom .sos-btn { background: #c62828; color: #fff; -webkit-text-fill-color: #fff; font-size: 18px; }
+.sos-box { display: flex; flex-direction: column; gap: 10px; }
+.sos-call { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px; text-decoration: none; background: #c62828; color: #fff; -webkit-text-fill-color: #fff; }
+.sos-call b { font-size: 34px; letter-spacing: .04em; }
+.sos-call span { font-size: 15px; font-weight: 700; }
+.sos-card { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line); }
+.sos-card b { display: block; font-size: 16px; }
+.sos-card .num { display: block; font-size: 20px; font-weight: 800; user-select: all; -webkit-user-select: all; font-variant-numeric: tabular-nums; }
+.sos-card small { display: block; font-size: 13px; color: var(--ink-2); }
+.sos-acts { display: flex; gap: 8px; }
+.sos-acts .btn { text-decoration: none; display: inline-grid; place-items: center; color: var(--ink); }
+.sos-acts .btn.primary { color: #fff; -webkit-text-fill-color: #fff; }

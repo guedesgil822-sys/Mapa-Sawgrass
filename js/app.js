@@ -139,6 +139,10 @@ function bindUI() {
   });
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
+  $('#sos-btn').onclick = () => $('#sos').showModal();
+  const goPlace = (cat) => { const p = mall.pois.find((q) => q.cat === cat); if (!p) return; $('#sos').close(); state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); };
+  $('#sos-sec').onclick = () => goPlace('Administração');
+  $('#sos-info').onclick = () => goPlace('Atendimento e cartões-presente');
   $('#intro-again').onclick = () => { $('#lang').close(); openIntro(); };
   $('#move-cancel').onclick = () => { moving = null; $('#move-bar').hidden = true; };
   $('#fix-chip').onclick = openFixes;
