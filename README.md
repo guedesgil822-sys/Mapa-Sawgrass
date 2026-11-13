@@ -130,6 +130,16 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Visual (vidro + navegação)
+
+- **No mapa:** busca, filtros, botões e painel em vidro translúcido, e a barra de baixo é uma doca flutuante.
+- **Durante a rota:** uma faixa verde no topo mostra o passo atual em letra grande e o próximo passo embaixo.
+  - O ✏️ da faixa abre a origem e o destino para trocar, e o ✓ volta para a rota.
+- **Painel da rota:** mostra o tempo em destaque, a distância, a hora de chegada e o destino.
+  - Botões: **Encerrar**, ‹, 🔊 Voz, ☰ Passos e Próximo ›.
+  - Embaixo, uma barra de progresso ("Passo 2 de 15").
+  - A doca some enquanto a rota está aberta.
+
 ## Rota em voz alta
 
 No painel da rota, o botão 🔇/🔊 liga a leitura em voz alta (voz do próprio

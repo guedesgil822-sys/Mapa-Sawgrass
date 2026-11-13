@@ -21,11 +21,11 @@ const GROUP_TTL = 24 * 3600 * 1000;
 const MEET_KEY = 'sawgrass.encontro';
 const CAR_KEY = 'sawgrass.carro';
 const ICON = {
-  start: '●', straight: '↑', right: '↱', left: '↰', 'slight-right': '↗', 'slight-left': '↖',
+  start: '🚶', straight: '↑', right: '↱', left: '↰', 'slight-right': '↗', 'slight-left': '↖',
   uturn: '↶', arrive: '⚑',
 };
 
-const state = { tour: null, meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
+const state = { tour: null, meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false, edit: false };
 let mall, view, layers, picking = 'from', group = '', onlyMarked = false;
 let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
@@ -106,6 +106,8 @@ function bindUI() {
   $('#f-from').onclick = () => openPicker('from');
   $('#f-to').onclick = () => openPicker('to');
   $('#search-pill').onclick = () => openPicker('find'); // mesma tela da aba Buscar
+  $('#nb-edit').onclick = () => { state.edit = true; update(false); };
+  $('#trip-done').onclick = () => { state.edit = false; update(false); };
   $('#trip-clear').onclick = () => { state.tour = null; state.from = state.to = null; state.picked = null; update(false); };
   $('#tab-map').onclick = () => { state.picked = null; update(false); fitCurrent(); };
   $('#tab-find').onclick = () => openPicker('find');
@@ -837,14 +839,18 @@ function onMapTap(pt, ev, target) {
 function update(refit) {
   setField('#f-from', state.from, tx('Escolha a loja mais próxima'));
   setField('#f-to', state.to, tx('Escolha o destino'));
-  $('#trip').hidden = !(state.from || state.to);
-  $('#search-pill').hidden = !$('#trip').hidden;
-
   state.route = null;
   if (state.from && state.to && state.from.id !== state.to.id) {
     state.route = mall.route(state.from.id, state.to.id, { accessible: state.accessible });
   }
-  if (refit) state.step = 0;
+  if (refit) { state.step = 0; state.edit = false; }
+  // com rota: faixa de instrução no topo (origem/destino ficam atrás do lápis)
+  const nav = !!state.route && !state.edit;
+  $('#nav-banner').hidden = !nav;
+  $('#trip').hidden = !(state.from || state.to) || nav;
+  $('#search-pill').hidden = !!(state.from || state.to);
+  $('#trip-done').hidden = !(state.route && state.edit);
+  document.documentElement.classList.toggle('navigating', nav);
 
   const h = new URLSearchParams();
   if (state.from && state.from !== ME) h.set('de', state.from.id);
@@ -919,32 +925,50 @@ function renderSheet() {
   const r = state.route;
   if (!r) { s.hidden = true; return; }
 
+  const cur = r.steps[state.step], nxt = r.steps[state.step + 1];
+  // faixa do topo: passo atual em letra grande e o seguinte embaixo
+  $('#nb-ico').textContent = stepIcon(cur);
+  $('#nb-text').textContent = cur.text;
+  $('#nb-dist').textContent = cur.dist ? tx('siga por {x}', { x: fmtDist(cur.dist) }) : '';
+  $('#nb-dist').hidden = !cur.dist;
+  $('#nb-next').hidden = !nxt;
+  if (nxt) $('#nb-next').textContent = tx('Depois: {x}', { x: nxt.text });
+
   const head = el('div', 'sheet-head');
   const g = el('div', 'grow');
   const fl = r.floors.filter((f, i) => f !== r.floors[i - 1]);
-  g.append(
-    el('h2', '', `${fmtTime(r.seconds)} · ${fmtDist(r.meters)}`),
-    el('p', '', fl.length > 1 ? tx('Pisos: {x}', { x: fl.join(' → ') }) : multi() ? tx('Tudo no piso {x}', { x: fl[0] }) : tx('A pé, sem trocar de piso')),
-  );
-  const prev = el('button', 'btn small', '‹');
+  const sub = [fmtDist(r.meters), tx('chega {x}', { x: clock(Date.now() + r.seconds * 1000) })];
+  if (fl.length > 1) sub.push(tx('Pisos: {x}', { x: fl.join(' → ') }));
+  if (state.to) sub.push(td(state.to.name));
+  g.append(el('h2', 'eta', fmtTime(r.seconds)), el('p', '', sub.join(' · ')));
+  const end = el('button', 'btn end', tx('Encerrar'));
+  end.onclick = () => $('#trip-clear').click();
+  head.append(g, end);
+
+  const acts = el('div', 'nav-acts');
+  const prev = el('button', 'btn', '‹');
   prev.setAttribute('aria-label', tx('Passo anterior'));
-  const next = el('button', 'btn small primary', tx('Próximo ›'));
   prev.onclick = () => goStep(state.step - 1);
-  next.onclick = () => goStep(state.step + 1);
   prev.disabled = state.step === 0;
-  next.disabled = state.step === r.steps.length - 1;
-  const spk = el('button', 'btn small voice' + (voiceOn ? ' on' : ''), voiceOn ? '🔊' : '🔇');
-  spk.setAttribute('aria-label', tx(voiceOn ? 'Desligar voz' : 'Ler a rota em voz alta'));
-  spk.title = spk.getAttribute('aria-label');
+  const spk = el('button', 'btn voice' + (voiceOn ? ' on' : ''), (voiceOn ? '🔊 ' : '🔇 ') + tx('Voz'));
+  spk.setAttribute('aria-pressed', String(voiceOn));
+  spk.title = tx(voiceOn ? 'Desligar voz' : 'Ler a rota em voz alta');
   spk.hidden = !('speechSynthesis' in window);
   spk.onclick = () => { voiceOn = !voiceOn; store('sawgrass.voz', voiceOn); if (voiceOn) speakStep(); else speechSynthesis.cancel(); renderSheet(); };
-  head.append(g, spk, prev, next);
+  const list = el('button', 'btn list' + (state.open ? ' on' : ''), '☰ ' + tx('Passos'));
+  list.setAttribute('aria-pressed', String(state.open));
+  list.onclick = () => { state.open = !state.open; renderSheet(); };
+  const next = el('button', 'btn primary', tx('Próximo ›'));
+  next.onclick = () => goStep(state.step + 1);
+  next.disabled = state.step === r.steps.length - 1;
+  acts.append(prev, spk, list, next);
 
-  const cur = r.steps[state.step];
-  const now = el('div', 'now');
-  const txt = el('div', 'txt', cur.text);
-  if (cur.dist) txt.appendChild(el('small', '', tx('siga por {x}', { x: fmtDist(cur.dist) })));
-  now.append(el('div', 'ico', stepIcon(cur)), txt);
+  const prog = el('div', 'prog');
+  const bar = el('span', 'bar');
+  const fill = el('i');
+  fill.style.width = `${((state.step + 1) / r.steps.length) * 100}%`;
+  bar.append(fill);
+  prog.append(bar, el('span', '', tx('Passo {i} de {n}', { i: state.step + 1, n: r.steps.length })));
 
   const ol = el('ol', 'steps');
   r.steps.forEach((st, i) => {
@@ -956,11 +980,17 @@ function renderSheet() {
     li.onclick = () => goStep(i);
     ol.appendChild(li);
   });
-  const more = el('button', 'more', state.open ? tx('Ocultar passos') : tx('Ver os {n} passos', { n: r.steps.length }));
-  more.onclick = () => { state.open = !state.open; renderSheet(); };
   ol.hidden = !state.open;
   if (state.tour) s.append(tourBox());
-  s.append(head, now, more, ol);
+  s.append(head);
+  if (state.edit) {   // sem a faixa do topo, o passo atual aparece aqui
+    const now = el('div', 'now');
+    const txt = el('div', 'txt', cur.text);
+    if (cur.dist) txt.appendChild(el('small', '', tx('siga por {x}', { x: fmtDist(cur.dist) })));
+    now.append(el('div', 'ico', stepIcon(cur)), txt);
+    s.append(now);
+  }
+  s.append(acts, prog, ol);
   s.hidden = false;
   ol.querySelector('.cur')?.scrollIntoView({ block: 'nearest' });
 }
