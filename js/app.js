@@ -21,6 +21,7 @@ const DB_URL = 'https://sawgrass-58fe7-default-rtdb.firebaseio.com';
 const GROUP_TTL = 24 * 3600 * 1000;
 const MEET_KEY = 'sawgrass.encontro';
 const CAR_KEY = 'sawgrass.carro';
+const CAR_PHOTO_KEY = 'sawgrass.carro.foto';
 const ICON = {
   start: '🚶', straight: '↑', right: '↱', left: '↰', 'slight-right': '↗', 'slight-left': '↖',
   uturn: '↶', arrive: '⚑',
@@ -187,7 +188,10 @@ function bindUI() {
   $('#mt-share').onclick = () => { $('#meet').close(); openShare(); };
   $('#car-gps').onclick = carFromGps;
   $('#car-save').onclick = saveCar;
-  $('#car-del').onclick = () => { state.car = null; persistCar(); $('#car').close(); if (state.to === CAR) { state.to = null; update(false); } };
+  $('#car-file').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) shrinkPhoto(f).then((d) => { carPhoto = d; renderCarPhoto(); }).catch(() => toast(tx('Não deu para abrir a foto.'))); };
+  $('#car-photo-del').onclick = () => { carPhoto = null; renderCarPhoto(); };
+  $('#car-img-btn').onclick = () => { $('#photo-big').src = carPhoto; $('#photo-view').showModal(); };
+  $('#car-del').onclick = () => { store(CAR_PHOTO_KEY, null); carPhoto = null; state.car = null; persistCar(); $('#car').close(); if (state.to === CAR) { state.to = null; update(false); } };
   $('#car-go').onclick = () => { $('#car').close(); goToCar(); };
   $('#sh-send').onclick = sendShare;
   $('#shared-close').onclick = () => { $('#shared-bar').hidden = true; };
@@ -1354,11 +1358,32 @@ function openCar() {
   $('#car-info').hidden = !c;
   if (c) $('#car-info').textContent = `${tx('Salvo às {t}', { t: clock(c.t) })}${c.x != null ? tx(' pelo GPS') : ''}${c.note ? ' · ' + c.note : ''}`;
   $('#car-del').hidden = $('#car-go').hidden = !c;
+  carPhoto = c ? load(CAR_PHOTO_KEY) : null;
+  renderCarPhoto();
   $('#car-gps').textContent = tx('📍 Usar minha posição agora (GPS)');
   if (!$('#car').open) $('#car').showModal();
 }
 
-let carPos = null, carWaiting = false;
+let carPos = null, carWaiting = false, carPhoto = null;
+
+// foto da vaga: reduzida (lado maior 1000 px, JPEG) para caber no armazenamento do navegador
+async function shrinkPhoto(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, err) => { const i = new Image(); i.onload = () => ok(i); i.onerror = err; i.src = url; });
+    const k = Math.min(1, 1000 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.7);
+  } finally { URL.revokeObjectURL(url); }
+}
+function renderCarPhoto() {
+  $('#car-img-btn').hidden = !carPhoto;
+  if (carPhoto) $('#car-img').src = carPhoto;
+  $('#car-photo-del').hidden = !carPhoto;
+  $('#car-photo-l').textContent = tx(carPhoto ? '📸 Trocar foto' : '📸 Foto da vaga');
+}
 function carFromGps() {
   if (!gps.me) {
     carWaiting = true;
@@ -1378,6 +1403,8 @@ function saveCar() {
   const lot = $('#car-lot').value;
   if (!lot) { $('#car-lot').classList.add('need'); return; }
   state.car = { lot, note: $('#car-note').value.trim(), t: Date.now(), ...(carPos || {}) };
+  store(CAR_PHOTO_KEY, carPhoto);
+  if (carPhoto && load(CAR_PHOTO_KEY) !== carPhoto) toast(tx('A foto não coube na memória do navegador; o resto foi salvo.'));
   persistCar();
   $('#car').close();
   fitPoints([CAR], 200 * mall.ppm);

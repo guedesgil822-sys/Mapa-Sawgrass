@@ -604,3 +604,16 @@ button { cursor: pointer; }
 @keyframes mic-pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 25%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .icon-btn.mic.on { animation: none; } }
 .mic-status { margin: 0; padding: 10px 16px 0; font-size: 15px; font-weight: 600; color: var(--ink); }
+
+/* ---------- 26 · foto da vaga do carro ---------- */
+.car-photo { display: flex; flex-direction: column; gap: 8px; }
+.car-photo-act { display: flex; gap: 8px; }
+.photo-btn { display: inline-grid; place-items: center; cursor: pointer; color: var(--ink); position: relative; overflow: hidden; }
+.photo-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.photo-btn:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.car-img-btn { padding: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: none; cursor: zoom-in; }
+.car-img-btn img { display: block; width: 100%; max-height: 180px; object-fit: cover; }
+.photo-view { border: 0; padding: 0; margin: auto; max-width: 100vw; max-height: 100dvh; background: transparent; }
+.photo-view::backdrop { background: rgba(0, 0, 0, .85); }
+.pv-close { border: 0; padding: 0; background: none; cursor: zoom-out; display: block; }
+.pv-close img { display: block; max-width: 100vw; max-height: 100dvh; object-fit: contain; }
