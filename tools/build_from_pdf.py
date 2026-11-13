@@ -120,7 +120,7 @@ PLACES = [
     ("Banheiros · Entrada 1", "Facilidades", "Banheiro", (425, 2785)),
     ("Banheiros · Market Food Court", "Facilidades", "Banheiro", (705, 2795)),
     ("Banheiros · Entrada 2", "Facilidades", "Banheiro", (985, 3160)),
-    ("Banheiros · Bed Bath & Beyond", "Facilidades", "Banheiro", (1585, 3770)),
+    ("Banheiros · Entrada 3", "Facilidades", "Banheiro", (1585, 3770)),   # antes "· Bed Bath & Beyond" (fechou)
     ("Banheiros · Nordstrom Rack", "Facilidades", "Banheiro", (2200, 2995)),
     ("Banheiros · Burlington", "Facilidades", "Banheiro", (2075, 3270)),
     ("Banheiros · Entrada 4", "Facilidades", "Banheiro", (2605, 3730)),

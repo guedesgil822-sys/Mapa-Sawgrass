@@ -355,3 +355,20 @@ button { cursor: pointer; }
 .mk.stop { width: 30px; height: 30px; border-radius: 50%; background: #fff; color: var(--accent); -webkit-text-fill-color: var(--accent); border: 3px solid var(--accent); display: grid; place-items: center; font-size: 15px; font-weight: 800; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
 .mk.stop.cur { background: var(--accent); color: #fff; -webkit-text-fill-color: #fff; width: 36px; height: 36px; font-size: 17px; }
 .mk.stop.done { background: var(--from); border-color: #fff; color: #fff; -webkit-text-fill-color: #fff; }
+
+/* ---------- perto de mim ---------- */
+.chip.near { cursor: pointer; background: #1a73e8; color: #fff; -webkit-text-fill-color: #fff; border-color: #1a73e8; }
+.near-from { margin: 6px 0 0; font-size: 14px; color: var(--ink-2); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.near-from .chip { cursor: pointer; box-shadow: none; padding: 5px 10px; font-size: 13px; }
+.near-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+.near-cat { min-height: 74px; padding: 10px 6px; align-items: center; text-align: center; }
+.near-cat .ti { font-size: 24px; margin-bottom: 4px; }
+.near-cat b { font-size: 12.5px; line-height: 1.2; }
+.near-cat.on { border-color: #1a73e8; background: color-mix(in srgb, #1a73e8 18%, var(--panel)); }
+.near-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; }
+.near-list li { display: flex; align-items: center; gap: 12px; padding: 10px 2px; border-top: 1px solid var(--line); }
+.near-list .txt { flex: 1; min-width: 0; }
+.near-list .n { font-weight: 700; font-size: 15px; }
+.near-list .c { font-size: 13px; color: var(--ink-2); }
+.near-list .go { flex: none; border: 0; background: var(--accent); color: #fff; -webkit-text-fill-color: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 800; font-size: 15px; cursor: pointer; }
+.logo.ico { font-size: 22px; }

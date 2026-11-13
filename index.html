@@ -34,6 +34,7 @@
     <button type="button" class="chip st-meet" id="meet-chip" hidden></button>
     <button type="button" class="chip st-car" id="car-chip" hidden></button>
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
+    <button type="button" class="chip near" id="near-btn">📍 Perto de mim</button>
     <button type="button" class="chip tour" id="tour-btn" hidden>🧭 Roteiro</button>
     <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
@@ -164,6 +165,15 @@
   <form method="dialog" class="tools-box">
     <div class="tools-head"><h2>🌐 <span>Idioma</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
     <div class="lang-list" id="lang-list"></div>
+  </form>
+</dialog>
+
+<dialog id="near" class="sheet-dlg">
+  <form method="dialog" class="tools-box">
+    <div class="tools-head"><h2>📍 <span>Perto de mim</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <p class="near-from" id="near-from"></p>
+    <div class="near-cats" id="near-cats"></div>
+    <ul class="near-list" id="near-list"></ul>
   </form>
 </dialog>
 

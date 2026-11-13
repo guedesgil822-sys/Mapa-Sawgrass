@@ -239,6 +239,19 @@ const D = {
   'Próxima loja ›': ['Next store ›', 'Siguiente tienda ›', 'Magasin suivant ›', 'Nächstes Geschäft ›'],
   '✅ Concluir': ['✅ Finish', '✅ Terminar', '✅ Terminer', '✅ Fertig'],
 
+  // ---------- perto de mim ----------
+  '📍 Perto de mim': ['📍 Near me', '📍 Cerca de mí', '📍 Près de moi', '📍 In meiner Nähe'],
+  'Perto de mim': ['Near me', 'Cerca de mí', 'Près de moi', 'In meiner Nähe'],
+  'Comida': ['Food', 'Comida', 'Manger', 'Essen'],
+  'Café e doces': ['Coffee & sweets', 'Café y dulces', 'Café et douceurs', 'Kaffee & Süßes'],
+  'Saída': ['Exit', 'Salida', 'Sortie', 'Ausgang'],
+  'Atendimento': ['Guest services', 'Atención', 'Accueil', 'Service'],
+  'Farmácia': ['Pharmacy', 'Farmacia', 'Pharmacie', 'Apotheke'],
+  'A partir de: {x}': ['From: {x}', 'Desde: {x}', 'Depuis : {x}', 'Von: {x}'],
+  'Diga onde você está (ou ligue o GPS) para achar o mais perto.': ['Tell us where you are (or turn on GPS) to find the nearest.', 'Indica dónde estás (o activa el GPS) para encontrar lo más cercano.', 'Indiquez où vous êtes (ou activez le GPS) pour trouver le plus proche.', 'Sag, wo du bist (oder schalte GPS ein), um das Nächste zu finden.'],
+  'Trocar': ['Change', 'Cambiar', 'Changer', 'Ändern'],
+  'Escolher onde estou': ['Choose where I am', 'Elegir dónde estoy', 'Choisir où je suis', 'Standort wählen'],
+
   // ---------- segmentos ----------
   'Alimentação': ['Food', 'Comida', 'Restauration', 'Essen'],
   'Beleza': ['Beauty', 'Belleza', 'Beauté', 'Beauty'],
@@ -298,6 +311,17 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  '📍 Perto de mim': ['📍 附近', '📍 近くを探す'],
+  'Perto de mim': ['附近', '近くを探す'],
+  'Comida': ['餐饮', '食事'],
+  'Café e doces': ['咖啡甜品', 'カフェ・スイーツ'],
+  'Saída': ['出口', '出口'],
+  'Atendimento': ['服务台', 'インフォメーション'],
+  'Farmácia': ['药店', '薬局'],
+  'A partir de: {x}': ['起点：{x}', '出発地：{x}'],
+  'Diga onde você está (ou ligue o GPS) para achar o mais perto.': ['请告诉我们您的位置（或开启 GPS）以查找最近的地点。', '現在地を選ぶ（またはGPSをオン）と一番近い場所を探せます。'],
+  'Trocar': ['更改', '変更'],
+  'Escolher onde estou': ['选择我的位置', '現在地を選ぶ'],
   '🧭 Roteiro': ['🧭 路线', '🧭 ルート'],
   '🧭 Roteiro · loja {i} de {n}': ['🧭 路线 · 第 {i}/{n} 家', '🧭 ルート・{n}店中{i}店目'],
   '{n} lojas · {d} no total': ['{n} 家店铺 · 共 {d}', '{n}店・合計 {d}'],

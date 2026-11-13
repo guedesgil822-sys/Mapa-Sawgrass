@@ -125,6 +125,7 @@ function bindUI() {
   $('#mark-clear').onclick = () => { clearMarked(); renderResults(); };
   $('#marked-clear').onclick = clearMarked;
   $('#tour-btn').onclick = startTour;
+  $('#near-btn').onclick = () => openNear();
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
   $('#mark-only').onclick = () => { onlyMarked = !onlyMarked; $('#results').scrollTop = 0; renderResults(); };
   $('#picker').addEventListener('close', () => { onlyMarked = false; });
@@ -273,6 +274,7 @@ function renderResults() {
       if (picking === 'meet') { meetDraft = p; return openMeet(p); }
       state[picking] = p; state.picked = null;
       if (tourPending && picking === 'from') { tourPending = false; return startTour(); }
+      if (nearPending && picking === 'from') { nearPending = false; state.from = p; update(false); return openNear(); }
       state.tour = null; // escolha manual encerra o roteiro
       if (picking === 'to') gpsAsOrigin();
       update(true);
@@ -320,6 +322,72 @@ function showMarked() {
   if (!ps.some((p) => p.f === state.floor)) setFloor(ps[0].f, false);
   state.picked = null; update(false);
   fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
+}
+
+/* ---------- mais perto de mim ---------- */
+let nearPending = false, nearCat = null;
+// categorias: o que procurar e como reconhecer nos dados
+const NEAR = [
+  { id: 'wc', ico: '🚻', label: 'Banheiro', ok: (p) => p.cat === 'Banheiro' },
+  { id: 'food', ico: '🍔', label: 'Comida', ok: (p) => p.group === 'Alimentação' && !/Doces/.test(p.cat || '') },
+  { id: 'cafe', ico: '☕', label: 'Café e doces', ok: (p) => /^Doces/.test(p.cat || '') },
+  { id: 'exit', ico: '🚪', label: 'Saída', ok: (p) => p.group === 'Entradas' },
+  { id: 'park', ico: '🅿️', label: 'Estacionamento', ok: (p) => p.group === 'Estacionamento' },
+  { id: 'info', ico: 'ℹ️', label: 'Atendimento', ok: (p) => p.cat === 'Atendimento e cartões-presente' },
+  { id: 'rx', ico: '💊', label: 'Farmácia', ok: (p) => /CVS|Pharmacy|Farm/i.test(p.name) },
+];
+
+// ponto de partida: GPS, a origem escolhida ou a loja aberta no painel
+const nearOrigin = () => (gps.me && ME.node ? ME : state.from || state.picked || null);
+
+function openNear() {
+  const o = nearOrigin();
+  const box = $('#near-cats');
+  box.textContent = '';
+  for (const c of NEAR) {
+    const b = el('button', 'tile near-cat' + (c.id === nearCat ? ' on' : ''));
+    b.type = 'button';
+    b.append(el('span', 'ti', c.ico), el('b', '', tx(c.label)));
+    b.onclick = () => { nearCat = c.id; openNear(); };
+    box.appendChild(b);
+  }
+  const from = $('#near-from');
+  from.textContent = '';
+  if (o) {
+    from.append(tx('A partir de: {x}', { x: td(o.name) }) + ' ');
+  } else {
+    from.append(tx('Diga onde você está (ou ligue o GPS) para achar o mais perto.') + ' ');
+  }
+  const ch = el('button', 'chip', o ? tx('Trocar') : tx('Escolher onde estou'));
+  ch.type = 'button';
+  ch.onclick = () => { nearPending = true; $('#near').close(); openPicker('from'); };
+  from.append(ch);
+  renderNear(o);
+  if (!$('#near').open) $('#near').showModal();
+}
+
+function renderNear(o) {
+  const ul = $('#near-list');
+  ul.textContent = '';
+  const c = NEAR.find((x) => x.id === nearCat);
+  if (!c || !o) return;
+  const found = mall.pois.filter((p) => p.f === o.f && p !== o && c.ok(p))
+    .map((p) => ({ p, m: walk(o, p) })).filter((x) => Number.isFinite(x.m)).sort((a, b) => a.m - b.m).slice(0, 5);
+  if (!found.length) { ul.appendChild(el('li', 'empty', tx('Nada encontrado.'))); return; }
+  for (const { p, m } of found) {
+    const li = el('li');
+    const txt = el('div', 'txt');
+    txt.append(el('div', 'n', td(p.name)), el('div', 'c', `${fmtDist(m)} · ${fmtTime(m / 1.2)}`));
+    const go = el('button', 'go', tx('Ir ➜'));
+    go.type = 'button';
+    go.onclick = () => {
+      $('#near').close();
+      state.tour = null; state.from = o; state.to = p; state.picked = null;
+      update(true);
+    };
+    li.append(logoEl(p), txt, go);
+    ul.appendChild(li);
+  }
 }
 
 /* ---------- roteiro pelas lojas marcadas ---------- */
@@ -417,7 +485,11 @@ const initials = (n) => n.replace(/^the\s+/i, '').split(/[\s/&-]+/).filter((w) =
 function logoEl(p, cls = '') {
   const d = el('span', 'logo ' + cls);
   d.style.setProperty('--h', GROUP_HUE[p.group] ?? 220);
-  d.textContent = initials(p.name) || '•';
+  // lugares do shopping (não marcas) ganham ícone em vez de iniciais
+  const icon = { Banheiro: '🚻', Entrada: '🚪', Estacionamento: '🅿️', 'Atendimento e cartões-presente': 'ℹ️', Administração: '🛡️',
+    'Praça de alimentação': '🍽️', Cinema: '🎬' }[(p.cat || '').split(' · ')[0]];
+  d.textContent = icon || initials(p.name) || '•';
+  if (icon) d.classList.add('ico');
   d.setAttribute('aria-hidden', 'true');
   if (p.web) {
     // a imagem fica dentro do selo desde já (imagem "solta" com loading=lazy nunca carrega no Safari)

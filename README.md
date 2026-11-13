@@ -97,6 +97,13 @@ Server-Sent Events, sem biblioteca. Regras do banco: só lê/escreve quem tem o
 código, ninguém lista os grupos, validade máxima de 24 h, mensagens de até 300
 letras. Não funciona dentro do visualizador do Claude (só no site).
 
+## Perto de mim
+
+O chip **📍 Perto de mim** mostra os 5 lugares mais próximos (distância real a
+pé) de: banheiro, comida, café e doces, saída, estacionamento, atendimento e
+farmácia, a partir do GPS, da origem escolhida ou da loja aberta no painel.
+"Ir ➜" traça a rota. (Caixas eletrônicos ainda não estão nos dados.)
+
 ## Roteiro pelas lojas marcadas
 
 Com 2 ou mais lojas marcadas aparece o chip **🧭 Roteiro**. O app calcula a
