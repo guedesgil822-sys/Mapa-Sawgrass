@@ -71,7 +71,8 @@ function bindUI() {
   $('#zin').onclick = () => view.zoomBy(1.6);
   $('#zout').onclick = () => view.zoomBy(1 / 1.6);
   $('#gps').hidden = !mall.data.meta?.geo;
-  $('#gps').onclick = () => (gps.watch == null ? startGps() : gps.me && centerOnMe());
+  $('#gps').onclick = () => (gps.watch == null ? startGps() : stopGps()); // liga/desliga
+  $('#gps-txt').onclick = () => gps.me && centerOnMe(); // tocar no texto recentraliza
   $('#gps-close').onclick = stopGps;
   $('#gps-use').onclick = () => {
     if (!gps.me?.near) return;
@@ -465,6 +466,8 @@ function gpsMsg(text, canUse = false) {
 function startGps() {
   if (!('geolocation' in navigator)) return gpsMsg('Este aparelho não oferece localização.');
   $('#gps').classList.add('on');
+  $('#gps').setAttribute('aria-pressed', 'true');
+  $('#gps').title = 'Desligar localização';
   gpsMsg('Procurando sua posição…');
   gps.centered = false;
   gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError,
@@ -475,11 +478,14 @@ function stopGps() {
   if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
   gps.watch = null; gps.me = null;
   $('#gps').classList.remove('on');
+  $('#gps').setAttribute('aria-pressed', 'false');
+  $('#gps').title = 'Onde estou (GPS)';
   $('#gps-bar').hidden = true;
   drawRoute();
 }
 
 function onGps(pos) {
+  if (gps.watch == null) return; // já desligado
   const { latitude, longitude, accuracy } = pos.coords;
   const { x, y } = geoToMap(latitude, longitude);
   const f = mall.floorById.get(state.floor);
@@ -497,11 +503,12 @@ function onGps(pos) {
   }
   gps.me = { x, y, acc: accuracy, near };
   const acc = accuracy < 1000 ? `±${Math.round(accuracy)} m` : 'baixa precisão';
-  gpsMsg(near ? `Perto de ${near.name} (${acc})` : `Você está aqui (${acc})`, !!near);
+  gpsMsg(near ? `📍 Perto de ${near.name} (${acc})` : `Você está aqui (${acc})`, !!near);
   if (!gps.centered) { gps.centered = true; centerOnMe(); } else drawRoute();
 }
 
 function onGpsError(err) {
+  if (gps.watch == null) return;
   if (err.code === 1) {
     stopGps();
     let framed = true;
