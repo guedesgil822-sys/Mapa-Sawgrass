@@ -28,6 +28,14 @@
 <header class="top">
   <button type="button" id="lang-btn" class="lang-btn" aria-label="Idioma" title="Idioma">🇧🇷</button>
   <button type="button" class="card search-pill" id="search-pill"><span class="sp-ic" aria-hidden="true">🔎</span><span class="sp-q">Para onde você vai?</span></button>
+  <div class="nav-banner" id="nav-banner" hidden role="status" aria-live="polite">
+    <div class="nb-main">
+      <span class="nb-ico" id="nb-ico" aria-hidden="true"></span>
+      <div class="nb-txt"><b id="nb-dist"></b><span id="nb-text"></span></div>
+      <button type="button" class="nb-edit" id="nb-edit" aria-label="Mudar origem ou destino" title="Mudar origem ou destino"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+    </div>
+    <div class="nb-next" id="nb-next" hidden></div>
+  </div>
   <div class="card trip" id="trip" hidden>
     <div class="rail" aria-hidden="true"><i class="dot from"></i><i class="line"></i><i class="dot to"></i></div>
     <div class="fields">
@@ -36,6 +44,7 @@
     </div>
     <div class="trip-act">
       <button type="button" class="icon-btn" id="swap" aria-label="Inverter origem e destino" title="Inverter">⇅</button>
+      <button type="button" class="icon-btn" id="trip-done" hidden aria-label="Voltar à rota" title="Voltar à rota">✓</button>
       <button type="button" class="icon-btn" id="trip-clear" aria-label="Limpar rota" title="Limpar rota">✕</button>
     </div>
   </div>
@@ -76,7 +85,7 @@
 
 <nav id="floors" aria-label="Pisos"></nav>
 <div class="zoom">
-  <button type="button" id="sos-btn" class="sos-btn" aria-label="Emergência" title="Emergência">🆘</button>
+  <button type="button" id="sos-btn" class="sos-btn" aria-label="Emergência" title="Emergência">SOS</button>
   <button type="button" id="gps" aria-label="Onde estou (GPS)" title="Onde estou (GPS)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/><path d="M12 1.5v3.5M12 19v3.5M1.5 12h3.5M19 12h3.5"/></svg></button>
   <button type="button" id="zin" aria-label="Aproximar">+</button>
   <button type="button" id="zout" aria-label="Afastar">−</button>
