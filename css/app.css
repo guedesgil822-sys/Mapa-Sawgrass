@@ -663,3 +663,13 @@ button { cursor: pointer; }
   .tabbar { left: 0; right: 0; bottom: 0; height: var(--tabh); padding: 6px max(8px, env(safe-area-inset-left)) calc(4px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
     border-radius: 22px 22px 0 0; border-bottom: 0; border-left: 0; border-right: 0; }
 }
+
+/* faixa vazia embaixo no app instalado do iPhone (--gap medido em app.js; 0 nos demais) */
+html, body { background: #f4f3ef; }
+#map { bottom: calc(-1 * var(--gap, 0px)); }
+@media (max-width: 759px) {
+  :root { --tabh: calc(66px + env(safe-area-inset-bottom) - var(--gap, 0px)); }
+  .tabbar { bottom: calc(-1 * var(--gap, 0px)); height: calc(var(--tabh) + var(--gap, 0px)); }
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]), :root:not([data-theme="light"]) body { background: #14171c; } }
+:root[data-theme="dark"], :root[data-theme="dark"] body { background: #14171c; }
