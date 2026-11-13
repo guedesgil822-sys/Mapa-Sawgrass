@@ -307,6 +307,7 @@ const D = {
   'O shopping não tem um ponto oficial de embarque: os carros param nas entradas. Confira o local no app antes de sair; táxis também param nas entradas principais.': ['The mall has no official rideshare zone: cars stop at the entrances. Check the spot in the app before heading out; taxis also stop at the main entrances.', 'El centro comercial no tiene un punto oficial: los autos paran en las entradas. Confirma el lugar en la app antes de salir; los taxis también paran en las entradas principales.', 'Pas de zone officielle : les voitures s’arrêtent aux entrées. Vérifiez le point dans l’app avant de sortir ; les taxis s’arrêtent aussi aux entrées principales.', 'Es gibt keinen offiziellen Abholpunkt: Autos halten an den Eingängen. Prüfe den Ort in der App; Taxis halten ebenfalls an den Haupteingängen.'],
 
   // ---------- correções ----------
+  '📍 local aproximado': ['📍 approximate location', '📍 ubicación aproximada', '📍 emplacement approximatif', '📍 ungefähre Lage'],
   '📍 Loja no lugar errado?': ['📍 Store in the wrong place?', '📍 ¿Tienda en el lugar equivocado?', '📍 Magasin mal placé ?', '📍 Geschäft am falschen Ort?'],
   'Toque no mapa onde a {x} fica de verdade.': ['Tap the map where {x} really is.', 'Toca el mapa donde está realmente {x}.', 'Touchez la carte là où se trouve vraiment {x}.', 'Tippe auf die Karte, wo {x} wirklich ist.'],
   '✅ {x} mudou de lugar. Obrigado!': ['✅ {x} moved. Thank you!', '✅ {x} cambió de lugar. ¡Gracias!', '✅ {x} a été déplacé. Merci !', '✅ {x} verschoben. Danke!'],
@@ -377,6 +378,7 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  '📍 local aproximado': ['📍 大致位置', '📍 おおよその位置'],
   '📍 Loja no lugar errado?': ['📍 店铺位置不对？', '📍 店の位置が違う？'],
   'Toque no mapa onde a {x} fica de verdade.': ['请在地图上点击 {x} 的实际位置。', '{x}の本当の場所を地図でタップしてください。'],
   '✅ {x} mudou de lugar. Obrigado!': ['✅ 已移动 {x}，谢谢！', '✅ {x}を移動しました。ありがとう！'],

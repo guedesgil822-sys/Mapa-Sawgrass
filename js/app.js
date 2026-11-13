@@ -256,7 +256,7 @@ function renderResults() {
     const li = el('li');
     li.tabIndex = 0;
     const box = el('div', 'txt');
-    box.append(el('div', 'n', td(p.name)), el('div', 'c', td(p.cat || p.group)));
+    box.append(el('div', 'n', td(p.name)), el('div', 'c', td(p.cat || p.group) + (p.approx ? ' · ' + tx('📍 local aproximado') : '')));
     li.append(logoEl(p), box);
     if (multi()) li.append(el('span', 'f', p.f));
     if (picking === 'find') {
@@ -355,6 +355,7 @@ function nearestCorridor(x, y, f) {
 }
 function movePoi(p, x, y) {
   p.x = x; p.y = y;
+  delete p.approx;
   delete p.poly;            // o contorno antigo era de outro lugar
   p.label = true;
   const n = nearestCorridor(x, y, p.f);
@@ -819,7 +820,7 @@ function renderSheet() {
     const head = el('div', 'sheet-head');
     const g = el('div', 'grow');
     head.prepend(logoEl(p, 'big'));
-    g.append(el('h2', '', td(p.name)), el('p', '', [multi() && mall.floorById.get(p.f).name, td(p.cat || p.group)].filter(Boolean).join(' · ')));
+    g.append(el('h2', '', td(p.name)), el('p', '', [multi() && mall.floorById.get(p.f).name, td(p.cat || p.group), p.approx && tx('📍 local aproximado')].filter(Boolean).join(' · ')));
     const x = el('button', 'icon-btn', '✕');
     x.setAttribute('aria-label', 'Fechar');
     x.onclick = () => { state.picked = null; update(false); };

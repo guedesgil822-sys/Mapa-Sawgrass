@@ -63,6 +63,12 @@ recebe a marca nova (o nome antigo é apagado do desenho e o app escreve o novo)
 loja que fechou sai do mapa; lojas novas viram pontos ligados ao corredor mais
 próximo (as grifes da parte nova do Colonnade ganham um caminho a pé até ele).
 O resumo da última atualização fica em `tools/update_stores_report.json`.
+
+Lojas do diretório atual que não estão no OpenStreetMap entram por
+`tools/add_missing.py`, a partir das pistas do diretório ("entre a Gap e a
+Solaris", "em frente à Nike", "perto da Burlington"): ficam perto das lojas
+citadas, ligadas ao corredor, com `"approx": true` (o app mostra "📍 local
+aproximado"; uma correção pelo app tira essa marca). Sem pista, ficam de fora.
 Limites: a posição vem do OpenStreetMap, que pode errar alguns metros, e lojas
 que não estão no OpenStreetMap ficam fora do mapa.
 
