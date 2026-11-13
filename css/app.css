@@ -656,3 +656,10 @@ button { cursor: pointer; }
 /* ---------- 32 · banheiro mais perto ---------- */
 .zoom .wc-btn { font-size: 21px; }
 .big .theme-seg button { white-space: normal; font-size: 13px; line-height: 1.2; }
+
+/* barra de baixo encostada no fim da tela (no celular); flutuante só no computador */
+@media (max-width: 759px) {
+  :root { --tabh: calc(66px + env(safe-area-inset-bottom)); }
+  .tabbar { left: 0; right: 0; bottom: 0; height: var(--tabh); padding: 6px max(8px, env(safe-area-inset-left)) calc(4px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+    border-radius: 22px 22px 0 0; border-bottom: 0; border-left: 0; border-right: 0; }
+}
