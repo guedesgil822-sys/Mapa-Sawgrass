@@ -573,7 +573,7 @@ button { cursor: pointer; }
 }
 
 /* ---------- 23 · letra maior ---------- */
-.big .top, .big #sheet, .big .tabbar, .big .zoom, .big #floors, .big dialog { zoom: 1.15; }
+.big .top, .big #sheet, .big .tabbar, .big .zoom, .big #floors, .big dialog > * { zoom: 1.15; }
 .big .top { max-width: 460px; }
 .big-opt { display: flex; width: fit-content; margin: 16px 0 6px; cursor: pointer; }
 /* letra maior: os 4 botões da rota em duas linhas (‹ e Próximo embaixo) */
@@ -655,3 +655,4 @@ button { cursor: pointer; }
 
 /* ---------- 32 · banheiro mais perto ---------- */
 .zoom .wc-btn { font-size: 21px; }
+.big .theme-seg button { white-space: normal; font-size: 13px; line-height: 1.2; }
