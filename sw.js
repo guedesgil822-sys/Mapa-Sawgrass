@@ -1,5 +1,5 @@
 // Cache para uso offline dentro do shopping (sinal costuma ser ruim).
-const VERSION = 'v67';
+const VERSION = 'v68';
 const SHELL = [
   './', 'index.html', 'css/app.css', 'js/app.js', 'js/graph.js', 'js/mapview.js', 'js/i18n.js', 'js/shop.js',
   'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-180.png',
@@ -19,11 +19,13 @@ self.addEventListener('activate', (e) => {
 });
 
 // Rede primeiro (para pegar mapa atualizado), cache quando estiver sem sinal.
+// "no-cache": sempre confere com o servidor (resposta curta se nada mudou), em vez de usar a cópia
+// de até 10 min do navegador — assim o atalho da tela de início pega a versão nova na hora.
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   e.respondWith(
-    fetch(req)
+    fetch(req, { cache: 'no-cache' })
       .then((res) => {
         if (res.ok) {
           const copy = res.clone();
