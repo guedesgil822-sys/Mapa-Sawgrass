@@ -11,12 +11,14 @@ const el = (tag, cls, text) => {
 const DRAFT_KEY = 'sawgrass.draft';
 const MARK_KEY = 'sawgrass.marcadas';
 const NAME_KEY = 'sawgrass.nome';
+const MEET_KEY = 'sawgrass.encontro';
+const CAR_KEY = 'sawgrass.carro';
 const ICON = {
   start: '●', straight: '↑', right: '↱', left: '↰', 'slight-right': '↗', 'slight-left': '↖',
   uturn: '↶', arrive: '⚑',
 };
 
-const state = { meet: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
+const state = { meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
 let mall, view, layers, picking = 'from', group = '';
 let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
@@ -28,6 +30,8 @@ const saveMarked = () => { try { localStorage.setItem(MARK_KEY, JSON.stringify([
 // GPS: posição atual no mapa { x, y, acc (m), near (POI mais próxima), inside }
 const gps = { watch: null, me: null, centered: false, heading: null };
 // "Minha posição": ponto de interesse virtual usado como origem da rota quando o GPS está ligado
+// carro: ponto virtual; a rota termina na saída do estacionamento escolhido e uma linha leva até o carro
+const CAR = { id: '__car', name: '🚗 Meu carro', group: 'Carro', cat: 'Carro', f: null, x: 0, y: 0, node: null };
 const ME = { id: '__gps', name: '📍 Minha posição', gps: true, group: 'GPS', cat: 'GPS', f: null, x: 0, y: 0, node: null };
 // aberto dentro de outro app (ex.: visualizador do Claude), onde o GPS fica bloqueado
 const framed = (() => { try { return window.top !== window; } catch { return true; } })();
@@ -64,11 +68,14 @@ async function init() {
   $('#accessible').checked = state.accessible;
 
   try { for (const id of JSON.parse(localStorage.getItem(MARK_KEY) || '[]')) if (mall.poiById.has(id)) marked.add(id); } catch { /* ignora */ }
+  loadMeetCar();
   readShared(h);
 
   setFloor(state.from?.f || mall.floors[0].id, false);
   update(true);
   renderMarked();
+  renderStatus();
+  setInterval(renderStatus, 30000);
   if (state.shared) { // enquadra tudo o que foi compartilhado
     const pts = [state.meet, state.shared.who, ...state.shared.marks.map((id) => mall.poiById.get(id))].filter(Boolean);
     requestAnimationFrame(() => { const m = 25 * mall.ppm; fitPoints(pts.flatMap((p) => [{ x: p.x - m, y: p.y - m }, { x: p.x + m, y: p.y + m }])); });
@@ -88,7 +95,23 @@ function bindUI() {
   $('#marked-clear').onclick = clearMarked;
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
   $('#marked-chip').onclick = showMarked;
-  $('#share-btn').onclick = openShare;
+  $('#tools-btn').onclick = openTools;
+  $('#t-meet').onclick = () => { $('#tools').close(); openMeet(); };
+  $('#t-car').onclick = () => { $('#tools').close(); openCar(); };
+  $('#t-share').onclick = () => { $('#tools').close(); openShare(); };
+  $('#t-marked').onclick = () => { $('#tools').close(); openPicker('find'); };
+  $('#t-gps').onclick = () => { $('#tools').close(); if (gps.watch == null) startGps(); else stopGps(); };
+  $('#meet-chip').onclick = () => openMeet();
+  $('#car-chip').onclick = () => openCar();
+  $('#mt-place').onclick = () => { $('#meet').close(); openPicker('meet'); };
+  $('#mt-quick').onclick = (e) => { const m = +e.target.dataset?.min; if (m) $('#mt-time').value = hhmm(Date.now() + m * 60000); };
+  $('#mt-save').onclick = saveMeet;
+  $('#mt-del').onclick = () => { state.meet = null; state.meetTime = ''; persistMeet(); $('#meet').close(); };
+  $('#mt-share').onclick = () => { $('#meet').close(); openShare(); };
+  $('#car-gps').onclick = carFromGps;
+  $('#car-save').onclick = saveCar;
+  $('#car-del').onclick = () => { state.car = null; persistCar(); $('#car').close(); if (state.to === CAR) { state.to = null; update(false); } };
+  $('#car-go').onclick = () => { $('#car').close(); goToCar(); };
   $('#sh-send').onclick = sendShare;
   $('#shared-close').onclick = () => { $('#shared-bar').hidden = true; };
   $('#shared-keep').onclick = () => {
@@ -145,7 +168,7 @@ function buildGroups() {
 function openPicker(which) {
   picking = which;
   $('#q').placeholder = { from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
-    find: 'Buscar loja, serviço ou categoria' }[which];
+    find: 'Buscar loja, serviço ou categoria', meet: 'Onde vão se encontrar?' }[which];
   $('#mark-hint').hidden = which !== 'find';
   renderResults();
   $('#picker').showModal();
@@ -195,6 +218,7 @@ function renderResults() {
         return;
       }
       $('#picker').close();
+      if (picking === 'meet') { meetDraft = p; return openMeet(p); }
       state[picking] = p; state.picked = null;
       if (picking === 'to') gpsAsOrigin();
       update(true);
@@ -352,7 +376,7 @@ function update(refit) {
 
   const h = new URLSearchParams();
   if (state.from && state.from !== ME) h.set('de', state.from.id);
-  if (state.to) h.set('para', state.to.id);
+  if (state.to && state.to !== CAR) h.set('para', state.to.id);
   if (state.accessible) h.set('acessivel', '1');
   history.replaceState(null, '', location.pathname + location.search + (h.size ? '#' + h : ''));
 
@@ -395,8 +419,8 @@ function renderSheet() {
     act.append(a, b);
     const m = el('button', 'btn small', marked.has(p.id) ? '★ Desmarcar' : '☆ Marcar');
     m.onclick = () => { toggleMarked(p); renderSheet(); };
-    const e = el('button', 'btn small', state.meet === p ? '🤝 Cancelar encontro' : '🤝 Encontro aqui');
-    e.onclick = () => { state.meet = state.meet === p ? null : p; renderSheet(); drawRoute(); };
+    const e = el('button', 'btn small', state.meet === p ? '🤝 Editar encontro' : '🤝 Encontro aqui');
+    e.onclick = () => openMeet(p);
     const row = el('div', 'actions');
     row.append(m, e);
     s.append(head, act, row);
@@ -521,12 +545,17 @@ function drawRoute() {
   if (state.meet && state.meet.f === state.floor) {
     const p = state.meet;
     if (p.poly?.length >= 6 && p !== state.to) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel meet' }, layers.sel);
-    markers.push({ x: p.x, y: p.y, cls: 'meet', text: '🤝', title: 'Ponto de encontro: ' + p.name });
+    markers.push({ x: p.x, y: p.y, cls: 'meet' + (state.meetTime ? ' timed' : ''), text: state.meetTime ? `🤝 ${state.meetTime}` : '🤝', title: 'Ponto de encontro: ' + p.name });
+  }
+  if (state.car && CAR.f === state.floor) {
+    const n = state.to === CAR && r && mall.nodes.get(CAR.node);
+    if (n) svgEl('line', { x1: n.x, y1: n.y, x2: CAR.x, y2: CAR.y, class: 'car-link' }, layers.route);
+    markers.push({ x: CAR.x, y: CAR.y, cls: 'car', text: '🚗', title: 'Meu carro' });
   }
   const fr = state.shared?.who;
   if (fr && fr.f === state.floor) markers.push({ x: fr.x, y: fr.y, cls: 'friend', text: `${fr.name || 'Amigo'}${fr.time ? ' · ' + fr.time : ''}`, title: 'Posição compartilhada' });
   if (state.from !== ME) mark(state.from, 'from');
-  mark(state.to, 'to');
+  if (state.to !== CAR) mark(state.to, 'to');
   if (gps.me) {
     svgEl('circle', { cx: gps.me.x, cy: gps.me.y, r: Math.max(gps.me.acc, 3) * mall.ppm, class: 'gps-acc' }, layers.sel);
     const n = state.from === ME && r && mall.nodes.get(ME.node);
@@ -562,6 +591,129 @@ function placeMarkers() {
   });
 }
 
+/* ---------- ferramentas: encontro e carro ---------- */
+let meetDraft = null;
+const hhmm = (t) => new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const store = (k, v) => { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch { /* sem armazenamento */ } };
+const load = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } };
+
+// minutos até HH:MM de hoje (negativo = já passou)
+function minsTo(t) {
+  const [h, m] = t.split(':').map(Number), d = new Date();
+  return Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m) - d) / 60000);
+}
+function relTime(t) {
+  const m = minsTo(t);
+  if (m > 90) return `em ${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`;
+  if (m > 1) return `em ${m} min`;
+  if (m >= -1) return 'agora';
+  return `há ${-m} min`;
+}
+
+function loadMeetCar() {
+  const mt = load(MEET_KEY);
+  if (mt && mall.poiById.has(mt.id)) { state.meet = mall.poiById.get(mt.id); state.meetTime = mt.time || ''; }
+  const c = load(CAR_KEY);
+  if (c && mall.poiById.has(c.lot)) { state.car = c; placeCar(); }
+}
+
+function persistMeet() { store(MEET_KEY, state.meet ? { id: state.meet.id, time: state.meetTime } : null); renderStatus(); drawRoute(); }
+function persistCar() { store(CAR_KEY, state.car); if (state.car) placeCar(); renderStatus(); drawRoute(); }
+
+function placeCar() {
+  const lot = mall.poiById.get(state.car.lot), c = state.car;
+  Object.assign(CAR, { f: lot.f, x: c.x ?? lot.x, y: c.y ?? lot.y, node: lot.node,
+    name: `🚗 Meu carro (${lot.name.replace(/^Estacionamento · /, '')})` });
+  mall.poiById.set(CAR.id, CAR);
+}
+
+// chips de status no topo (encontro e carro), atualizados a cada 30 s
+function renderStatus() {
+  const mc = $('#meet-chip'), cc = $('#car-chip');
+  mc.hidden = !state.meet;
+  if (state.meet) mc.textContent = `🤝 ${state.meet.name}${state.meetTime ? ` · ${state.meetTime} (${relTime(state.meetTime)})` : ''}`;
+  cc.hidden = !state.car;
+  if (state.car) cc.textContent = `🚗 ${mall.poiById.get(state.car.lot).name.replace(/^Estacionamento · /, '')}`;
+  mc.classList.toggle('late', !!state.meetTime && minsTo(state.meetTime) <= 5);
+}
+
+function openTools() {
+  $('#t-meet-sub').textContent = state.meet ? `${state.meet.name}${state.meetTime ? ' · ' + state.meetTime : ''}` : 'Local e horário';
+  $('#t-car-sub').textContent = state.car ? 'Salvo · ' + hhmm(state.car.t) : 'Marcar onde estacionei';
+  $('#t-marked-sub').textContent = marked.size ? `${marked.size} marcadas` : 'Marcar na busca';
+  $('#t-gps-sub').textContent = gps.watch == null ? 'Ligar GPS' : 'Desligar GPS';
+  $('#tools').showModal();
+}
+
+function openMeet(p) {
+  if (p) meetDraft = p; else meetDraft = state.meet;
+  $('#mt-place').textContent = meetDraft ? `📍 ${meetDraft.name}` : 'Escolher local';
+  $('#mt-place').classList.toggle('set', !!meetDraft);
+  if (!$('#mt-time').value || (!p && state.meetTime)) $('#mt-time').value = state.meetTime || hhmm(Date.now() + 30 * 60000);
+  $('#mt-del').hidden = $('#mt-share').hidden = !state.meet;
+  if (!$('#meet').open) $('#meet').showModal();
+}
+
+function saveMeet() {
+  if (!meetDraft) { $('#mt-place').classList.add('need'); return; }
+  state.meet = meetDraft; state.meetTime = $('#mt-time').value || '';
+  persistMeet();
+  $('#meet').close();
+  state.picked = null; update(false);
+  fitPoints([state.meet], 80 * mall.ppm);
+}
+
+const LOTS = () => mall.pois.filter((p) => p.group === 'Estacionamento');
+
+function openCar() {
+  const sel = $('#car-lot');
+  if (!sel.options.length) {
+    sel.append(new Option('Escolha…', ''));
+    for (const p of LOTS()) sel.append(new Option(p.name.replace(/^Estacionamento · /, ''), p.id));
+  }
+  const c = state.car;
+  sel.value = c?.lot || ''; $('#car-note').value = c?.note || '';
+  carPos = c && c.x != null ? { x: c.x, y: c.y } : null;
+  $('#car-info').hidden = !c;
+  if (c) $('#car-info').textContent = `Salvo às ${hhmm(c.t)}${c.x != null ? ' pelo GPS' : ''}${c.note ? ' · ' + c.note : ''}`;
+  $('#car-del').hidden = $('#car-go').hidden = !c;
+  $('#car-gps').textContent = '📍 Usar minha posição agora (GPS)';
+  if (!$('#car').open) $('#car').showModal();
+}
+
+let carPos = null, carWaiting = false;
+function carFromGps() {
+  if (!gps.me) {
+    carWaiting = true;
+    $('#car-gps').textContent = '⏳ Procurando sua posição…';
+    if (gps.watch == null) startGps();
+    return;
+  }
+  carWaiting = false;
+  carPos = { x: gps.me.x, y: gps.me.y };
+  let best = null, bd = Infinity;
+  for (const p of LOTS()) { const d = Math.hypot(p.x - carPos.x, p.y - carPos.y); if (d < bd) { bd = d; best = p; } }
+  $('#car-lot').value = best?.id || '';
+  $('#car-gps').textContent = `✅ Posição capturada (±${Math.round(gps.me.acc)} m)`;
+}
+
+function saveCar() {
+  const lot = $('#car-lot').value;
+  if (!lot) { $('#car-lot').classList.add('need'); return; }
+  state.car = { lot, note: $('#car-note').value.trim(), t: Date.now(), ...(carPos || {}) };
+  persistCar();
+  $('#car').close();
+  fitPoints([CAR], 80 * mall.ppm);
+}
+
+function goToCar() {
+  if (!state.car) return;
+  placeCar();
+  state.to = CAR; state.picked = null;
+  gpsAsOrigin();
+  update(true);
+}
+
 /* ---------- compartilhar com o grupo ---------- */
 // Tudo vai no próprio link (sem servidor): #m=ids&enc=id&quem=Nome&px=x,y&h=15:42
 const baseUrl = () => (framed ? WEB_URL : location.origin + location.pathname);
@@ -572,7 +724,7 @@ function openShare() {
   $('#sh-marked-row').hidden = !n;
   $('#sh-marked-txt').textContent = `★ Lojas marcadas (${n}): ${names.slice(0, 4).join(', ')}${n > 4 ? '…' : ''}`;
   $('#sh-meet-row').hidden = !state.meet;
-  $('#sh-meet-txt').textContent = `🤝 Encontro: ${state.meet?.name || ''}`;
+  $('#sh-meet-txt').textContent = `🤝 Encontro: ${state.meet?.name || ''}${state.meetTime ? ' às ' + state.meetTime : ''}`;
   $('#sh-me-row').hidden = !gps.me;
   $('#sh-empty').hidden = !!(n || state.meet || gps.me);
   $('#sh-name').value = myName();
@@ -585,7 +737,9 @@ function buildShare() {
   try { localStorage.setItem(NAME_KEY, name); } catch { /* sem armazenamento */ }
   const h = new URLSearchParams(), lines = ['🛍️ Sawgrass Mills'];
   if (!$('#sh-meet-row').hidden && $('#sh-meet').checked) {
-    h.set('enc', state.meet.id); lines.push(`🤝 Encontro: ${state.meet.name}`);
+    h.set('enc', state.meet.id);
+    if (state.meetTime) h.set('eh', state.meetTime);
+    lines.push(`🤝 Encontro: ${state.meet.name}${state.meetTime ? ' às ' + state.meetTime : ''}`);
   }
   if (!$('#sh-marked-row').hidden && $('#sh-marked').checked) {
     const ids = [...marked];
@@ -624,10 +778,10 @@ function readShared(h) {
     ? { name, x: px[0], y: px[1], time: (h.get('h') || '').slice(0, 5), f: mall.floors[0].id } : null;
   if (!marks.length && !meet && !who) return;
   state.shared = { marks, who };
-  state.meet = meet;
+  if (meet) { state.meet = meet; state.meetTime = /^\d\d:\d\d$/.test(h.get('eh') || '') ? h.get('eh') : ''; persistMeet(); }
   for (const id of marks) marked.add(id); // aparecem no mapa; só ficam salvas se tocar em "Guardar"
   const from = name ? `${name} compartilhou` : 'Compartilhado com você';
-  const bits = [meet && `🤝 encontro na ${meet.name}`, marks.length && `★ ${marks.length} lojas`, who && `📍 posição às ${who.time}`].filter(Boolean);
+  const bits = [meet && `🤝 encontro na ${meet.name}${state.meetTime ? ' às ' + state.meetTime : ''}`, marks.length && `★ ${marks.length} lojas`, who && `📍 posição às ${who.time}`].filter(Boolean);
   $('#shared-txt').textContent = `${from}: ${bits.join(' · ')}`;
   $('#shared-keep').hidden = !marks.length;
   $('#shared-keep').textContent = `Guardar ${marks.length} ${marks.length === 1 ? 'loja' : 'lojas'}`;
@@ -694,6 +848,7 @@ function onGps(pos) {
   gps.me = { x, y, acc: accuracy, near };
   updateMe();
   renderGpsBar();
+  if (carWaiting && $('#car').open) carFromGps();
   if (!gps.centered) { gps.centered = true; centerOnMe(); }
 }
 
@@ -727,7 +882,7 @@ function renderGpsBar() {
     return gpsMsg(left < 15 ? `✅ Você chegou: ${state.to.name}` : `${arrow} ${state.to.name} · ${left} m pela rota (${prec})`, false);
   }
   gpsMsg(near ? `📍 Perto de ${near.name} (${prec})` : `Você está aqui (${prec})`, !!near);
-  $('#gps-use').textContent = 'Usar minha posição como origem';
+  $('#gps-use').textContent = 'Usar como origem';
 }
 
 // seta de direção até o destino, relativa à bússola do celular (ou ao mapa, sem bússola)

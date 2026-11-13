@@ -35,6 +35,22 @@ salvas no aparelho. **Ver no mapa** enquadra todas; **Limpar** (na busca ou no
 botão "✕ Limpar" da tela principal) apaga a seleção. Tocando numa loja no mapa,
 o painel mostra "Estou aqui", "Ir para cá" e "Marcar/Desmarcar".
 
+## Ferramentas
+
+O botão **🧰 Ferramentas** abre uma folha com atalhos (padrão de apps de
+shopping e do Google/Apple Maps):
+
+- **🤝 Ponto de encontro**: local + horário (atalhos +15 min, +30 min, +1 h,
+  +2 h). Fica um chip no topo com a contagem ("em 25 min"), que fica roxo
+  quando faltam 5 min. Vai junto no compartilhamento.
+- **🚗 Meu carro**: marca onde estacionou, pelo GPS (escolhe sozinho o
+  estacionamento mais próximo) ou escolhendo da lista, com anotação ("fileira
+  B, vaga 23"). "Levar até o carro" traça a rota até a saída daquele
+  estacionamento e uma linha até o carro.
+- **📤 Compartilhar**, **★ Lojas marcadas** e **📍 Onde estou (GPS)**.
+
+Encontro e carro ficam salvos no aparelho.
+
 ## Compartilhar com o grupo
 
 **📤 Compartilhar** monta uma mensagem com link (WhatsApp ou qualquer app; sem
