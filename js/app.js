@@ -48,7 +48,7 @@ async function init() {
     route: svgEl('g', {}, view.svg),
     labels: svgEl('g', {}, view.svg),
   };
-  view.onChange = () => { placeMarkers(); cullLabels(); };
+  view.onChange = () => { if (gps.heading != null && gps.me) drawRoute(); else placeMarkers(); cullLabels(); };
   view.onTap = onMapTap;
 
   buildFloors();
@@ -508,7 +508,14 @@ function drawRoute() {
     const n = state.from === ME && r && mall.nodes.get(ME.node);
     if (n) svgEl('line', { x1: ME.x, y1: ME.y, x2: n.x, y2: n.y, class: 'gps-link' }, layers.route);
     const head = gps.heading != null ? mapHeading(gps.heading) : null;
-    markers.push({ x: gps.me.x, y: gps.me.y, cls: 'me' + (head != null ? ' head' : ''), title: 'Você está aqui', rot: head });
+    if (head != null) {
+      // "graveto": cone claro + linha fina para onde o celular aponta (comprimento fixo na tela)
+      const a = head * Math.PI / 180, L = 70 / view.k, w = 0.42;
+      const tip = (ang, len) => `${gps.me.x + Math.sin(ang) * len},${gps.me.y - Math.cos(ang) * len}`;
+      svgEl('polygon', { points: `${gps.me.x},${gps.me.y} ${tip(a - w, L)} ${tip(a + w, L)}`, class: 'gps-cone' }, layers.route);
+      svgEl('line', { x1: gps.me.x, y1: gps.me.y, x2: gps.me.x + Math.sin(a) * L * 1.15, y2: gps.me.y - Math.cos(a) * L * 1.15, class: 'gps-stick' }, layers.route);
+    }
+    markers.push({ x: gps.me.x, y: gps.me.y, cls: 'me', title: 'Você está aqui' });
   }
   placeMarkers();
 }
@@ -526,7 +533,6 @@ function placeMarkers() {
     d.title = m.title || '';
     d.onclick = m.go ? () => setFloor(m.go, true) : null;
     const s = view.toScreen(m.x, m.y);
-    if (m.rot != null) d.style.setProperty('--rot', m.rot + 'deg');
     d.style.left = s.x + 'px';
     d.style.top = s.y + 'px';
   });
