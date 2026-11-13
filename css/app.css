@@ -18,6 +18,7 @@
   :root {
     --ink: #eef2f8; --ink-2: #a5b1c4; --panel: #1a2536; --line: #2c3a50; --bg: #0f1724;
     --shadow: 0 6px 24px rgba(0, 0, 0, .5);
+    --pick: #5b9bff;
   }
 }
 * { box-sizing: border-box; }
@@ -92,7 +93,9 @@ button { cursor: pointer; }
 #floors button[aria-pressed="true"] { background: var(--ink); color: var(--panel); }
 #floors button.in-route::after { content: ""; position: absolute; right: 6px; top: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
 .zoom { top: calc(170px + 4 * 44px + 12px + env(safe-area-inset-top)); }
-.zoom button { font-size: 22px; font-weight: 400; }
+.zoom button { font-size: 26px; font-weight: 500; color: var(--ink); -webkit-text-fill-color: var(--ink); }
+#floors button { color: var(--ink); -webkit-text-fill-color: var(--ink); }
+.zoom, #floors { border: 1px solid var(--line); }
 
 /* ---------- painel inferior ---------- */
 #sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--panel); border-radius: 20px 20px 0 0; box-shadow: var(--shadow); padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); max-height: 62vh; display: flex; flex-direction: column; }
@@ -147,7 +150,8 @@ button { cursor: pointer; }
 @media (min-width: 760px) { .more { display: none; } .steps[hidden] { display: block !important; } }
 
 /* ---------- GPS ---------- */
-.zoom #gps { font-size: 22px; color: var(--pick); }
+.zoom #gps { display: grid; place-items: center; color: var(--pick); }
+.zoom #gps svg { width: 24px; height: 24px; }
 .zoom #gps.on { background: var(--pick); color: #fff; }
 .mk.me { width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, .45); }
 .gps-acc { fill: rgba(26, 115, 232, .15); stroke: rgba(26, 115, 232, .5); stroke-width: 2; vector-effect: non-scaling-stroke; }
