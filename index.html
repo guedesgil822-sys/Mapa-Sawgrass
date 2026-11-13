@@ -8,10 +8,20 @@
 <meta name="theme-color" content="#14233b">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sawgrass">
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body class="app">
+<div class="splash" id="splash" aria-hidden="true">
+  <img src="icons/icon.svg" alt="" width="112" height="112">
+  <b>Rota no Shopping</b>
+  <span>Sawgrass Mills</span>
+  <i class="dots"><i></i><i></i><i></i></i>
+</div>
 <main id="map" aria-label="Mapa do piso"></main>
 <div id="markers" aria-hidden="true"></div>
 

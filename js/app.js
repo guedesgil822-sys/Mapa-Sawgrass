@@ -89,6 +89,7 @@ async function init() {
   renderMarked();
   renderStatus();
   setInterval(renderStatus, 30000);
+  const sp = $('#splash'); sp.classList.add('out'); setTimeout(() => sp.remove(), 500);
   if (!load('sawgrass.intro') && !state.shared) setTimeout(openIntro, 600);
   if (state.shared) { // enquadra tudo o que foi compartilhado
     const pts = [state.meet, state.shared.who, ...state.shared.marks.map((id) => mall.poiById.get(id))].filter(Boolean);
@@ -1709,6 +1710,7 @@ function fitCurrent() {
 
 init().catch((err) => {
   console.error(err);
+  $('#splash')?.remove();
   const s = $('#sheet');
   s.hidden = false;
   s.textContent = tx('Não foi possível carregar o mapa. Verifique a conexão e tente de novo.');

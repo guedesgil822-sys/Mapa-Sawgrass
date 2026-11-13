@@ -1,6 +1,6 @@
 {
   "name": "Rota no Shopping · Sawgrass Mills",
-  "short_name": "Rota Sawgrass",
+  "short_name": "Sawgrass",
   "description": "Rotas a pé entre lojas do Sawgrass Mills (Sunrise, Flórida).",
   "lang": "pt-BR",
   "start_url": "./index.html",
@@ -10,6 +10,7 @@
   "background_color": "#14233b",
   "theme_color": "#14233b",
   "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }

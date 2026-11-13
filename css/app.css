@@ -479,3 +479,16 @@ button { cursor: pointer; }
 .sos-acts { display: flex; gap: 8px; }
 .sos-acts .btn { text-decoration: none; display: inline-grid; place-items: center; color: var(--ink); }
 .sos-acts .btn.primary { color: #fff; -webkit-text-fill-color: #fff; }
+
+/* ---------- tela de abertura ---------- */
+.splash { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: #14233b; color: #fff; -webkit-text-fill-color: #fff; transition: opacity .45s ease; }
+.splash.out { opacity: 0; pointer-events: none; }
+.splash img { width: 112px; height: 112px; border-radius: 26px; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); margin-bottom: 14px; }
+.splash b { font-size: 24px; letter-spacing: .01em; }
+.splash span { font-size: 15px; opacity: .75; letter-spacing: .08em; text-transform: uppercase; }
+.splash .dots { display: flex; gap: 8px; margin-top: 22px; }
+.splash .dots i { width: 8px; height: 8px; border-radius: 50%; background: #e5246b; animation: blink 1s infinite ease-in-out; }
+.splash .dots i:nth-child(2) { animation-delay: .15s; } .splash .dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 100% { opacity: .25; transform: scale(.8); } 50% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .splash .dots i { animation: none; } .splash { transition: none; } }

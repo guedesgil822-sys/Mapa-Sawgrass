@@ -143,6 +143,12 @@ O botão vermelho 🆘 (acima do GPS) abre: ligar 911, segurança do shopping
 que fazer com criança perdida. Os números ficam visíveis para copiar, caso a
 ligação direta não funcione.
 
+## Ícone e abertura
+
+Ícone com as alas coloridas do Sawgrass (cores da planta), a rota e o alfinete
+(`icons/icon.svg` e PNGs 180/192/512/maskable). Enquanto o mapa carrega,
+aparece a tela de abertura. Na tela de início o app se chama "Sawgrass".
+
 ## Tutorial
 
 Na primeira abertura aparecem 3 telas rápidas de "como usar" (busca e rota,
