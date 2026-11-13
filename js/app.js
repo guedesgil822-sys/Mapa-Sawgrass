@@ -1,4 +1,4 @@
-import { Mall, TRANSITION, fmtDist, fmtTime } from './graph.js';
+import { Mall, TRANSITION, fmtDist, fmtTime, norm } from './graph.js';
 import { MapView, svgEl } from './mapview.js';
 
 const $ = (s) => document.querySelector(s);
@@ -63,6 +63,7 @@ async function init() {
 function bindUI() {
   $('#f-from').onclick = () => openPicker('from');
   $('#f-to').onclick = () => openPicker('to');
+  $('#find').onclick = () => openPicker('find');
   $('#swap').onclick = () => { [state.from, state.to] = [state.to, state.from]; update(true); };
   $('#accessible').onchange = (e) => { state.accessible = e.target.checked; update(true); };
   $('#zin').onclick = () => view.zoomBy(1.6);
@@ -99,7 +100,8 @@ function buildGroups() {
 
 function openPicker(which) {
   picking = which;
-  $('#q').placeholder = which === 'from' ? 'Perto de qual loja você está?' : 'Para onde você quer ir?';
+  $('#q').placeholder = { from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
+    find: 'Buscar loja, serviço ou categoria' }[which];
   renderResults();
   $('#picker').showModal();
   $('#q').focus();
@@ -108,20 +110,47 @@ function openPicker(which) {
 function renderResults() {
   const ul = $('#results');
   ul.textContent = '';
-  const list = mall.search($('#q').value, group);
+  const q = $('#q').value.trim();
+  let list = mall.search(q, group);
   if (!list.length) { ul.appendChild(el('li', 'empty', 'Nada encontrado.')); return; }
+  // sem busca: ordem alfabética com uma divisória por letra (A, B, C…)
+  if (!q) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
+  ul.appendChild(el('li', 'count', `${list.length} ${list.length === 1 ? 'lugar' : 'lugares'}`));
+  let letter = null;
   for (const p of list) {
+    if (!q) {
+      const k = sortKey(p)[0]?.toUpperCase() || '#';
+      const l = /[A-Z]/.test(k) ? k : '#';
+      if (l !== letter) { letter = l; ul.appendChild(el('li', 'sec', l)); }
+    }
     const li = el('li');
     li.tabIndex = 0;
     const box = el('div');
     box.append(el('div', 'n', p.name), el('div', 'c', p.cat || p.group));
     li.append(box);
     if (multi()) li.append(el('span', 'f', p.f));
-    const pick = () => { state[picking] = p; state.picked = null; $('#picker').close(); update(true); };
+    const pick = () => {
+      $('#picker').close();
+      if (picking === 'find') return showPoi(p);
+      state[picking] = p; state.picked = null; update(true);
+    };
     li.onclick = pick;
     li.onkeydown = (e) => { if (e.key === 'Enter') pick(); };
     ul.appendChild(li);
   }
+}
+
+// "The Sports Authority" fica no S; acentos não mudam a ordem
+const sortKey = (p) => norm(p.name.replace(/^the\s+/i, ''));
+
+/** Mostra uma loja em destaque: vai até ela, pinta o contorno e abre as ações. */
+function showPoi(p) {
+  state.picked = p;
+  if (state.floor !== p.f) setFloor(p.f, false);
+  update(false);
+  let pts = [{ x: p.x, y: p.y }];
+  if (p.poly?.length >= 6) pts = p.poly.reduce((a, v, i) => (i % 2 ? a[a.length - 1].y = v : a.push({ x: v, y: 0 }), a), []);
+  fitPoints(pts, 90 * mall.ppm);
 }
 
 /* ---------- piso ---------- */
@@ -351,7 +380,10 @@ function drawRoute() {
   };
   if (state.picked && state.picked !== state.from && state.picked !== state.to) {
     const p = state.picked;
-    if (p.f === state.floor && p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel' }, layers.sel);
+    if (p.f === state.floor) {
+      if (p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel pick' }, layers.sel);
+      markers.push({ x: p.x, y: p.y, cls: 'pick' });
+    }
   }
   if (r) {
     r.legs.forEach((leg, i) => {

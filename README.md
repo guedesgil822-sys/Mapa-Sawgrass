@@ -18,6 +18,14 @@ somem quando só existe um piso).
 - `sw.js`, `manifest.webmanifest`, `icons/` – PWA e cache offline.
 - `tools/fetch_sources.sh`, `tools/build_from_pdf.py`, `tools/add_osm.py` – baixam a planta oficial em PDF e o OpenStreetMap e geram `mall.json` e `maps/l1.svg` (nessa ordem).
 
+## Buscar loja
+
+O botão **🔎 Buscar loja** abre a lista de todos os lugares em ordem alfabética,
+com uma divisória por letra ("The" no início do nome não conta) e filtros por
+categoria. Digitando, a lista filtra por nome ou categoria. Ao escolher uma loja,
+o mapa vai até ela, pinta o contorno de azul, mostra um marcador pulsando e abre
+as ações "Estou aqui" e "Ir para cá".
+
 ## Rodar
 
 Site estático, sem build e sem dependências:
