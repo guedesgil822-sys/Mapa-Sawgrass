@@ -27,10 +27,21 @@
   <div class="opts">
     <button type="button" class="chip find" id="find">🔎 Buscar loja</button>
     <label class="chip toggle"><input type="checkbox" id="accessible"><span>♿ Sem escada rolante</span></label>
+    <button type="button" class="chip tools" id="tools-btn">🧰 Ferramentas</button>
+    <button type="button" class="chip st-meet" id="meet-chip" hidden></button>
+    <button type="button" class="chip st-car" id="car-chip" hidden></button>
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
     <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
+  </div>
+  <div class="card shared-bar" id="shared-bar" hidden role="status">
+    <div class="shared-txt" id="shared-txt"></div>
+    <div class="shared-act">
+      <button type="button" class="chip" id="shared-keep" hidden>Guardar lojas</button>
+      <button type="button" class="chip" id="shared-gps" hidden>📍 Ver rota até o encontro</button>
+      <button type="button" class="icon-btn" id="shared-close" aria-label="Fechar">✕</button>
+    </div>
   </div>
   <div class="card gps-bar" id="gps-bar" hidden role="status">
     <span class="gps-txt" id="gps-txt"></span>
@@ -60,6 +71,71 @@
     <button type="button" class="btn" id="mark-clear">Limpar</button>
     <button type="button" class="btn primary" id="mark-show">Ver no mapa</button>
   </div>
+</dialog>
+
+<dialog id="tools" class="sheet-dlg">
+  <form method="dialog" class="tools-box">
+    <div class="tools-head"><h2>Ferramentas</h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <div class="tiles">
+      <button type="button" class="tile" id="t-meet"><span class="ti">🤝</span><b>Ponto de encontro</b><small id="t-meet-sub">Local e horário</small></button>
+      <button type="button" class="tile" id="t-car"><span class="ti">🚗</span><b>Meu carro</b><small id="t-car-sub">Marcar onde estacionei</small></button>
+      <button type="button" class="tile" id="t-share"><span class="ti">📤</span><b>Compartilhar</b><small>Com o grupo</small></button>
+      <button type="button" class="tile" id="t-marked"><span class="ti">★</span><b>Lojas marcadas</b><small id="t-marked-sub">Marcar na busca</small></button>
+      <button type="button" class="tile" id="t-gps"><span class="ti">📍</span><b>Onde estou</b><small id="t-gps-sub">Ligar GPS</small></button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="meet" class="sheet-dlg">
+  <form method="dialog" class="share-box">
+    <div class="tools-head"><h2>🤝 Ponto de encontro</h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <label class="share-name">Onde
+      <button type="button" class="field-btn" id="mt-place">Escolher local</button>
+    </label>
+    <label class="share-name">Horário <input type="time" id="mt-time" required></label>
+    <div class="quick" id="mt-quick">
+      <button type="button" class="chip" data-min="15">+15 min</button>
+      <button type="button" class="chip" data-min="30">+30 min</button>
+      <button type="button" class="chip" data-min="60">+1 h</button>
+      <button type="button" class="chip" data-min="120">+2 h</button>
+    </div>
+    <div class="actions">
+      <button class="btn" type="button" id="mt-del" hidden>Remover</button>
+      <button class="btn primary" type="button" id="mt-save">Salvar</button>
+    </div>
+    <button class="btn link" type="button" id="mt-share" hidden>📤 Avisar o grupo</button>
+  </form>
+</dialog>
+
+<dialog id="car" class="sheet-dlg">
+  <form method="dialog" class="share-box">
+    <div class="tools-head"><h2>🚗 Onde parei o carro</h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <p class="car-info" id="car-info" hidden></p>
+    <button type="button" class="btn gpsb" id="car-gps">📍 Usar minha posição agora (GPS)</button>
+    <label class="share-name">Estacionamento <select id="car-lot"></select></label>
+    <label class="share-name">Anotação <input type="text" id="car-note" maxlength="40" placeholder="Ex.: fileira B, vaga 23, perto do poste azul"></label>
+    <div class="actions">
+      <button class="btn" type="button" id="car-del" hidden>Esquecer</button>
+      <button class="btn primary" type="button" id="car-save">Salvar</button>
+    </div>
+    <button class="btn from" type="button" id="car-go" hidden>🧭 Levar até o carro</button>
+  </form>
+</dialog>
+
+<dialog id="share">
+  <form method="dialog" class="share-box">
+    <h2>Compartilhar com o grupo</h2>
+    <label class="share-opt" id="sh-marked-row"><input type="checkbox" id="sh-marked" checked><span id="sh-marked-txt"></span></label>
+    <label class="share-opt" id="sh-meet-row"><input type="checkbox" id="sh-meet" checked><span id="sh-meet-txt"></span></label>
+    <label class="share-opt" id="sh-me-row"><input type="checkbox" id="sh-me" checked><span>📍 Onde estou agora (GPS)</span></label>
+    <p class="share-empty" id="sh-empty">Marque lojas na busca ou escolha um ponto de encontro (toque numa loja no mapa › “🤝 Encontro aqui”). Você também pode mandar só o link do mapa.</p>
+    <label class="share-name">Seu nome <input type="text" id="sh-name" maxlength="20" placeholder="Ex.: Gil" autocomplete="given-name"></label>
+    <div class="actions">
+      <button class="btn" value="cancel">Cancelar</button>
+      <button class="btn primary" type="button" id="sh-send">Enviar</button>
+    </div>
+    <p class="share-done" id="sh-done" hidden></p>
+  </form>
 </dialog>
 
 <script type="module" src="js/app.js"></script>

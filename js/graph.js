@@ -183,7 +183,7 @@ export class Mall {
           continue;
         }
         let text;
-        if (first) text = `Saia de ${from.name}`;
+        if (first) text = from.gps ? 'Siga a partir da sua posição' : `Saia de ${from.name}`;
         else if (k === 0) text = 'Siga em frente';
         else {
           const lm = (this.landmarks.get(a.id) || []).find((p) => p.id !== from.id && p.id !== to.id && !/banheiro|pagamento|em breve/i.test(p.name));

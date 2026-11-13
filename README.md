@@ -6,7 +6,11 @@ o app desenha a rota a pé sobre a planta, com passo a passo em texto. A origem
 pode ser escolhida na lista ou pelo botão ◎ (GPS do celular), que mostra um
 ponto azul com o raio de precisão e sugere a loja mais próxima como origem.
 Dentro do prédio o GPS costuma errar 10–50 m; perto das entradas e no
-estacionamento ele é mais confiável. A conversão lat/lon → mapa fica em
+estacionamento ele é mais confiável. Com o GPS ligado, ao escolher um destino a
+origem vira **📍 Minha posição**: a rota sai de onde você está e é refeita
+conforme você anda; a faixa do GPS mostra a seta de direção, o nome do destino
+e os metros que faltam. No celular, a bússola gira o cone azul do ponto e a
+seta passa a ser relativa para onde você está virado. A conversão lat/lon → mapa fica em
 `meta.geo` do `mall.json` (gerada por `tools/add_osm.py`).
 
 Mesmo código do app feito para o Salvador Norte Shopping, adaptado para um
@@ -30,6 +34,32 @@ marca ou desmarca (✓); as marcadas ficam em amarelo com ★ no mapa e continua
 salvas no aparelho. **Ver no mapa** enquadra todas; **Limpar** (na busca ou no
 botão "✕ Limpar" da tela principal) apaga a seleção. Tocando numa loja no mapa,
 o painel mostra "Estou aqui", "Ir para cá" e "Marcar/Desmarcar".
+
+## Ferramentas
+
+O botão **🧰 Ferramentas** abre uma folha com atalhos (padrão de apps de
+shopping e do Google/Apple Maps):
+
+- **🤝 Ponto de encontro**: local + horário (atalhos +15 min, +30 min, +1 h,
+  +2 h). Fica um chip no topo com a contagem ("em 25 min"), que fica roxo
+  quando faltam 5 min. Vai junto no compartilhamento.
+- **🚗 Meu carro**: marca onde estacionou, pelo GPS (escolhe sozinho o
+  estacionamento mais próximo) ou escolhendo da lista, com anotação ("fileira
+  B, vaga 23"). "Levar até o carro" traça a rota até a saída daquele
+  estacionamento e uma linha até o carro.
+- **📤 Compartilhar**, **★ Lojas marcadas** e **📍 Onde estou (GPS)**.
+
+Encontro e carro ficam salvos no aparelho.
+
+## Compartilhar com o grupo
+
+**📤 Compartilhar** monta uma mensagem com link (WhatsApp ou qualquer app; sem
+suporte, copia o texto). Pode levar as lojas marcadas, o ponto de encontro
+(toque numa loja no mapa › "🤝 Encontro aqui") e onde você está (GPS, uma foto
+do momento com seu nome e a hora). Tudo vai no próprio link
+(`#enc=…&m=…&px=x,y&h=…&quem=…`), sem servidor. Quem abre vê o encontro como
+destino, as lojas em amarelo e a sua posição em roxo, e pode "Guardar" as lojas
+ou ver a rota até o encontro pelo GPS.
 
 ## Rodar
 
