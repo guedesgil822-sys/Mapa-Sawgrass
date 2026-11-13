@@ -95,7 +95,7 @@ async function init() {
 function bindUI() {
   $('#f-from').onclick = () => openPicker('from');
   $('#f-to').onclick = () => openPicker('to');
-  $('#search-pill').onclick = () => openPicker('to');
+  $('#search-pill').onclick = () => openPicker('find'); // mesma tela da aba Buscar
   $('#trip-clear').onclick = () => { state.from = state.to = null; state.picked = null; update(false); };
   $('#tab-map').onclick = () => { state.picked = null; update(false); fitCurrent(); };
   $('#tab-find').onclick = () => openPicker('find');
@@ -188,12 +188,12 @@ function buildGroups() {
 function openPicker(which) {
   picking = which;
   $('#q').placeholder = { from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
-    find: 'Buscar loja, serviço ou categoria', meet: 'Onde vão se encontrar?' }[which];
+    find: 'Para onde você vai?', meet: 'Onde vão se encontrar?' }[which];
   // dica do que o toque faz em cada modo
   $('#mark-hint').textContent = {
     from: 'Toque na loja mais perto de você.',
     to: 'Toque numa loja para traçar a rota. Para marcar várias, use a aba Buscar.',
-    find: 'Toque nas lojas para marcar ou desmarcar (✓). Elas ficam em destaque no mapa.',
+    find: 'Toque na loja para marcar várias (✓) ou em “Ir ➜” para traçar a rota.',
     meet: 'Toque no lugar do encontro.',
   }[which];
   $('#mark-hint').hidden = false;
@@ -235,7 +235,17 @@ function renderResults() {
       li.classList.toggle('on', on);
       li.setAttribute('role', 'checkbox');
       li.setAttribute('aria-checked', String(on));
-      li.append(el('span', 'chk', on ? '✓' : ''));
+      // "Ir": traça a rota até a loja sem precisar marcar
+      const go = el('button', 'go', 'Ir ➜');
+      go.type = 'button';
+      go.setAttribute('aria-label', `Traçar rota até ${p.name}`);
+      go.onclick = (e) => {
+        e.stopPropagation();
+        $('#picker').close();
+        state.to = p; state.picked = null; gpsAsOrigin(); update(true);
+        if (!state.from) openPicker('from');
+      };
+      li.append(go, el('span', 'chk', on ? '✓' : ''));
     }
     const pick = () => {
       if (picking === 'find') {
