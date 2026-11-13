@@ -35,6 +35,7 @@
     <button type="button" class="chip st-car" id="car-chip" hidden></button>
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
     <button type="button" class="chip near" id="near-btn">📍 Perto de mim</button>
+    <button type="button" class="chip shop" id="shop-btn">🛍️ Compras</button>
     <button type="button" class="chip tour" id="tour-btn" hidden>🧭 Roteiro</button>
     <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
@@ -175,6 +176,40 @@
     <div class="near-cats" id="near-cats"></div>
     <ul class="near-list" id="near-list"></ul>
   </form>
+</dialog>
+
+<dialog id="shop" class="sheet-dlg shop-dlg">
+  <div class="shop-box">
+    <div class="tools-head"><h2>🛍️ <span>Compras</span></h2><button type="button" class="icon-btn" id="shop-close" aria-label="Fechar">✕</button></div>
+    <div class="seg" id="shop-tabs">
+      <button type="button" data-tab="conv">💵 <span>Preço</span></button>
+      <button type="button" data-tab="sizes">👟 <span>Tamanhos</span></button>
+      <button type="button" data-tab="list">📝 <span>Lista</span></button>
+    </div>
+
+    <section class="shop-pane" id="shop-conv">
+      <label class="share-name">Preço na etiqueta (US$)
+        <input type="text" inputmode="decimal" id="cv-price" placeholder="89.99" autocomplete="off">
+      </label>
+      <div class="quick" id="cv-quick">
+        <button type="button" class="chip" data-v="10">10</button><button type="button" class="chip" data-v="25">25</button>
+        <button type="button" class="chip" data-v="50">50</button><button type="button" class="chip" data-v="100">100</button>
+        <button type="button" class="chip" data-v="200">200</button>
+      </div>
+      <label class="share-name">Moeda <select id="cv-cur"></select></label>
+      <label class="grp-pos"><input type="checkbox" id="cv-tax"><span>+ imposto da Flórida (7%)</span></label>
+      <label class="grp-pos" id="cv-iof-row"><input type="checkbox" id="cv-iof"><span>Cartão brasileiro (+ IOF 3,5%)</span></label>
+      <div class="cv-out">
+        <small>Você paga cerca de</small>
+        <b id="cv-total"></b>
+        <span id="cv-detail"></span>
+      </div>
+      <p class="cv-note"><span id="cv-rate"></span><br><span>O preço da etiqueta nos EUA não inclui o imposto; ele é somado no caixa.</span></p>
+    </section>
+
+    <section class="shop-pane" id="shop-sizes" hidden></section>
+    <section class="shop-pane" id="shop-list" hidden></section>
+  </div>
 </dialog>
 
 <dialog id="share">

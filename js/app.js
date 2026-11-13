@@ -1,6 +1,7 @@
 import { Mall, TRANSITION, fmtDist, fmtTime, norm } from './graph.js';
 import { MapView, svgEl } from './mapview.js';
 import { t as tx, td, clock, initLang, setLang, getLang, translateDom, LANGS } from './i18n.js';
+import { openShop, setShopHooks } from './shop.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, text) => {
@@ -126,6 +127,13 @@ function bindUI() {
   $('#marked-clear').onclick = clearMarked;
   $('#tour-btn').onclick = startTour;
   $('#near-btn').onclick = () => openNear();
+  $('#shop-btn').onclick = () => openShop();
+  setShopHooks({
+    marked: () => [...marked].map((id) => mall.poiById.get(id)).filter(Boolean),
+    poi: (id) => mall.poiById.get(id),
+    goTo: (p) => { state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); },
+  });
+  $('#shop-close').onclick = () => $('#shop').close();
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
   $('#mark-only').onclick = () => { onlyMarked = !onlyMarked; $('#results').scrollTop = 0; renderResults(); };
   $('#picker').addEventListener('close', () => { onlyMarked = false; });

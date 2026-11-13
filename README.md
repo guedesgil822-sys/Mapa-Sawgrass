@@ -104,6 +104,22 @@ pé) de: banheiro, comida, café e doces, saída, estacionamento, atendimento e
 farmácia, a partir do GPS, da origem escolhida ou da loja aberta no painel.
 "Ir ➜" traça a rota. (Caixas eletrônicos ainda não estão nos dados.)
 
+## Compras (preço, tamanhos e lista)
+
+O chip **🛍️ Compras** abre três abas (`js/shop.js`):
+
+- **Preço**: preço da etiqueta em US$ → moeda escolhida (real, euro, libra,
+  dólar canadense, peso mexicano/colombiano/argentino/chileno, yuan, iene), com
+  o imposto de 7% de Sunrise (6% da Flórida + 1% do condado de Broward) e, para
+  real, o IOF de 3,5% do cartão brasileiro. A cotação do dia vem de
+  open.er-api.com e fica guardada para usar sem internet (antes da primeira
+  cotação usa um valor aproximado e avisa).
+- **Tamanhos**: calçado feminino e masculino (EUA, Brasil, Europa, cm do pé),
+  roupa feminina, camisa e calça masculina. Referência comum; varia por marca.
+- **Lista**: o que comprar, preço e loja (entre as marcadas), agrupado por loja
+  com "Ir ➜", marcar como comprado, e totais planejado/comprado na moeda
+  escolhida. Fica salva no aparelho.
+
 ## Roteiro pelas lojas marcadas
 
 Com 2 ou mais lojas marcadas aparece o chip **🧭 Roteiro**. O app calcula a
