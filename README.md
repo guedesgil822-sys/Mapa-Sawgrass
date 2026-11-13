@@ -97,6 +97,15 @@ Server-Sent Events, sem biblioteca. Regras do banco: só lê/escreve quem tem o
 código, ninguém lista os grupos, validade máxima de 24 h, mensagens de até 300
 letras. Não funciona dentro do visualizador do Claude (só no site).
 
+## Roteiro pelas lojas marcadas
+
+Com 2 ou mais lojas marcadas aparece o chip **🧭 Roteiro**. O app calcula a
+ordem que faz andar menos (vizinho mais próximo + melhorias 2-opt, com as
+distâncias reais dos corredores), saindo da sua posição (GPS) ou da loja que
+você escolher. No mapa as paradas ficam numeradas e os próximos trechos
+tracejados; o painel mostra "1/5", o total em metros e os botões ‹ e
+"Próxima loja ›" (tocar numa parada da lista também leva até ela).
+
 ## Compartilhar com o grupo
 
 **📤 Compartilhar** monta uma mensagem com link (WhatsApp ou qualquer app; sem

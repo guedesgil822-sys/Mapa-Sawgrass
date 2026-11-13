@@ -230,6 +230,15 @@ const D = {
   'Guardar {n} lojas': ['Save {n} stores', 'Guardar {n} tiendas', 'Garder {n} magasins', '{n} Geschäfte speichern'],
   '📍 Ver rota até o encontro': ['📍 Route to the meet-up', '📍 Ver ruta al encuentro', '📍 Itinéraire vers le rendez-vous', '📍 Route zum Treffpunkt'],
 
+  // ---------- roteiro ----------
+  '🧭 Roteiro': ['🧭 Tour', '🧭 Recorrido', '🧭 Parcours', '🧭 Tour'],
+  '🧭 Roteiro · loja {i} de {n}': ['🧭 Tour · store {i} of {n}', '🧭 Recorrido · tienda {i} de {n}', '🧭 Parcours · magasin {i} sur {n}', '🧭 Tour · Geschäft {i} von {n}'],
+  '{n} lojas · {d} no total': ['{n} stores · {d} in total', '{n} tiendas · {d} en total', '{n} magasins · {d} au total', '{n} Geschäfte · {d} insgesamt'],
+  'Encerrar roteiro': ['End tour', 'Terminar recorrido', 'Terminer le parcours', 'Tour beenden'],
+  '‹ Loja anterior': ['‹ Previous store', '‹ Tienda anterior', '‹ Magasin précédent', '‹ Vorheriges'],
+  'Próxima loja ›': ['Next store ›', 'Siguiente tienda ›', 'Magasin suivant ›', 'Nächstes Geschäft ›'],
+  '✅ Concluir': ['✅ Finish', '✅ Terminar', '✅ Terminer', '✅ Fertig'],
+
   // ---------- segmentos ----------
   'Alimentação': ['Food', 'Comida', 'Restauration', 'Essen'],
   'Beleza': ['Beauty', 'Belleza', 'Beauté', 'Beauty'],
@@ -289,6 +298,13 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  '🧭 Roteiro': ['🧭 路线', '🧭 ルート'],
+  '🧭 Roteiro · loja {i} de {n}': ['🧭 路线 · 第 {i}/{n} 家', '🧭 ルート・{n}店中{i}店目'],
+  '{n} lojas · {d} no total': ['{n} 家店铺 · 共 {d}', '{n}店・合計 {d}'],
+  'Encerrar roteiro': ['结束路线', 'ルートを終了'],
+  '‹ Loja anterior': ['‹ 上一家', '‹ 前の店'],
+  'Próxima loja ›': ['下一家 ›', '次の店 ›'],
+  '✅ Concluir': ['✅ 完成', '✅ 完了'],
   'Mapa': ['地图', '地図'],
   'Buscar': ['搜索', '検索'],
   'Encontro': ['集合', '待ち合わせ'],

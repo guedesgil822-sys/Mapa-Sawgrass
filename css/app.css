@@ -333,3 +333,25 @@ button { cursor: pointer; }
 .lang-opt .nm { flex: 1; }
 .lang-opt .ok { font-weight: 800; color: var(--tab-on); -webkit-text-fill-color: currentColor; }
 .lang-opt.on { border-color: var(--tab-on); }
+
+/* ---------- roteiro ---------- */
+.chip.tour { cursor: pointer; background: var(--accent); color: #fff; -webkit-text-fill-color: #fff; border-color: var(--accent); }
+.tour-box { display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
+.tour-top { display: flex; align-items: center; gap: 8px; }
+.tour-top b { display: block; font-size: 15px; }
+.tour-top .grow { min-width: 0; }
+.tour-top .btn { flex: none; min-height: 38px; }
+.tour-top .icon-btn { width: 36px; min-height: 36px; }
+.tour-top small { color: var(--ink-2); font-size: 13px; }
+.tour-list { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.tour-list li { flex: none; display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 5px; border-radius: 999px; border: 1px solid var(--line); font-size: 13px; font-weight: 600; cursor: pointer; }
+.tour-list li .num { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--line); font-weight: 800; font-size: 12px; }
+.tour-list li.cur { border-color: var(--accent); }
+.tour-list li.cur .num { background: var(--accent); color: #fff; -webkit-text-fill-color: #fff; }
+.tour-list li.done { opacity: .55; }
+.tour-list li.done .num { background: var(--from); color: #fff; -webkit-text-fill-color: #fff; }
+.tour-line { fill: none; stroke: var(--accent); stroke-width: 4; stroke-dasharray: 2 9; stroke-linecap: round; opacity: .7; vector-effect: non-scaling-stroke; }
+.tour-line.done { stroke: var(--from); opacity: .45; }
+.mk.stop { width: 30px; height: 30px; border-radius: 50%; background: #fff; color: var(--accent); -webkit-text-fill-color: var(--accent); border: 3px solid var(--accent); display: grid; place-items: center; font-size: 15px; font-weight: 800; box-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
+.mk.stop.cur { background: var(--accent); color: #fff; -webkit-text-fill-color: #fff; width: 36px; height: 36px; font-size: 17px; }
+.mk.stop.done { background: var(--from); border-color: #fff; color: #fff; -webkit-text-fill-color: #fff; }
