@@ -617,3 +617,8 @@ button { cursor: pointer; }
 .photo-view::backdrop { background: rgba(0, 0, 0, .85); }
 .pv-close { border: 0; padding: 0; background: none; cursor: zoom-out; display: block; }
 .pv-close img { display: block; max-width: 100vw; max-height: 100dvh; object-fit: contain; }
+
+/* ---------- 27 · aviso sem internet ---------- */
+.net-bar { display: flex; align-items: flex-start; gap: 10px; margin-top: 8px; padding: 10px 14px; font-size: 14px; line-height: 1.35; background: #fff4d6; color: #5c4200; -webkit-text-fill-color: #5c4200; border-color: #f0d98a; }
+.net-bar[hidden] { display: none; }
+.net-ic { font-size: 18px; line-height: 1.2; }
