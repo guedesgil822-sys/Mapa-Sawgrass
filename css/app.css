@@ -547,3 +547,41 @@ button { cursor: pointer; }
 @media (min-width: 760px) { .nav-acts { grid-template-columns: 52px 1fr 1.3fr; } .nav-acts .list { display: none; } .nav-banner { max-width: 420px; } }
 @media (prefers-reduced-motion: reduce) { .prog .bar i { transition: none; } }
 @media (min-width: 760px) { .tabbar { left: 50%; right: auto; width: 520px; bottom: 10px; } :root { --tabh: 84px; } :root.navigating { --tabh: 0px; } }
+
+/* ---------- 19 · mapa escuro (acompanha o modo escuro do celular) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) #map { background: #121417; }
+  :root:not([data-theme="light"]) .mv-content img { filter: invert(.9) hue-rotate(180deg) saturate(.85) brightness(.95); }
+  :root:not([data-theme="light"]) .lbl:not(.dark) { fill: #eef2f8; stroke: rgba(10, 14, 22, .75); }
+}
+:root[data-theme="dark"] #map { background: #121417; }
+:root[data-theme="dark"] .mv-content img { filter: invert(.9) hue-rotate(180deg) saturate(.85) brightness(.95); }
+:root[data-theme="dark"] .lbl:not(.dark) { fill: #eef2f8; stroke: rgba(10, 14, 22, .75); }
+
+/* ---------- 20 · animações suaves ---------- */
+.route-line.draw, .route-case.draw { stroke-dasharray: var(--dash) 100000px; stroke-dashoffset: var(--dash); animation: route-draw 1.1s cubic-bezier(.3, .7, .3, 1) .15s forwards; }
+@keyframes route-draw { to { stroke-dashoffset: 0; } }
+#sheet:not([hidden]) { animation: sheet-in .32s cubic-bezier(.2, .8, .2, 1); }
+@keyframes sheet-in { from { transform: translateY(28px); opacity: 0; } }
+.nav-banner:not([hidden]) { animation: banner-in .32s cubic-bezier(.2, .8, .2, 1); }
+@keyframes banner-in { from { transform: translateY(-20px); opacity: 0; } }
+.sheet-dlg[open], #picker[open] { animation: sheet-in .28s cubic-bezier(.2, .8, .2, 1); }
+.btn, .chip, .tabbar button, .zoom button { transition: transform .12s ease, background-color .2s ease; }
+.btn:active, .chip:active, .tabbar button:active, .zoom button:active { transform: scale(.96); }
+@media (prefers-reduced-motion: reduce) {
+  #sheet:not([hidden]), .nav-banner:not([hidden]), .sheet-dlg[open], #picker[open] { animation: none; }
+  .btn, .chip, .tabbar button, .zoom button { transition: none; }
+  .btn:active, .chip:active, .tabbar button:active, .zoom button:active { transform: none; }
+}
+
+/* ---------- 23 · letra maior ---------- */
+.big .top, .big #sheet, .big .tabbar, .big .zoom, .big #floors, .big dialog { zoom: 1.15; }
+.big .top { max-width: 460px; }
+.big-opt { align-self: flex-start; margin-top: 6px; cursor: pointer; }
+/* letra maior: os 4 botões da rota em duas linhas (‹ e Próximo embaixo) */
+.big .nav-acts { grid-template-columns: 1fr 1fr 1fr; }
+.big .nav-acts .voice { order: -2; grid-column: span 1; }
+.big .nav-acts .list { order: -1; grid-column: span 2; }
+.big .nav-acts:has(.voice[hidden]) .list { grid-column: span 3; }
+.big .nav-acts .btn.primary { grid-column: span 2; }
+@media (min-width: 760px) { .big .nav-acts .btn.primary { grid-column: span 2; } .big .nav-acts { grid-template-columns: 1fr 1fr 1fr; } }
