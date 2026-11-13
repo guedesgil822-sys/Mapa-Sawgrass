@@ -577,7 +577,7 @@ button { cursor: pointer; }
 /* ---------- 23 · letra maior ---------- */
 .big .top, .big #sheet, .big .tabbar, .big .zoom, .big #floors, .big dialog { zoom: 1.15; }
 .big .top { max-width: 460px; }
-.big-opt { align-self: flex-start; margin-top: 14px; cursor: pointer; }
+.big-opt { display: flex; width: fit-content; margin: 16px 0 6px; cursor: pointer; }
 /* letra maior: os 4 botões da rota em duas linhas (‹ e Próximo embaixo) */
 .big .nav-acts { grid-template-columns: 1fr 1fr 1fr; }
 .big .nav-acts .voice { order: -2; grid-column: span 1; }
