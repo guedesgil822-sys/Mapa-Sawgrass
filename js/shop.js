@@ -225,6 +225,69 @@ function renderList() {
   }
 }
 
+/* ---------- frases úteis em inglês (o celular fala para o vendedor) ---------- */
+// [inglês, pt, es, fr, de, zh, ja]
+const PHRASES = [
+  ['Provador e tamanhos', [
+    ['Where is the fitting room?', 'Onde fica o provador?', '¿Dónde está el probador?', 'Où est la cabine d’essayage ?', 'Wo ist die Umkleide?', '试衣间在哪里？', '試着室はどこですか？'],
+    ['Can I try this on?', 'Posso experimentar?', '¿Me lo puedo probar?', 'Je peux l’essayer ?', 'Kann ich das anprobieren?', '我可以试穿吗？', '試着してもいいですか？'],
+    ['Do you have this in a larger size?', 'Tem um tamanho maior?', '¿Lo tiene en una talla más grande?', 'Vous l’avez en plus grand ?', 'Haben Sie das eine Nummer größer?', '有大一号的吗？', 'もっと大きいサイズはありますか？'],
+    ['Do you have this in a smaller size?', 'Tem um tamanho menor?', '¿Lo tiene en una talla más pequeña?', 'Vous l’avez en plus petit ?', 'Haben Sie das eine Nummer kleiner?', '有小一号的吗？', 'もっと小さいサイズはありますか？'],
+    ['Do you have it in another color?', 'Tem em outra cor?', '¿Lo tiene en otro color?', 'Vous l’avez dans une autre couleur ?', 'Gibt es das in einer anderen Farbe?', '有别的颜色吗？', '他の色はありますか？'],
+  ]],
+  ['Preço e pagamento', [
+    ['How much is this?', 'Quanto custa?', '¿Cuánto cuesta?', 'Combien ça coûte ?', 'Wie viel kostet das?', '这个多少钱？', 'これはいくらですか？'],
+    ['Are there any discounts today?', 'Tem algum desconto hoje?', '¿Hay algún descuento hoy?', 'Il y a des réductions aujourd’hui ?', 'Gibt es heute Rabatte?', '今天有折扣吗？', '今日は割引がありますか？'],
+    ['Is this price already discounted?', 'Esse preço já está com desconto?', '¿Este precio ya tiene descuento?', 'Ce prix est déjà réduit ?', 'Ist der Preis schon reduziert?', '这个价格已经打折了吗？', 'この値段はもう割引済みですか？'],
+    ['Do you have a tourist discount?', 'Tem desconto para turista?', '¿Tienen descuento para turistas?', 'Vous avez une réduction pour touristes ?', 'Gibt es einen Touristenrabatt?', '有游客折扣吗？', '観光客向けの割引はありますか？'],
+    ['Can I pay by card?', 'Posso pagar com cartão?', '¿Puedo pagar con tarjeta?', 'Je peux payer par carte ?', 'Kann ich mit Karte zahlen?', '可以刷卡吗？', 'カードで払えますか？'],
+    ['I’m just looking, thank you.', 'Só estou olhando, obrigado.', 'Solo estoy mirando, gracias.', 'Je regarde seulement, merci.', 'Ich schaue nur, danke.', '我只是看看，谢谢。', '見ているだけです、ありがとう。'],
+  ]],
+  ['Trocas e nota', [
+    ['What is your return policy?', 'Como funciona a troca?', '¿Cuál es la política de devoluciones?', 'Quelle est votre politique de retour ?', 'Wie ist Ihre Rückgaberegelung?', '退换货政策是什么？', '返品のルールは？'],
+    ['Can I exchange it at another store?', 'Posso trocar em outra loja da marca?', '¿Lo puedo cambiar en otra tienda?', 'Je peux l’échanger dans un autre magasin ?', 'Kann ich es in einer anderen Filiale umtauschen?', '可以在别的分店换吗？', '他の店舗で交換できますか？'],
+    ['Can I have the receipt, please?', 'Pode me dar o recibo, por favor?', '¿Me da el recibo, por favor?', 'Je peux avoir le reçu, s’il vous plaît ?', 'Kann ich bitte den Beleg haben?', '请给我收据。', 'レシートをください。'],
+    ['Could I have a bag, please?', 'Pode me dar uma sacola, por favor?', '¿Me da una bolsa, por favor?', 'Je peux avoir un sac, s’il vous plaît ?', 'Kann ich bitte eine Tüte haben?', '请给我一个袋子。', '袋をもらえますか？'],
+  ]],
+  ['Ajuda', [
+    ['Where is the restroom?', 'Onde fica o banheiro?', '¿Dónde está el baño?', 'Où sont les toilettes ?', 'Wo ist die Toilette?', '洗手间在哪里？', 'トイレはどこですか？'],
+    ['Could you say that again more slowly?', 'Pode repetir mais devagar?', '¿Puede repetirlo más despacio?', 'Vous pouvez répéter plus lentement ?', 'Können Sie das langsamer wiederholen?', '请再慢一点说一遍。', 'もう一度ゆっくり言ってもらえますか？'],
+    ['I don’t speak English very well.', 'Não falo inglês muito bem.', 'No hablo inglés muy bien.', 'Je ne parle pas très bien anglais.', 'Ich spreche nicht so gut Englisch.', '我英语说得不太好。', '英語があまり話せません。'],
+  ]],
+];
+const PH_IDX = { pt: 1, es: 2, fr: 3, de: 4, zh: 5, ja: 6 };
+function speakEn(text, btn) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.9;
+  const en = speechSynthesis.getVoices().find((v) => v.lang?.startsWith('en-US')) || speechSynthesis.getVoices().find((v) => v.lang?.startsWith('en'));
+  if (en) u.voice = en;
+  document.querySelectorAll('.phrase.on').forEach((x) => x.classList.remove('on'));
+  btn.classList.add('on');
+  u.onend = u.onerror = () => btn.classList.remove('on');
+  speechSynthesis.speak(u);
+}
+function renderPhrases() {
+  const pane = $('#shop-phrases');
+  if (!pane || pane.dataset.lang === getLang()) return;
+  pane.dataset.lang = getLang(); pane.textContent = '';
+  pane.append(el('p', 'cv-note', tx('Toque na frase: o celular fala em inglês. Ou mostre a tela para o vendedor.')));
+  const k = PH_IDX[getLang()];
+  for (const [title, list] of PHRASES) {
+    pane.append(el('h3', 'ph-h', tx(title)));
+    for (const ph of list) {
+      const b = el('button', 'phrase'); b.type = 'button';
+      b.append(el('span', 'ph-ic', '🔊'));
+      const t = el('span', 'ph-t'); t.append(el('b', '', ph[0]));
+      if (k) t.append(el('small', '', ph[k]));
+      b.append(t);
+      b.onclick = () => speakEn(ph[0], b);
+      pane.append(b);
+    }
+  }
+}
+
 /* ---------- cota de isenção da Receita Federal (bagagem) ---------- */
 // US$ 1.000 por viajante chegando ao Brasil de avião ou navio; acima disso, 50% sobre o excedente.
 // Conta o que foi marcado como comprado, com o imposto da loja (o valor pago).
@@ -277,7 +340,7 @@ export function openShop(tab = 'conv') {
     b.onclick = () => openShop(b.dataset.tab);
   }
   for (const s of document.querySelectorAll('.shop-pane')) s.hidden = s.id !== 'shop-' + tab;
-  renderConv(); renderList();
+  renderConv(); renderList(); renderPhrases();
   $('#deal-go').onclick = () => { const g = hooks.guest(); if (g) { $('#shop').close(); hooks.goTo(g); } };
   if (!$('#shop').open) $('#shop').showModal();
 }

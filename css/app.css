@@ -641,3 +641,14 @@ button { cursor: pointer; }
 .cota.over .cota-msg { color: #b3123f; -webkit-text-fill-color: #b3123f; }
 .cota small { font-size: 12.5px; color: var(--ink-2); -webkit-text-fill-color: var(--ink-2); line-height: 1.35; }
 .shop-toast { margin: 8px 0 0; padding: 10px 12px; border-radius: 12px; background: #fff4d6; color: #5c4200; -webkit-text-fill-color: #5c4200; font-size: 14px; font-weight: 700; }
+
+/* ---------- 30 · frases em inglês ---------- */
+#shop-tabs { grid-template-columns: repeat(5, 1fr); }
+#shop-tabs button { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 12px; padding: 7px 2px; line-height: 1.15; }
+.ph-h { margin: 14px 0 6px; font-size: 14px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; }
+.phrase { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 8px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.phrase .ph-ic { font-size: 20px; flex: none; }
+.phrase .ph-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.phrase b { font-size: 17px; line-height: 1.3; }
+.phrase small { font-size: 13.5px; color: var(--ink-2); -webkit-text-fill-color: var(--ink-2); }
+.phrase.on { border-color: var(--pick); background: color-mix(in srgb, var(--pick) 12%, var(--panel)); }
