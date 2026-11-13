@@ -147,6 +147,13 @@
     <button type="button" class="btn gpsb" id="car-gps">📍 Usar minha posição agora (GPS)</button>
     <label class="share-name">Estacionamento <select id="car-lot"></select></label>
     <label class="share-name">Anotação <input type="text" id="car-note" maxlength="40" placeholder="Ex.: fileira B, vaga 23, perto do poste azul"></label>
+    <div class="car-photo">
+      <button type="button" class="car-img-btn" id="car-img-btn" hidden aria-label="Ver foto da vaga"><img id="car-img" alt=""></button>
+      <div class="car-photo-act">
+        <label class="btn photo-btn"><input type="file" id="car-file" accept="image/*"><span id="car-photo-l">📸 Foto da vaga</span></label>
+        <button type="button" class="btn small" id="car-photo-del" hidden>Apagar foto</button>
+      </div>
+    </div>
     <div class="actions">
       <button class="btn" type="button" id="car-del" hidden>Esquecer</button>
       <button class="btn primary" type="button" id="car-save">Salvar</button>
@@ -309,6 +316,10 @@
       <button type="button" class="btn primary" id="intro-next">Próximo</button>
     </div>
   </div>
+</dialog>
+
+<dialog id="photo-view" class="photo-view">
+  <form method="dialog"><button class="pv-close" value="cancel" aria-label="Fechar"><img id="photo-big" alt="Foto da vaga do carro"></button></form>
 </dialog>
 
 <dialog id="install" class="sheet-dlg">

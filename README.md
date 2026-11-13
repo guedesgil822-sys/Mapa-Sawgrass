@@ -130,6 +130,12 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Foto da vaga do carro
+
+- Em 🚗 **Carro**, toque em **📸 Foto da vaga** e fotografe o pilar, a placa da fileira ou o carro (ou escolha uma foto da galeria).
+- A foto fica salva só no celular, reduzida para ocupar pouco espaço. Toque nela para ver em tela cheia.
+- **Esquecer** apaga a vaga e a foto juntas.
+
 ## Busca por voz
 
 - Na tela de busca, toque no 🎤 ao lado do campo e fale o nome da loja, no idioma escolhido no app.
