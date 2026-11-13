@@ -323,10 +323,13 @@ function logoEl(p, cls = '') {
   d.textContent = initials(p.name) || '•';
   d.setAttribute('aria-hidden', 'true');
   if (p.web) {
-    const img = new Image();
-    img.alt = ''; img.decoding = 'async'; img.loading = 'lazy';
-    img.onload = () => { if (img.naturalWidth > 16) { d.textContent = ''; d.classList.add('img'); d.append(img); } };
+    // a imagem fica dentro do selo desde já (imagem "solta" com loading=lazy nunca carrega no Safari)
+    const img = document.createElement('img');
+    img.alt = ''; img.decoding = 'async'; img.referrerPolicy = 'no-referrer';
+    img.onload = () => { if (img.naturalWidth > 16) d.classList.add('img'); else img.remove(); };
+    img.onerror = () => img.remove();
     img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(p.web)}&sz=128`;
+    d.append(img);
   }
   return d;
 }
