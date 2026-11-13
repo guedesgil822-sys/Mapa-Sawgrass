@@ -22,6 +22,9 @@ const multi = () => mall.floors.length > 1;
 const markers = [];
 // GPS: posição atual no mapa { x, y, acc (m), near (POI mais próxima), inside }
 const gps = { watch: null, me: null, centered: false };
+// aberto dentro de outro app (ex.: visualizador do Claude), onde o GPS fica bloqueado
+const framed = (() => { try { return window.top !== window; } catch { return true; } })();
+const WEB_URL = 'https://guedesgil822-sys.github.io/Mapa-Sawgrass/';
 
 async function init() {
   const useDraft = new URLSearchParams(location.search).has('draft') && localStorage.getItem(DRAFT_KEY);
@@ -71,6 +74,8 @@ function bindUI() {
   $('#zin').onclick = () => view.zoomBy(1.6);
   $('#zout').onclick = () => view.zoomBy(1 / 1.6);
   $('#gps').hidden = !mall.data.meta?.geo;
+  $('#open-web').hidden = !framed;
+  $('#open-web').onclick = (e) => { e.currentTarget.href = WEB_URL + location.hash; }; // leva a rota junto
   $('#gps').onclick = () => (gps.watch == null ? startGps() : stopGps()); // liga/desliga
   $('#gps-txt').onclick = () => gps.me && centerOnMe(); // tocar no texto recentraliza
   $('#gps-close').onclick = stopGps;
@@ -511,10 +516,8 @@ function onGpsError(err) {
   if (gps.watch == null) return;
   if (err.code === 1) {
     stopGps();
-    let framed = true;
-    try { framed = window.top !== window; } catch { /* outro domínio: está dentro de um quadro */ }
     return gpsMsg(framed
-      ? 'Aqui dentro o GPS fica bloqueado pelo app onde a página está aberta. Abra o mapa pelo endereço próprio no Safari/Chrome para usar a localização.'
+      ? 'Aqui dentro o GPS fica bloqueado. Toque em “🌐 Abrir no navegador” para usar a localização.'
       : 'Localização bloqueada. iPhone: Ajustes › Privacidade e Segurança › Serviços de Localização › Sites do Safari › Durante o Uso. Depois, no Safari, toque em aA › Ajustes do Site › Localização › Perguntar e recarregue.');
   }
   gpsMsg(err.code === 3 ? 'O GPS está demorando. Dentro do shopping o sinal é fraco; tente perto de uma entrada.'

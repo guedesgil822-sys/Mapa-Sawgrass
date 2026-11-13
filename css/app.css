@@ -170,3 +170,4 @@ button { cursor: pointer; }
 .gps-bar[hidden] { display: none; }
 .gps-txt { flex: 1; min-width: 0; cursor: pointer; }
 .gps-bar .chip { background: var(--pick-fill); color: #fff; border-color: var(--pick-fill); cursor: pointer; box-shadow: none; }
+.chip.open-web { text-decoration: none; background: #0b7d57; color: #fff; border-color: #0b7d57; }
