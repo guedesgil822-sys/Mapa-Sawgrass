@@ -16,18 +16,20 @@
 <div id="markers" aria-hidden="true"></div>
 
 <header class="top">
-  <div class="card trip">
+  <button type="button" class="card search-pill" id="search-pill"><span class="sp-ic" aria-hidden="true">🔎</span><span class="sp-q">Para onde você vai?</span></button>
+  <div class="card trip" id="trip" hidden>
     <div class="rail" aria-hidden="true"><i class="dot from"></i><i class="line"></i><i class="dot to"></i></div>
     <div class="fields">
       <button type="button" class="field" id="f-from"><small>Você está em</small><span>Escolha a loja mais próxima</span></button>
       <button type="button" class="field" id="f-to"><small>Quer ir para</small><span>Escolha o destino</span></button>
     </div>
-    <button type="button" class="icon-btn" id="swap" aria-label="Inverter origem e destino" title="Inverter">⇅</button>
+    <div class="trip-act">
+      <button type="button" class="icon-btn" id="swap" aria-label="Inverter origem e destino" title="Inverter">⇅</button>
+      <button type="button" class="icon-btn" id="trip-clear" aria-label="Limpar rota" title="Limpar rota">✕</button>
+    </div>
   </div>
   <div class="opts">
-    <button type="button" class="chip find" id="find">🔎 Buscar loja</button>
     <label class="chip toggle"><input type="checkbox" id="accessible"><span>♿ Sem escada rolante</span></label>
-    <button type="button" class="chip tools" id="tools-btn">🧰 Ferramentas</button>
     <button type="button" class="chip st-meet" id="meet-chip" hidden></button>
     <button type="button" class="chip st-car" id="car-chip" hidden></button>
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
@@ -35,6 +37,7 @@
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
   </div>
+  <button type="button" class="card chat-bar" id="chat-bar" hidden><span class="cb-ic" aria-hidden="true">💬</span><span class="cb-txt" id="chat-bar-txt"></span><i class="cb-n" id="chat-bar-n" hidden></i></button>
   <div class="card shared-bar" id="shared-bar" hidden role="status">
     <div class="shared-txt" id="shared-txt"></div>
     <div class="shared-act">
@@ -59,6 +62,14 @@
 
 <section id="sheet" hidden aria-live="polite"></section>
 
+<nav class="tabbar" id="tabbar" aria-label="Ferramentas">
+  <button type="button" id="tab-map" class="on"><span class="ti" aria-hidden="true">🗺️</span>Mapa</button>
+  <button type="button" id="tab-find"><span class="ti" aria-hidden="true">🔎</span>Buscar<i class="badge" id="tab-find-b" hidden></i></button>
+  <button type="button" id="tab-meet"><span class="ti" aria-hidden="true">🤝</span><span id="tab-meet-l">Encontro</span></button>
+  <button type="button" id="tab-car"><span class="ti" aria-hidden="true">🚗</span>Carro<i class="badge dot" id="tab-car-b" hidden></i></button>
+  <button type="button" id="tab-share"><span class="ti" aria-hidden="true">📤</span>Grupo</button>
+</nav>
+
 <dialog id="picker">
   <form method="dialog" class="picker-head">
     <button class="icon-btn" value="cancel" aria-label="Fechar">←</button>
@@ -71,19 +82,6 @@
     <button type="button" class="btn" id="mark-clear">Limpar</button>
     <button type="button" class="btn primary" id="mark-show">Ver no mapa</button>
   </div>
-</dialog>
-
-<dialog id="tools" class="sheet-dlg">
-  <form method="dialog" class="tools-box">
-    <div class="tools-head"><h2>Ferramentas</h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
-    <div class="tiles">
-      <button type="button" class="tile" id="t-meet"><span class="ti">🤝</span><b>Ponto de encontro</b><small id="t-meet-sub">Local e horário</small></button>
-      <button type="button" class="tile" id="t-car"><span class="ti">🚗</span><b>Meu carro</b><small id="t-car-sub">Marcar onde estacionei</small></button>
-      <button type="button" class="tile" id="t-share"><span class="ti">📤</span><b>Compartilhar</b><small>Com o grupo</small></button>
-      <button type="button" class="tile" id="t-marked"><span class="ti">★</span><b>Lojas marcadas</b><small id="t-marked-sub">Marcar na busca</small></button>
-      <button type="button" class="tile" id="t-gps"><span class="ti">📍</span><b>Onde estou</b><small id="t-gps-sub">Ligar GPS</small></button>
-    </div>
-  </form>
 </dialog>
 
 <dialog id="meet" class="sheet-dlg">
@@ -120,6 +118,43 @@
     </div>
     <button class="btn from" type="button" id="car-go" hidden>🧭 Levar até o carro</button>
   </form>
+</dialog>
+
+<dialog id="group" class="sheet-dlg group-dlg">
+  <div class="grp-box">
+    <div class="tools-head"><h2 id="gr-title">👥 Grupo</h2><button type="button" class="icon-btn" id="gr-close" aria-label="Fechar">✕</button></div>
+
+    <!-- fora de um grupo -->
+    <div id="gr-out" class="grp-sec">
+      <p class="grp-lead">Crie um grupo para conversar e combinar o encontro com quem está com você. Tudo some quando o grupo é excluído, ou sozinho depois de 24 h.</p>
+      <label class="share-name">Seu nome <input type="text" id="gr-name" maxlength="20" placeholder="Ex.: Gil" autocomplete="given-name"></label>
+      <button type="button" class="btn primary" id="gr-create">Criar grupo</button>
+      <div class="grp-or"><span>ou entre com um código</span></div>
+      <div class="grp-join"><input type="text" id="gr-code" placeholder="SAW-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"><button type="button" class="btn" id="gr-join">Entrar</button></div>
+      <p class="grp-err" id="gr-err" hidden></p>
+      <button type="button" class="btn link" id="gr-link">📤 Só mandar um link (sem grupo)</button>
+    </div>
+
+    <!-- dentro do grupo -->
+    <div id="gr-in" class="grp-sec grp-in" hidden>
+      <div class="grp-info">
+        <div><small>Código</small><b id="gr-code-show"></b></div>
+        <button type="button" class="chip" id="gr-invite">➕ Convidar</button>
+      </div>
+      <div class="grp-who" id="gr-who"></div>
+      <ul class="grp-msgs" id="gr-msgs" aria-live="polite"></ul>
+      <form class="grp-send" id="gr-form">
+        <input type="text" id="gr-text" maxlength="300" placeholder="Mensagem para o grupo" autocomplete="off" enterkeyhint="send">
+        <button type="submit" class="btn primary" aria-label="Enviar">➤</button>
+      </form>
+      <label class="grp-pos"><input type="checkbox" id="gr-pos"><span>📍 Mostrar minha posição no mapa do grupo (com o GPS ligado)</span></label>
+      <div class="actions">
+        <button type="button" class="btn" id="gr-leave">Sair do grupo</button>
+        <button type="button" class="btn danger" id="gr-del" hidden>Excluir grupo</button>
+      </div>
+      <p class="grp-err" id="gr-confirm" hidden>Excluir apaga a conversa de todos. <button type="button" class="btn small danger" id="gr-del-ok">Sim, excluir</button></p>
+    </div>
+  </div>
 </dialog>
 
 <dialog id="share">

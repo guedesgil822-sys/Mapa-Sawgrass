@@ -37,8 +37,11 @@ o painel mostra "Estou aqui", "Ir para cá" e "Marcar/Desmarcar".
 
 ## Ferramentas
 
-O botão **🧰 Ferramentas** abre uma folha com atalhos (padrão de apps de
-shopping e do Google/Apple Maps):
+Layout "barra inferior" (padrão Google Maps/Waze): no topo, a busca
+**"Para onde você vai?"** (vira o cartão De → Para quando há rota, com ✕ para
+limpar) e chips de status; à direita, GPS e zoom; embaixo, a barra fixa
+**Mapa · Buscar · Encontro · Carro · Grupo** (a aba mostra o horário do
+encontro, o número de lojas marcadas e um ponto quando o carro está salvo):
 
 - **🤝 Ponto de encontro**: local + horário (atalhos +15 min, +30 min, +1 h,
   +2 h). Fica um chip no topo com a contagem ("em 25 min"), que fica roxo
@@ -47,9 +50,24 @@ shopping e do Google/Apple Maps):
   estacionamento mais próximo) ou escolhendo da lista, com anotação ("fileira
   B, vaga 23"). "Levar até o carro" traça a rota até a saída daquele
   estacionamento e uma linha até o carro.
-- **📤 Compartilhar**, **★ Lojas marcadas** e **📍 Onde estou (GPS)**.
+- **📤 Grupo** (compartilhar) e **🔎 Buscar** (marcar lojas).
 
 Encontro e carro ficam salvos no aparelho.
+
+## Grupo com conversa
+
+A aba **Grupo** cria um grupo (código tipo `SAW-K7Q2-M9XD` e link de convite
+`#g=…`) ou entra num existente, só com o nome. Dentro: conversa ao vivo, a
+última mensagem aparece numa faixa no topo do mapa (com contador de não
+lidas), o ponto de encontro fica igual para todos e, opcionalmente, cada um
+mostra a própria posição no mapa do grupo. Quem criou pode **Excluir grupo**,
+que apaga mensagens e posições de todos; o grupo também deixa de existir
+depois de 24 h.
+
+Banco: Firebase Realtime Database (`DB_URL` em `js/app.js`), usado por REST e
+Server-Sent Events, sem biblioteca. Regras do banco: só lê/escreve quem tem o
+código, ninguém lista os grupos, validade máxima de 24 h, mensagens de até 300
+letras. Não funciona dentro do visualizador do Claude (só no site).
 
 ## Compartilhar com o grupo
 
