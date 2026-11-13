@@ -306,6 +306,17 @@ const D = {
   'Uber / táxi': ['Uber / taxi', 'Uber / taxi', 'Uber / taxi', 'Uber / Taxi'],
   'O shopping não tem um ponto oficial de embarque: os carros param nas entradas. Confira o local no app antes de sair; táxis também param nas entradas principais.': ['The mall has no official rideshare zone: cars stop at the entrances. Check the spot in the app before heading out; taxis also stop at the main entrances.', 'El centro comercial no tiene un punto oficial: los autos paran en las entradas. Confirma el lugar en la app antes de salir; los taxis también paran en las entradas principales.', 'Pas de zone officielle : les voitures s’arrêtent aux entrées. Vérifiez le point dans l’app avant de sortir ; les taxis s’arrêtent aussi aux entrées principales.', 'Es gibt keinen offiziellen Abholpunkt: Autos halten an den Eingängen. Prüfe den Ort in der App; Taxis halten ebenfalls an den Haupteingängen.'],
 
+  // ---------- ofertas ----------
+  "Ofertas": ["Deals", "Ofertas", "Offres", "Angebote"],
+  "Livreto de cupons para turistas": ["Tourist coupon book", "Cuponera para turistas", "Carnet de coupons pour touristes", "Gutscheinheft für Touristen"],
+  "Turistas estrangeiros ganham um livreto de cupons de desconto no Atendimento ao cliente (Simon Guest Services), em frente à Burlington. Leve o passaporte.": ["International visitors get a free coupon book at Simon Guest Services, across from Burlington. Bring your passport.", "Los turistas extranjeros reciben una cuponera de descuentos en Simon Guest Services, frente a Burlington. Lleva el pasaporte.", "Les visiteurs étrangers reçoivent un carnet de coupons au Simon Guest Services, en face de Burlington. Apportez votre passeport.", "Internationale Besucher erhalten beim Simon Guest Services gegenüber von Burlington ein Gutscheinheft. Reisepass mitnehmen."],
+  "🧭 Ir até o Atendimento": ["🧭 Go to Guest Services", "🧭 Ir a Atención al cliente", "🧭 Aller à l’accueil", "🧭 Zum Guest Service"],
+  "Promoções de hoje": ["Today’s deals", "Promociones de hoy", "Promotions du jour", "Heutige Angebote"],
+  "A lista oficial de promoções das lojas fica no site do shopping (em inglês).": ["The official list of store deals is on the mall’s website.", "La lista oficial de promociones está en el sitio del centro comercial (en inglés).", "La liste officielle des promotions est sur le site du centre (en anglais).", "Die offizielle Angebotsliste steht auf der Website des Centers (auf Englisch)."],
+  "Abrir promoções ↗": ["Open deals ↗", "Abrir promociones ↗", "Voir les promotions ↗", "Angebote öffnen ↗"],
+  "Dicas para economizar": ["Tips to save", "Consejos para ahorrar", "Conseils pour économiser", "Spartipps"],
+  "Pergunte no caixa se há desconto extra para turistas (muitas lojas aceitam o cupom do livreto). Confira se a etiqueta já é preço de outlet e lembre que o imposto de 7% é somado no caixa.": ["Ask at the register about extra discounts for tourists (many stores take the coupon book). Check whether the tag is already the outlet price, and remember 7% tax is added at checkout.", "Pregunta en la caja si hay descuento extra para turistas (muchas tiendas aceptan la cuponera). Revisa si la etiqueta ya es precio outlet y recuerda que el 7% de impuesto se suma en la caja.", "Demandez en caisse s’il y a une remise pour touristes (beaucoup de magasins acceptent le carnet). Vérifiez si l’étiquette est déjà au prix outlet ; la taxe de 7 % s’ajoute en caisse.", "Frag an der Kasse nach Rabatt für Touristen (viele Geschäfte nehmen das Gutscheinheft). Prüfe, ob das Etikett schon Outlet-Preis ist; 7 % Steuer kommen an der Kasse dazu."],
+  "As ofertas mudam com frequência; confirme na loja ou no Atendimento.": ["Deals change often; confirm at the store or Guest Services.", "Las ofertas cambian a menudo; confirma en la tienda o en Atención al cliente.", "Les offres changent souvent ; vérifiez en magasin ou à l’accueil.", "Angebote ändern sich oft; frag im Geschäft oder beim Guest Service nach."],
   // ---------- tutorial ----------
   "Bem-vindo ao Sawgrass Mills": ["Welcome to Sawgrass Mills", "Bienvenido a Sawgrass Mills", "Bienvenue à Sawgrass Mills", "Willkommen in Sawgrass Mills"],
   "Busque qualquer loja em \"Para onde você vai?\" e toque em \"Ir ➜\": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.": ["Search any store in “Where are you going?” and tap “Go ➜”: the app draws the walking route, step by step. Turn on GPS (◎) to start from where you are.", "Busca cualquier tienda en “¿A dónde vas?” y toca “Ir ➜”: la app traza la ruta a pie, paso a paso. Activa el GPS (◎) para salir desde donde estás.", "Cherchez un magasin dans « Où allez-vous ? » et touchez « Aller ➜ » : l’app trace l’itinéraire à pied, étape par étape. Activez le GPS (◎) pour partir d’où vous êtes.", "Suche ein Geschäft unter „Wohin möchtest du?“ und tippe auf „Los ➜“: Die App zeigt den Fußweg Schritt für Schritt. Mit GPS (◎) startest du an deinem Standort."],
@@ -390,6 +401,16 @@ const D = {
 
 // Chinês (simplificado) e japonês: [zh, ja]
 const DZ = {
+  "Ofertas": ["优惠", "お得情報"],
+  "Livreto de cupons para turistas": ["游客优惠券册", "観光客向けクーポンブック"],
+  "Turistas estrangeiros ganham um livreto de cupons de desconto no Atendimento ao cliente (Simon Guest Services), em frente à Burlington. Leve o passaporte.": ["外国游客可在 Burlington 对面的 Simon Guest Services（服务台）免费领取优惠券册，请携带护照。", "海外からの観光客は、Burlingtonの向かいのSimon Guest Servicesでクーポンブックをもらえます。パスポートを持参してください。"],
+  "🧭 Ir até o Atendimento": ["🧭 前往服务台", "🧭 インフォメーションへ"],
+  "Promoções de hoje": ["今日优惠", "本日のセール"],
+  "A lista oficial de promoções das lojas fica no site do shopping (em inglês).": ["官方店铺优惠列表见商场网站（英文）。", "公式のセール一覧はモールのサイトにあります（英語）。"],
+  "Abrir promoções ↗": ["打开优惠 ↗", "セールを見る ↗"],
+  "Dicas para economizar": ["省钱小贴士", "節約のコツ"],
+  "Pergunte no caixa se há desconto extra para turistas (muitas lojas aceitam o cupom do livreto). Confira se a etiqueta já é preço de outlet e lembre que o imposto de 7% é somado no caixa.": ["结账时问问是否有游客额外折扣（很多店接受优惠券册）。看看标价是否已是奥特莱斯价，并记得结账时另加 7% 税。", "レジで観光客向けの追加割引がないか聞いてみましょう（多くの店でクーポンブックが使えます）。値札がすでにアウトレット価格か確認し、7%の税がレジで加算されることもお忘れなく。"],
+  "As ofertas mudam com frequência; confirme na loja ou no Atendimento.": ["优惠经常变化，请在店内或服务台确认。", "お得情報は頻繁に変わります。店舗かインフォメーションで確認してください。"],
   "Bem-vindo ao Sawgrass Mills": ["欢迎来到 Sawgrass Mills", "Sawgrass Millsへようこそ"],
   "Busque qualquer loja em \"Para onde você vai?\" e toque em \"Ir ➜\": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.": ["在“您要去哪里？”中搜索店铺并点击“前往 ➜”：应用会逐步显示步行路线。开启 GPS（◎）即可从当前位置出发。", "「どこへ行きますか？」で店を検索して「行く ➜」をタップすると、徒歩ルートを順番に案内します。GPS（◎）をオンにすると現在地から出発できます。"],
   "Marque suas lojas": ["标记您的店铺", "お店をマーク"],

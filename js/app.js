@@ -134,6 +134,7 @@ function bindUI() {
   setShopHooks({
     marked: () => [...marked].map((id) => mall.poiById.get(id)).filter(Boolean),
     poi: (id) => mall.poiById.get(id),
+    guest: () => mall.pois.find((p) => p.cat === 'Atendimento e cartões-presente'),
     goTo: (p) => { state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); },
   });
   $('#shop-close').onclick = () => $('#shop').close();

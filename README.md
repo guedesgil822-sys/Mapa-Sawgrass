@@ -113,7 +113,7 @@ farmácia, a partir do GPS, da origem escolhida ou da loja aberta no painel.
 
 ## Compras (preço, tamanhos e lista)
 
-O chip **🛍️ Compras** abre três abas (`js/shop.js`):
+O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
 
 - **Preço**: preço da etiqueta em US$ → moeda escolhida (real, euro, libra,
   dólar canadense, peso mexicano/colombiano/argentino/chileno, yuan, iene), com
@@ -126,6 +126,9 @@ O chip **🛍️ Compras** abre três abas (`js/shop.js`):
 - **Lista**: o que comprar, preço e loja (entre as marcadas), agrupado por loja
   com "Ir ➜", marcar como comprado, e totais planejado/comprado na moeda
   escolhida. Fica salva no aparelho.
+- **Ofertas**: livreto de cupons grátis para turistas no Atendimento (Simon
+  Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
+  link para as promoções oficiais (simon.com) e dicas para economizar.
 
 ## Tutorial
 
