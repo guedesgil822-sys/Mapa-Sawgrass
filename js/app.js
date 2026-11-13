@@ -1,6 +1,7 @@
 import { Mall, TRANSITION, fmtDist, fmtTime, norm } from './graph.js';
 import { MapView, svgEl } from './mapview.js';
 import { t as tx, td, clock, initLang, setLang, getLang, translateDom, LANGS } from './i18n.js';
+import { openShop, setShopHooks } from './shop.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, text) => {
@@ -23,7 +24,7 @@ const ICON = {
   uturn: '↶', arrive: '⚑',
 };
 
-const state = { meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
+const state = { tour: null, meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false };
 let mall, view, layers, picking = 'from', group = '', onlyMarked = false;
 let cullRaf = 0;
 // shopping de piso único: esconde seletor e referências ao piso
@@ -101,7 +102,7 @@ function bindUI() {
   $('#f-from').onclick = () => openPicker('from');
   $('#f-to').onclick = () => openPicker('to');
   $('#search-pill').onclick = () => openPicker('find'); // mesma tela da aba Buscar
-  $('#trip-clear').onclick = () => { state.from = state.to = null; state.picked = null; update(false); };
+  $('#trip-clear').onclick = () => { state.tour = null; state.from = state.to = null; state.picked = null; update(false); };
   $('#tab-map').onclick = () => { state.picked = null; update(false); fitCurrent(); };
   $('#tab-find').onclick = () => openPicker('find');
   $('#tab-meet').onclick = () => openMeet();
@@ -124,6 +125,15 @@ function bindUI() {
   }).observe($('#sheet'));
   $('#mark-clear').onclick = () => { clearMarked(); renderResults(); };
   $('#marked-clear').onclick = clearMarked;
+  $('#tour-btn').onclick = startTour;
+  $('#near-btn').onclick = () => openNear();
+  $('#shop-btn').onclick = () => openShop();
+  setShopHooks({
+    marked: () => [...marked].map((id) => mall.poiById.get(id)).filter(Boolean),
+    poi: (id) => mall.poiById.get(id),
+    goTo: (p) => { state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); },
+  });
+  $('#shop-close').onclick = () => $('#shop').close();
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
   $('#mark-only').onclick = () => { onlyMarked = !onlyMarked; $('#results').scrollTop = 0; renderResults(); };
   $('#picker').addEventListener('close', () => { onlyMarked = false; });
@@ -271,6 +281,9 @@ function renderResults() {
       $('#picker').close();
       if (picking === 'meet') { meetDraft = p; return openMeet(p); }
       state[picking] = p; state.picked = null;
+      if (tourPending && picking === 'from') { tourPending = false; return startTour(); }
+      if (nearPending && picking === 'from') { nearPending = false; state.from = p; update(false); return openNear(); }
+      state.tour = null; // escolha manual encerra o roteiro
       if (picking === 'to') gpsAsOrigin();
       update(true);
     };
@@ -306,6 +319,7 @@ function renderMarked() {
   const n = marked.size;
   renderStatus();
   $('#marked-chip').hidden = $('#marked-clear').hidden = !n;
+  $('#tour-btn').hidden = n < 2 || !!state.tour;
   $('#marked-chip').textContent = tx(n === 1 ? '★ {n} marcada' : '★ {n} marcadas', { n });
   drawRoute();
 }
@@ -318,6 +332,159 @@ function showMarked() {
   fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
 }
 
+/* ---------- mais perto de mim ---------- */
+let nearPending = false, nearCat = null;
+// categorias: o que procurar e como reconhecer nos dados
+const NEAR = [
+  { id: 'wc', ico: '🚻', label: 'Banheiro', ok: (p) => p.cat === 'Banheiro' },
+  { id: 'food', ico: '🍔', label: 'Comida', ok: (p) => p.group === 'Alimentação' && !/Doces/.test(p.cat || '') },
+  { id: 'cafe', ico: '☕', label: 'Café e doces', ok: (p) => /^Doces/.test(p.cat || '') },
+  { id: 'exit', ico: '🚪', label: 'Saída', ok: (p) => p.group === 'Entradas' },
+  { id: 'park', ico: '🅿️', label: 'Estacionamento', ok: (p) => p.group === 'Estacionamento' },
+  { id: 'info', ico: 'ℹ️', label: 'Atendimento', ok: (p) => p.cat === 'Atendimento e cartões-presente' },
+  { id: 'rx', ico: '💊', label: 'Farmácia', ok: (p) => /CVS|Pharmacy|Farm/i.test(p.name) },
+];
+
+// ponto de partida: GPS, a origem escolhida ou a loja aberta no painel
+const nearOrigin = () => (gps.me && ME.node ? ME : state.from || state.picked || null);
+
+function openNear() {
+  const o = nearOrigin();
+  const box = $('#near-cats');
+  box.textContent = '';
+  for (const c of NEAR) {
+    const b = el('button', 'tile near-cat' + (c.id === nearCat ? ' on' : ''));
+    b.type = 'button';
+    b.append(el('span', 'ti', c.ico), el('b', '', tx(c.label)));
+    b.onclick = () => { nearCat = c.id; openNear(); };
+    box.appendChild(b);
+  }
+  const from = $('#near-from');
+  from.textContent = '';
+  if (o) {
+    from.append(tx('A partir de: {x}', { x: td(o.name) }) + ' ');
+  } else {
+    from.append(tx('Diga onde você está (ou ligue o GPS) para achar o mais perto.') + ' ');
+  }
+  const ch = el('button', 'chip', o ? tx('Trocar') : tx('Escolher onde estou'));
+  ch.type = 'button';
+  ch.onclick = () => { nearPending = true; $('#near').close(); openPicker('from'); };
+  from.append(ch);
+  renderNear(o);
+  if (!$('#near').open) $('#near').showModal();
+}
+
+function renderNear(o) {
+  const ul = $('#near-list');
+  ul.textContent = '';
+  const c = NEAR.find((x) => x.id === nearCat);
+  if (!c || !o) return;
+  const found = mall.pois.filter((p) => p.f === o.f && p !== o && c.ok(p))
+    .map((p) => ({ p, m: walk(o, p) })).filter((x) => Number.isFinite(x.m)).sort((a, b) => a.m - b.m).slice(0, 5);
+  if (!found.length) { ul.appendChild(el('li', 'empty', tx('Nada encontrado.'))); return; }
+  for (const { p, m } of found) {
+    const li = el('li');
+    const txt = el('div', 'txt');
+    txt.append(el('div', 'n', td(p.name)), el('div', 'c', `${fmtDist(m)} · ${fmtTime(m / 1.2)}`));
+    const go = el('button', 'go', tx('Ir ➜'));
+    go.type = 'button';
+    go.onclick = () => {
+      $('#near').close();
+      state.tour = null; state.from = o; state.to = p; state.picked = null;
+      update(true);
+    };
+    li.append(logoEl(p), txt, go);
+    ul.appendChild(li);
+  }
+}
+
+/* ---------- roteiro pelas lojas marcadas ---------- */
+let tourPending = false;
+// distância a pé (m) entre dois lugares, com cache por par
+const legCache = new Map();
+function walk(a, b) {
+  const k = a.id + '>' + b.id;
+  if (!legCache.has(k)) legCache.set(k, mall.route(a.id, b.id, { accessible: state.accessible })?.meters ?? Infinity);
+  return legCache.get(k);
+}
+
+// melhor ordem: vizinho mais próximo + melhorias 2-opt (caminho aberto, começando na origem)
+function bestOrder(origin, stops) {
+  const rest = [...stops], order = [];
+  let cur = origin;
+  while (rest.length) {
+    let bi = 0;
+    rest.forEach((p, i) => { if (walk(cur, p) < walk(cur, rest[bi])) bi = i; });
+    cur = rest.splice(bi, 1)[0]; order.push(cur);
+  }
+  const cost = (o) => o.reduce((s, p, i) => s + walk(i ? o[i - 1] : origin, p), 0);
+  for (let improved = true; improved;) {
+    improved = false;
+    for (let i = 0; i < order.length - 1; i++) {
+      for (let j = i + 1; j < order.length; j++) {
+        const cand = [...order.slice(0, i), ...order.slice(i, j + 1).reverse(), ...order.slice(j + 1)];
+        if (cost(cand) < cost(order) - 1) { order.splice(0, order.length, ...cand); improved = true; }
+      }
+    }
+  }
+  return { order, meters: cost(order) };
+}
+
+function startTour() {
+  const stops = [...marked].map((id) => mall.poiById.get(id)).filter((p) => p && p.f === state.floor);
+  if (stops.length < 2) return;
+  const origin = gps.me && ME.node ? ME : state.from && !marked.has(state.from.id) ? state.from : null;
+  if (!origin) { tourPending = true; return openPicker('from'); } // primeiro: de onde você sai
+  legCache.clear();
+  const { order, meters } = bestOrder(origin, stops);
+  const paths = order.map((p, i) => {
+    const r = mall.route((i ? order[i - 1] : origin).id, p.id, { accessible: state.accessible });
+    return r ? r.legs.flatMap((l) => l.pts) : [];
+  });
+  state.tour = { start: origin, stops: order, i: 0, meters, paths };
+  setLeg(0);
+}
+
+function setLeg(i) {
+  const T = state.tour;
+  T.i = Math.max(0, Math.min(i, T.stops.length - 1));
+  state.from = gps.me && ME.node ? ME : T.i ? T.stops[T.i - 1] : T.start;
+  state.to = T.stops[T.i];
+  state.picked = null;
+  update(true);
+  renderMarked();
+}
+
+function endTour() { state.tour = null; state.from = state.to = null; update(false); renderMarked(); }
+
+function tourBox() {
+  const T = state.tour, n = T.stops.length;
+  const box = el('div', 'tour-box');
+  const top = el('div', 'tour-top');
+  const t = el('div', 'grow');
+  t.append(el('b', '', `🧭 ${T.i + 1}/${n}`),
+    el('small', '', tx('{n} lojas · {d} no total', { n, d: fmtDist(T.meters) })));
+  const x = el('button', 'icon-btn', '✕');
+  x.setAttribute('aria-label', tx('Encerrar roteiro'));
+  x.onclick = endTour;
+  const prev = el('button', 'btn small', '‹');
+  prev.setAttribute('aria-label', tx('‹ Loja anterior'));
+  prev.disabled = T.i === 0;
+  prev.onclick = () => setLeg(T.i - 1);
+  const next = el('button', 'btn small primary', T.i === n - 1 ? tx('✅ Concluir') : tx('Próxima loja ›'));
+  next.onclick = () => (T.i === n - 1 ? endTour() : setLeg(T.i + 1));
+  top.append(t, prev, next, x);
+  const list = el('ol', 'tour-list');
+  T.stops.forEach((p, k) => {
+    const li = el('li', k < T.i ? 'done' : k === T.i ? 'cur' : '');
+    li.append(el('span', 'num', String(k + 1)), el('span', 'nm', td(p.name)));
+    li.onclick = () => setLeg(k);
+    list.appendChild(li);
+  });
+  box.append(top, list);
+  return box;
+}
+
 /* ---------- logos das marcas ---------- */
 // ícone oficial do site da marca (campo "web" do mall.json); sem site, ou offline, um selo com as iniciais
 const GROUP_HUE = { Moda: 330, Calçados: 25, Esportes: 145, Alimentação: 35, Beleza: 300, Casa: 190, Tecnologia: 215,
@@ -326,7 +493,11 @@ const initials = (n) => n.replace(/^the\s+/i, '').split(/[\s/&-]+/).filter((w) =
 function logoEl(p, cls = '') {
   const d = el('span', 'logo ' + cls);
   d.style.setProperty('--h', GROUP_HUE[p.group] ?? 220);
-  d.textContent = initials(p.name) || '•';
+  // lugares do shopping (não marcas) ganham ícone em vez de iniciais
+  const icon = { Banheiro: '🚻', Entrada: '🚪', Estacionamento: '🅿️', 'Atendimento e cartões-presente': 'ℹ️', Administração: '🛡️',
+    'Praça de alimentação': '🍽️', Cinema: '🎬' }[(p.cat || '').split(' · ')[0]];
+  d.textContent = icon || initials(p.name) || '•';
+  if (icon) d.classList.add('ico');
   d.setAttribute('aria-hidden', 'true');
   if (p.web) {
     // a imagem fica dentro do selo desde já (imagem "solta" com loading=lazy nunca carrega no Safari)
@@ -559,6 +730,7 @@ function renderSheet() {
   const more = el('button', 'more', state.open ? tx('Ocultar passos') : tx('Ver os {n} passos', { n: r.steps.length }));
   more.onclick = () => { state.open = !state.open; renderSheet(); };
   ol.hidden = !state.open;
+  if (state.tour) s.append(tourBox());
   s.append(head, now, more, ol);
   s.hidden = false;
   ol.querySelector('.cur')?.scrollIntoView({ block: 'nearest' });
@@ -588,9 +760,21 @@ function drawRoute() {
     if (p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel ' + cls }, layers.sel);
     markers.push({ x: p.x, y: p.y, cls });
   };
+  const T = state.tour;
+  if (T) {
+    T.paths.forEach((pts, k) => {
+      if (k === T.i || !pts?.length) return;
+      svgEl('polyline', { points: pts.map((q) => `${q.x},${q.y}`).join(' '), class: 'tour-line' + (k < T.i ? ' done' : '') }, layers.route);
+    });
+    T.stops.forEach((p, k) => {
+      if (p.f !== state.floor) return;
+      if (p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel mark' }, layers.sel);
+      markers.push({ x: p.x, y: p.y, cls: 'stop' + (k < T.i ? ' done' : k === T.i ? ' cur' : ''), text: String(k + 1), title: p.name });
+    });
+  }
   for (const id of marked) {
     const p = mall.poiById.get(id);
-    if (!p || p.f !== state.floor || p === state.from || p === state.to) continue;
+    if (!p || p.f !== state.floor || p === state.from || p === state.to || T?.stops.includes(p)) continue;
     if (p.poly?.length >= 6) svgEl('polygon', { points: p.poly.join(' '), class: 'poi-sel mark' }, layers.sel);
     markers.push({ x: p.x, y: p.y, cls: 'mark', text: '★', title: p.name });
   }
@@ -640,8 +824,8 @@ function drawRoute() {
   }
   const fr = state.shared?.who;
   if (fr && fr.f === state.floor) markers.push({ x: fr.x, y: fr.y, cls: 'friend', text: `${fr.name || tx('Amigo')}${fr.time ? ' · ' + fr.time : ''}`, title: tx('Posição compartilhada') });
-  if (state.from !== ME) mark(state.from, 'from');
-  if (state.to !== CAR) mark(state.to, 'to');
+  if (state.from !== ME && !(T && T.stops.includes(state.from))) mark(state.from, 'from');
+  if (state.to !== CAR && !T) mark(state.to, 'to');
   if (gps.me) {
     svgEl('circle', { cx: gps.me.x, cy: gps.me.y, r: Math.max(gps.me.acc, 3) * mall.ppm, class: 'gps-acc' }, layers.sel);
     const n = state.from === ME && r && mall.nodes.get(ME.node);
@@ -1189,6 +1373,7 @@ function renderGpsBar() {
   if (state.from === ME && state.to && r) {
     const left = Math.max(0, Math.round(r.meters));
     const arrow = dirArrow(state.to);
+    if (left < 15 && state.tour && state.tour.i < state.tour.stops.length - 1) return gpsMsg(tx('✅ Você chegou: {x}', { x: td(state.to.name) }) + ' · ' + tx('Próxima loja ›'), false);
     return gpsMsg(left < 15 ? tx('✅ Você chegou: {x}', { x: td(state.to.name) }) : tx('{a} {x} · {n} m pela rota ({p})', { a: arrow, x: td(state.to.name), n: left, p: prec }), false);
   }
   gpsMsg(near ? tx('📍 Perto de {x} ({p})', { x: td(near.name), p: prec }) : tx('Você está aqui ({p})', { p: prec }), !!near);

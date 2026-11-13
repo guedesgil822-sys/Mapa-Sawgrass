@@ -97,6 +97,38 @@ Server-Sent Events, sem biblioteca. Regras do banco: só lê/escreve quem tem o
 código, ninguém lista os grupos, validade máxima de 24 h, mensagens de até 300
 letras. Não funciona dentro do visualizador do Claude (só no site).
 
+## Perto de mim
+
+O chip **📍 Perto de mim** mostra os 5 lugares mais próximos (distância real a
+pé) de: banheiro, comida, café e doces, saída, estacionamento, atendimento e
+farmácia, a partir do GPS, da origem escolhida ou da loja aberta no painel.
+"Ir ➜" traça a rota. (Caixas eletrônicos ainda não estão nos dados.)
+
+## Compras (preço, tamanhos e lista)
+
+O chip **🛍️ Compras** abre três abas (`js/shop.js`):
+
+- **Preço**: preço da etiqueta em US$ → moeda escolhida (real, euro, libra,
+  dólar canadense, peso mexicano/colombiano/argentino/chileno, yuan, iene), com
+  o imposto de 7% de Sunrise (6% da Flórida + 1% do condado de Broward) e, para
+  real, o IOF de 3,5% do cartão brasileiro. A cotação do dia vem de
+  open.er-api.com e fica guardada para usar sem internet (antes da primeira
+  cotação usa um valor aproximado e avisa).
+- **Tamanhos**: calçado feminino e masculino (EUA, Brasil, Europa, cm do pé),
+  roupa feminina, camisa e calça masculina. Referência comum; varia por marca.
+- **Lista**: o que comprar, preço e loja (entre as marcadas), agrupado por loja
+  com "Ir ➜", marcar como comprado, e totais planejado/comprado na moeda
+  escolhida. Fica salva no aparelho.
+
+## Roteiro pelas lojas marcadas
+
+Com 2 ou mais lojas marcadas aparece o chip **🧭 Roteiro**. O app calcula a
+ordem que faz andar menos (vizinho mais próximo + melhorias 2-opt, com as
+distâncias reais dos corredores), saindo da sua posição (GPS) ou da loja que
+você escolher. No mapa as paradas ficam numeradas e os próximos trechos
+tracejados; o painel mostra "1/5", o total em metros e os botões ‹ e
+"Próxima loja ›" (tocar numa parada da lista também leva até ela).
+
 ## Compartilhar com o grupo
 
 **📤 Compartilhar** monta uma mensagem com link (WhatsApp ou qualquer app; sem
