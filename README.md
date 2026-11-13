@@ -130,6 +130,11 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Sem internet
+
+- Quando a conexão cai, aparece um aviso amarelo no topo: o mapa, a busca e as rotas continuam funcionando, porque tudo fica guardado no celular.
+- O grupo e as logos das lojas voltam quando a conexão voltar, e o app avisa "📶 Internet de volta".
+
 ## Foto da vaga do carro
 
 - Em 🚗 **Carro**, toque em **📸 Foto da vaga** e fotografe o pilar, a placa da fileira ou o carro (ou escolha uma foto da galeria).

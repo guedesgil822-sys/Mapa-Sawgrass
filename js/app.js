@@ -154,6 +154,11 @@ function bindUI() {
   $('#hours-btn').onclick = openHours;
   $('#sos-btn').onclick = () => $('#sos').showModal();
   setupInstall();
+  // sem internet: o app segue funcionando (tudo fica guardado no celular); avisa o que depende da conexão
+  const net = () => { $('#net-bar').hidden = navigator.onLine; };
+  addEventListener('offline', net);
+  addEventListener('online', () => { net(); toast(tx('📶 Internet de volta.')); });
+  net();
   const goPlace = (cat) => { const p = mall.pois.find((q) => q.cat === cat); if (!p) return; $('#sos').close(); state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); };
   $('#sos-sec').onclick = () => goPlace('Administração');
   $('#sos-info').onclick = () => goPlace('Atendimento e cartões-presente');
