@@ -33,6 +33,7 @@
   "J. Crew → J.Crew",
   "Caché Outlet → Guess",
   "Gloria Jean's Gourmet Coffee → Wetzel's Pretzels",
+  "Le`s Nails → The Taco Stand",
   "Coco Reef → New Balance Factory Store",
   "Reebok Outlet Store → Greg Norman",
   "Rockport Outlet Store → Polo Ralph Lauren Children",
@@ -86,11 +87,13 @@
   "The Children's Place → Shoe Palace",
   "Kay Bee Toys → Famous Footwear",
   "Animation → Five Guys",
+  "Vitamin World → Charleys Philly Steaks",
   "Charley’s Grilled Subs → Popeyes",
   "Nathan's → Baba's Halal",
   "Tony Romas Express → Kelly's Cajun Grill",
   "Champs Sports → Foot Locker",
-  "Puma → Swatch"
+  "Puma → Swatch",
+  "Nail Trix → Churromania"
  ],
  "divididas": [
   "Wannado City → Steve Madden, Calvin Klein, Columbia, Lululemon, Hurley, Toys R Us, Sunglass Hut"
@@ -101,6 +104,7 @@
   "Battagila",
   "Furla",
   "Cavas",
+  "Inter Investments Realty, Inc",
   "Legal Sea Foods",
   "U.S. Tops",
   "Discount Luggage Outlet",
@@ -109,8 +113,10 @@
   "Athletic Footwear",
   "The Billard Club",
   "Disney's Character Premiere",
+  "Leslie's Signature Salon & Spa",
   "Hat Shack",
   "Nature’s Table Café",
+  "Sawgrass Dental",
   "Chao Cajun",
   "Chicken Connection",
   "Miami's Best Latin Grill",
@@ -128,6 +134,7 @@
   "PAC SUN",
   "Underground Station",
   "Hush Puppies & Family",
+  "Glamour Shots",
   "Kid’s Supercenter",
   "Swim n' Sport Outlet",
   "Lane Bryant Outlet",
@@ -174,7 +181,8 @@
   "Art Design Jewelers",
   "Zako",
   "Spanish Churro Magic",
-  "Jalan Jalan"
+  "Jalan Jalan",
+  "Psychic Fair"
  ],
  "mudaram": [
   "T.J. Maxx",
@@ -221,7 +229,9 @@
   "Nautica Factory Store",
   "Chico's Outlet",
   "Levi's/Dockers Outlet",
-  "Japan Cafe-Asian Grill"
+  "Japan Cafe-Asian Grill",
+  "GNC - General Nutrition Center",
+  "U.S. Post Office"
  ],
  "novas": [
   "Tommy Hilfiger",
@@ -345,20 +355,17 @@
   "Firehouse Subs",
   "Asian Chao",
   "Burger King",
-  "Charleys Philly Steaks",
   "Apropo Crepes",
   "Green Leaf's & Bananas",
   "Five Below",
   "Lids",
-  "Churromania",
   "Juan Valdez Café",
   "Ariat",
   "The Baked Bear",
   "Perfumania",
   "Shake Shack",
-  "The Taco Stand",
   "Primark",
   "Seasons 52"
  ],
- "letras_apagadas": 217
+ "letras_apagadas": 218
 }

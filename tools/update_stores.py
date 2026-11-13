@@ -116,6 +116,7 @@ NEW_WEB = {
     "Montblanc": "montblanc.com", "Breitling": "breitling.com", "Tod's": "tods.com", "Etro": "etro.com", "ETRO": "etro.com", "AMIRI": "amiri.com",
     "Anine Bing": "aninebing.com", "Zimmerman": "zimmermann.com", "rag & bone": "rag-bone.com", "Psycho Bunny": "psychobunny.com",
     "Carolina Herrera": "carolinaherrera.com", "Peserico": "peserico.com", "Monnalisa": "monnalisa.com", "FRETTE": "frette.com",
+    "GNC - General Nutrition Center": "gnc.com", "U.S. Post Office": "usps.com", "Vitamin World": "vitaminworld.com",
     "Matchbox": "matchboxrestaurants.com", "Seasons 52": "seasons52.com", "Aguabendita": "aguabendita.com", "Valentino": "valentino.com",
 }
 FIX_NAME = {"Oreg Norman": "Greg Norman"}  # erro de digitação no OSM
@@ -129,8 +130,12 @@ def norm(s):
     return [w for w in re.split(r"[^a-z0-9]+", s) if w and w not in GENERIC]
 
 
+ALIAS = {"US Post Office": "US Postal Service"}   # mesmo lugar, nomes diferentes nas fontes
+
+
 def same(a, b):
     """Mesma marca? Compara os nomes sem palavras genéricas (outlet, factory, store…)."""
+    a, b = (ALIAS.get(v.replace(".", ""), v) for v in (a, b))
     x, y = norm(a), norm(b)
     if not x or not y:
         return False
@@ -213,7 +218,8 @@ def main():
     erase = []          # contornos cujo nome antigo sai do desenho
     keep_pois = []
     for p in data["pois"]:
-        if (p.get("group") in KEEP_GROUPS or p["id"].startswith("__") or p.get("cat", "").split(" · ")[0] in AREAS
+        service_shop = p.get("group") == "Serviços" and " · loja " in p.get("cat", "")   # salão, dentista… são lojas
+        if ((p.get("group") in KEEP_GROUPS and not service_shop) or p["id"].startswith("__") or p.get("cat", "").split(" · ")[0] in AREAS
                 or re.search(r"food court|colonnade|oasis", p["name"], re.I)):
             keep_pois.append(p); continue
         poly = p.get("poly")
@@ -249,6 +255,7 @@ def main():
             continue
         if any(same(d, p["name"]) for d in directory):
             report["confirmadas_diretorio"].append(p["name"])
+            if not p.get("web") and NEW_WEB.get(p["name"]): p["web"] = NEW_WEB[p["name"]]
             keep_pois.append(p); continue
         report["fecharam"].append(p["name"])
         if poly: erase.append(p)
