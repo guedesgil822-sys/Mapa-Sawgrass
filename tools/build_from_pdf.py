@@ -398,43 +398,54 @@ def inside(p, ring):
 
 
 def base_svg(named_polys):
+    import xml.etree.ElementTree as ET
+    SVGNS, XL = "http://www.w3.org/2000/svg", "http://www.w3.org/1999/xlink"
+    ET.register_namespace("", SVGNS)
+    ET.register_namespace("xlink", XL)
     tmp_svg = OUT / "maps" / ".full.svg"
     run("pdftocairo", "-svg", str(PDF), str(tmp_svg))
-    s = tmp_svg.read_text()
+    root = ET.parse(tmp_svg).getroot()
     tmp_svg.unlink()
-    i = s.index("</defs>") + len("</defs>")
-    defs, body = s[s.index("<defs>"):i], s[i:s.rindex("</svg>")]
-    elems = re.findall(r"<g[^>]*>.*?</g>|<path[^>]*/>|<use[^>]*/>", body, flags=re.S)
     rings = [[(p[k] + X0, p[k + 1] + Y0) for k in range(0, len(p), 2)] for p in named_polys]
     boxes = [(min(x for x, _ in r), min(y for _, y in r), max(x for x, _ in r), max(y for _, y in r)) for r in rings]
-    keep, dropped = [], 0
-    for e in elems:
-        nums = [float(v) for v in re.findall(r"-?\d+\.?\d*", " ".join(re.findall(r' (?:d|x|y)="([^"]*)"', e)))]
-        if "transform=" in e:
-            m = re.search(r"matrix\(([^)]*)\)", e)
+
+    def bbox(el):
+        xs, ys = [], []
+        for e in el.iter():
+            m = re.search(r"matrix\(([^)]*)\)", e.get("transform", ""))
             if m:
                 t = [float(v) for v in m.group(1).split(",")]
-                nums = [t[4], t[5]]
-        if len(nums) < 2:
-            keep.append(e); continue
-        xs, ys = nums[0::2], nums[1::2]
-        bx0, bx1, by0, by1 = min(xs), max(xs), min(ys), max(ys)
-        if bx1 < X0 or bx0 > X0 + W or by1 < Y0 or by0 > Y0 + H:
+                xs.append(t[4]); ys.append(t[5])
+            if e.get("d"):
+                v = [float(n) for n in re.findall(r"-?\d+\.?\d*(?:e-?\d+)?", e.get("d"))]
+                if e.tag.endswith("path") and not e.get("id"):
+                    xs += v[0::2]; ys += v[1::2]
+            if e.tag.endswith("use") and e.get("x") is not None:
+                xs.append(float(e.get("x"))); ys.append(float(e.get("y")))
+        return (min(xs), min(ys), max(xs), max(ys)) if xs else None
+
+    dropped = 0
+    for el in list(root):
+        if el.tag.endswith("defs"):
             continue
+        bb = bbox(el)
+        if bb is None:
+            continue
+        bx0, by0, bx1, by1 = bb
+        if bx1 < X0 or bx0 > X0 + W or by1 < Y0 or by0 > Y0 + H:
+            root.remove(el); continue
         cx, cy = (bx0 + bx1) / 2, (by0 + by1) / 2
         if any(x0 <= cx <= x1 and y0 <= cy <= y1 for x0, y0, x1, y1 in ERASE):
-            continue
-        if (e.startswith("<path") and 'fill="rgb(0%, 0%, 0%)"' in e and "stroke" not in e
+            root.remove(el); continue
+        if (el.tag.endswith("path") and el.get("fill") == "rgb(0%, 0%, 0%)" and not el.get("stroke")
                 and bx1 - bx0 < 16 and by1 - by0 < 16
                 and any(b[0] <= cx <= b[2] and b[1] <= cy <= b[3] and inside((cx, cy), r) for r, b in zip(rings, boxes))):
-            dropped += 1
-            continue   # número de loja que ganhou nome no app
-        keep.append(e)
-    out = (f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
-           f'width="{W}" height="{H}" viewBox="{X0} {Y0} {W} {H}">\n{defs}\n'
-           f'<rect x="{X0}" y="{Y0}" width="{W}" height="{H}" fill="#fff"/>\n' + "\n".join(keep) + "\n</svg>\n")
-    (OUT / "maps" / "l1.svg").write_text(out)
-    return len(out) // 1024, dropped
+            root.remove(el); dropped += 1   # número de loja que ganhou nome no app
+    root.set("width", str(W)); root.set("height", str(H)); root.set("viewBox", f"{X0} {Y0} {W} {H}")
+    bg = ET.Element(f"{{{SVGNS}}}rect", {"x": str(X0), "y": str(Y0), "width": str(W), "height": str(H), "fill": "#fff"})
+    root.insert(1, bg)
+    ET.ElementTree(root).write(OUT / "maps" / "l1.svg", encoding="unicode", xml_declaration=False)
+    return (OUT / "maps" / "l1.svg").stat().st_size // 1024, dropped
 
 
 # ------------------------------------------------------------------ main
