@@ -25,7 +25,9 @@ const markers = [];
 const marked = new Set();
 const saveMarked = () => { try { localStorage.setItem(MARK_KEY, JSON.stringify([...marked])); } catch { /* sem armazenamento */ } };
 // GPS: posição atual no mapa { x, y, acc (m), near (POI mais próxima), inside }
-const gps = { watch: null, me: null, centered: false };
+const gps = { watch: null, me: null, centered: false, heading: null };
+// "Minha posição": ponto de interesse virtual usado como origem da rota quando o GPS está ligado
+const ME = { id: '__gps', name: '📍 Minha posição', gps: true, group: 'GPS', cat: 'GPS', f: null, x: 0, y: 0, node: null };
 // aberto dentro de outro app (ex.: visualizador do Claude), onde o GPS fica bloqueado
 const framed = (() => { try { return window.top !== window; } catch { return true; } })();
 const WEB_URL = 'https://guedesgil822-sys.github.io/Mapa-Sawgrass/';
@@ -91,8 +93,8 @@ function bindUI() {
   $('#gps-txt').onclick = () => gps.me && centerOnMe(); // tocar no texto recentraliza
   $('#gps-close').onclick = stopGps;
   $('#gps-use').onclick = () => {
-    if (!gps.me?.near) return;
-    state.from = gps.me.near; state.picked = null; update(true);
+    if (!gps.me) return;
+    state.from = ME; state.picked = null; update(true);
   };
   $('#q').oninput = renderResults;
   $('#picker').addEventListener('close', () => { $('#q').value = ''; });
@@ -179,7 +181,9 @@ function renderResults() {
         return;
       }
       $('#picker').close();
-      state[picking] = p; state.picked = null; update(true);
+      state[picking] = p; state.picked = null;
+      if (picking === 'to') gpsAsOrigin();
+      update(true);
     };
     li.onclick = pick;
     li.onkeydown = (e) => { if (e.key === 'Enter') pick(); };
@@ -333,7 +337,7 @@ function update(refit) {
   if (refit) state.step = 0;
 
   const h = new URLSearchParams();
-  if (state.from) h.set('de', state.from.id);
+  if (state.from && state.from !== ME) h.set('de', state.from.id);
   if (state.to) h.set('para', state.to.id);
   if (state.accessible) h.set('acessivel', '1');
   history.replaceState(null, '', location.pathname + location.search + (h.size ? '#' + h : ''));
@@ -342,6 +346,7 @@ function update(refit) {
   for (const b of $('#floors').children) b.classList.toggle('in-route', inRoute.has(b.dataset.f));
 
   renderSheet();
+  if (gps.me) renderGpsBar();
   if (refit) {
     const target = state.route ? state.route.steps[0].floor : (state.to || state.from)?.f;
     if (target) setFloor(target, true); else fitCurrent();
@@ -372,7 +377,7 @@ function renderSheet() {
     const a = el('button', 'btn from', 'Estou aqui');
     a.onclick = () => { state.from = p; state.picked = null; update(true); };
     const b = el('button', 'btn primary', 'Ir para cá');
-    b.onclick = () => { state.to = p; state.picked = null; update(true); };
+    b.onclick = () => { state.to = p; state.picked = null; gpsAsOrigin(); update(true); };
     act.append(a, b);
     const m = el('button', 'btn small mark-toggle', marked.has(p.id) ? '★ Desmarcar' : '☆ Marcar');
     m.onclick = () => { toggleMarked(p); renderSheet(); };
@@ -496,11 +501,14 @@ function drawRoute() {
       svgEl('polyline', { points: st.pts.map((p) => `${p.x},${p.y}`).join(' '), class: 'route-step' }, layers.route);
     }
   }
-  mark(state.from, 'from');
+  if (state.from !== ME) mark(state.from, 'from');
   mark(state.to, 'to');
   if (gps.me) {
     svgEl('circle', { cx: gps.me.x, cy: gps.me.y, r: Math.max(gps.me.acc, 3) * mall.ppm, class: 'gps-acc' }, layers.sel);
-    markers.push({ x: gps.me.x, y: gps.me.y, cls: 'me', title: 'Você está aqui' });
+    const n = state.from === ME && r && mall.nodes.get(ME.node);
+    if (n) svgEl('line', { x1: ME.x, y1: ME.y, x2: n.x, y2: n.y, class: 'gps-link' }, layers.route);
+    const head = gps.heading != null ? mapHeading(gps.heading) : null;
+    markers.push({ x: gps.me.x, y: gps.me.y, cls: 'me' + (head != null ? ' head' : ''), title: 'Você está aqui', rot: head });
   }
   placeMarkers();
 }
@@ -518,6 +526,7 @@ function placeMarkers() {
     d.title = m.title || '';
     d.onclick = m.go ? () => setFloor(m.go, true) : null;
     const s = view.toScreen(m.x, m.y);
+    if (m.rot != null) d.style.setProperty('--rot', m.rot + 'deg');
     d.style.left = s.x + 'px';
     d.style.top = s.y + 'px';
   });
@@ -543,13 +552,17 @@ function startGps() {
   $('#gps').title = 'Desligar localização';
   gpsMsg('Procurando sua posição…');
   gps.centered = false;
+  startCompass();
   gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError,
     { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
 }
 
 function stopGps() {
   if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
-  gps.watch = null; gps.me = null;
+  gps.watch = null; gps.me = null; gps.heading = null;
+  removeEventListener('deviceorientationabsolute', onHeading, true);
+  removeEventListener('deviceorientation', onHeading, true);
+  if (state.from === ME) { state.from = null; update(false); }
   $('#gps').classList.remove('on');
   $('#gps').setAttribute('aria-pressed', 'false');
   $('#gps').title = 'Onde estou (GPS)';
@@ -575,9 +588,83 @@ function onGps(pos) {
     if (d < bd) { bd = d; near = p; }
   }
   gps.me = { x, y, acc: accuracy, near };
-  const acc = accuracy < 1000 ? `±${Math.round(accuracy)} m` : 'baixa precisão';
-  gpsMsg(near ? `📍 Perto de ${near.name} (${acc})` : `Você está aqui (${acc})`, !!near);
-  if (!gps.centered) { gps.centered = true; centerOnMe(); } else drawRoute();
+  updateMe();
+  renderGpsBar();
+  if (!gps.centered) { gps.centered = true; centerOnMe(); }
+}
+
+// posiciona "Minha posição" no nó de corredor mais próximo e refaz a rota se ele mudou
+function updateMe() {
+  const { x, y } = gps.me;
+  let best = null, bd = Infinity;
+  for (const n of mall.nodes.values()) {
+    if (n.f !== state.floor || n.t === 'door' || !mall.adj.get(n.id)?.length) continue;
+    const d = Math.hypot(n.x - x, n.y - y);
+    if (d < bd) { bd = d; best = n; }
+  }
+  const changed = ME.node !== best?.id;
+  Object.assign(ME, { f: state.floor, x, y, node: best?.id ?? null });
+  if (!mall.poiById.has(ME.id)) mall.poiById.set(ME.id, ME);
+  if (state.from === ME && changed) update(false); else drawRoute();
+}
+
+function gpsAsOrigin() {
+  if (gps.me && ME.node && (!state.from || state.from === ME)) state.from = ME;
+}
+
+// texto da faixa do GPS: destino com distância e direção, ou loja mais próxima
+function renderGpsBar() {
+  const { acc, near } = gps.me;
+  const prec = acc < 1000 ? `±${Math.round(acc)} m` : 'baixa precisão';
+  const r = state.route;
+  if (state.from === ME && state.to && r) {
+    const left = Math.max(0, Math.round(r.meters));
+    const arrow = dirArrow(state.to);
+    return gpsMsg(left < 15 ? `✅ Você chegou: ${state.to.name}` : `${arrow} ${state.to.name} · ${left} m pela rota (${prec})`, false);
+  }
+  gpsMsg(near ? `📍 Perto de ${near.name} (${prec})` : `Você está aqui (${prec})`, !!near);
+  $('#gps-use').textContent = 'Usar minha posição como origem';
+}
+
+// seta de direção até o destino, relativa à bússola do celular (ou ao mapa, sem bússola)
+const ARROWS = ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'];
+function dirArrow(p) {
+  // mira um ponto à frente na rota (fim do primeiro trecho), não o nó colado em você
+  const tgt = state.route?.steps?.[0]?.pts?.at(-1) || p;
+  let a = Math.atan2(tgt.x - ME.x, -(tgt.y - ME.y)) * 180 / Math.PI; // 0 = topo do mapa
+  if (gps.heading != null) a -= mapHeading(gps.heading);
+  return ARROWS[Math.round((((a % 360) + 360) % 360) / 45) % 8];
+}
+
+/* bússola: direção do celular convertida para o ângulo do mapa (0 = topo da tela) */
+function startCompass() {
+  const add = () => {
+    addEventListener('deviceorientationabsolute', onHeading, true);
+    addEventListener('deviceorientation', onHeading, true);
+  };
+  const D = window.DeviceOrientationEvent;
+  if (!D) return;
+  add(); // ouvir não custa nada; no iPhone os eventos só chegam depois da permissão abaixo
+  if (D.requestPermission) D.requestPermission().catch(() => {});
+}
+
+function onHeading(e) {
+  let h = null;
+  if (e.webkitCompassHeading != null) h = e.webkitCompassHeading; // iPhone
+  else if (e.absolute && e.alpha != null) h = 360 - e.alpha;      // Android
+  if (h == null || gps.watch == null) return;
+  if (gps.heading != null && Math.abs(((h - gps.heading + 540) % 360) - 180) < 4) return;
+  gps.heading = h;
+  if (gps.me) { drawRoute(); if (state.from === ME && state.to) renderGpsBar(); }
+}
+
+// rumo (graus a partir do norte) -> ângulo na tela do mapa (graus a partir do topo, sentido horário)
+function mapHeading(h) {
+  const g = mall.data.meta.geo, k = Math.cos(g.lat0 * Math.PI / 180);
+  const nx = g.xLat / 110574, ny = g.yLat / 110574, ex = g.xLon / (111320 * k), ey = g.yLon / (111320 * k);
+  const r = h * Math.PI / 180;
+  const dx = nx * Math.cos(r) + ex * Math.sin(r), dy = ny * Math.cos(r) + ey * Math.sin(r);
+  return Math.atan2(dx, -dy) * 180 / Math.PI;
 }
 
 function onGpsError(err) {

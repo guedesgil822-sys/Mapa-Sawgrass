@@ -185,3 +185,9 @@ button { cursor: pointer; }
 .mark-bar .btn { color: var(--ink); }
 .mark-bar .btn.primary { color: #fff; -webkit-text-fill-color: #fff; }
 .btn.mark-toggle { flex: none; }
+
+/* ---------- GPS: direção ---------- */
+.mk.me.head::before { content: ""; position: absolute; left: 50%; top: 50%; width: 0; height: 0;
+  border-left: 14px solid transparent; border-right: 14px solid transparent; border-bottom: 34px solid rgba(26, 115, 232, .35);
+  transform: translate(-50%, -100%) rotate(var(--rot, 0deg)); transform-origin: 50% 100%; }
+.gps-link { stroke: #1a73e8; stroke-width: 4; stroke-dasharray: 2 8; stroke-linecap: round; vector-effect: non-scaling-stroke; fill: none; }

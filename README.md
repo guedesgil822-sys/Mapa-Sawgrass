@@ -6,7 +6,11 @@ o app desenha a rota a pé sobre a planta, com passo a passo em texto. A origem
 pode ser escolhida na lista ou pelo botão ◎ (GPS do celular), que mostra um
 ponto azul com o raio de precisão e sugere a loja mais próxima como origem.
 Dentro do prédio o GPS costuma errar 10–50 m; perto das entradas e no
-estacionamento ele é mais confiável. A conversão lat/lon → mapa fica em
+estacionamento ele é mais confiável. Com o GPS ligado, ao escolher um destino a
+origem vira **📍 Minha posição**: a rota sai de onde você está e é refeita
+conforme você anda; a faixa do GPS mostra a seta de direção, o nome do destino
+e os metros que faltam. No celular, a bússola gira o cone azul do ponto e a
+seta passa a ser relativa para onde você está virado. A conversão lat/lon → mapa fica em
 `meta.geo` do `mall.json` (gerada por `tools/add_osm.py`).
 
 Mesmo código do app feito para o Salvador Norte Shopping, adaptado para um
