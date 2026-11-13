@@ -53,6 +53,7 @@
     <button type="button" class="chip st-meet" id="meet-chip" hidden></button>
     <button type="button" class="chip st-car" id="car-chip" hidden></button>
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
+    <button type="button" class="chip install" id="install-btn" hidden>📲 Instalar app</button>
     <button type="button" class="chip near" id="near-btn">📍 Perto de mim</button>
     <button type="button" class="chip shop" id="shop-btn">🛍️ Compras</button>
     <button type="button" class="chip hours" id="hours-btn"></button>
@@ -306,6 +307,19 @@
       <button type="button" class="btn primary" id="intro-next">Próximo</button>
     </div>
   </div>
+</dialog>
+
+<dialog id="install" class="sheet-dlg">
+  <form method="dialog" class="tools-box install-box">
+    <div class="tools-head"><h2>📲 <span>Instalar o app</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <p class="install-why">Fica com ícone na tela de início, abre em tela cheia e funciona sem internet dentro do shopping.</p>
+    <ol class="install-steps">
+      <li><span class="ist-ic" aria-hidden="true">1</span><span>Abra este site no <b>Safari</b>.</span></li>
+      <li><span class="ist-ic" aria-hidden="true">2</span><span>Toque em <b>Compartilhar</b> <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v8h14v-8"/></svg> (na barra de baixo ou de cima).</span></li>
+      <li><span class="ist-ic" aria-hidden="true">3</span><span>Escolha <b>Adicionar à Tela de Início</b> e toque em <b>Adicionar</b>.</span></li>
+    </ol>
+    <button class="btn primary" value="cancel">Entendi</button>
+  </form>
 </dialog>
 
 <dialog id="sos" class="sheet-dlg">
