@@ -113,7 +113,7 @@ farmácia, a partir do GPS, da origem escolhida ou da loja aberta no painel.
 
 ## Compras (preço, tamanhos e lista)
 
-O chip **🛍️ Compras** abre três abas (`js/shop.js`):
+O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
 
 - **Preço**: preço da etiqueta em US$ → moeda escolhida (real, euro, libra,
   dólar canadense, peso mexicano/colombiano/argentino/chileno, yuan, iene), com
@@ -126,6 +126,35 @@ O chip **🛍️ Compras** abre três abas (`js/shop.js`):
 - **Lista**: o que comprar, preço e loja (entre as marcadas), agrupado por loja
   com "Ir ➜", marcar como comprado, e totais planejado/comprado na moeda
   escolhida. Fica salva no aparelho.
+- **Ofertas**: livreto de cupons grátis para turistas no Atendimento (Simon
+  Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
+  link para as promoções oficiais (simon.com) e dicas para economizar.
+
+## Rota em voz alta
+
+No painel da rota, o botão 🔇/🔊 liga a leitura em voz alta (voz do próprio
+celular, no idioma do app): cada passo é falado ao começar a rota e ao tocar
+em "Próximo", e com o GPS o app fala "Você chegou". A escolha fica salva.
+
+## Emergência
+
+O botão vermelho 🆘 (acima do GPS) abre: ligar 911, segurança do shopping
+(954) 846-2322 e Atendimento (954) 846-2350, com "Ir até lá" para cada um, e o
+que fazer com criança perdida. Os números ficam visíveis para copiar, caso a
+ligação direta não funcione.
+
+## Ícone e abertura
+
+Ícone com as alas coloridas do Sawgrass (cores da planta), a rota e o alfinete
+(`icons/icon.svg` e PNGs 180/192/512/maskable). Enquanto o mapa carrega,
+aparece a tela de abertura. Na tela de início o app se chama "Sawgrass".
+
+## Economia de bateria
+
+Com o GPS ligado, o botão 🔋 na faixa do GPS liga o modo econômico (GPS menos
+preciso e menos frequente, sem bússola). Ele liga sozinho com bateria abaixo
+de 20% onde o navegador informa a bateria. Em qualquer modo, o GPS pausa
+quando o app vai para segundo plano e volta ao abrir de novo.
 
 ## Tutorial
 

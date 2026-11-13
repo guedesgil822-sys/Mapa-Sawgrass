@@ -142,7 +142,7 @@ function buildSizes() {
 // itens: { id, t: o que comprar, usd: preço (opcional), store: id da loja (opcional), done: comprado }
 const LIST_KEY = 'sawgrass.lista';
 let items = load(LIST_KEY, []);
-let hooks = { marked: () => [], poi: () => null, goTo: () => {} };
+let hooks = { marked: () => [], poi: () => null, goTo: () => {}, guest: () => null };
 export function setShopHooks(h) { hooks = { ...hooks, ...h }; }
 const saveList = () => save(LIST_KEY, items);
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) && n > 0 ? n : null; };
@@ -230,5 +230,6 @@ export function openShop(tab = 'conv') {
   }
   for (const s of document.querySelectorAll('.shop-pane')) s.hidden = s.id !== 'shop-' + tab;
   renderConv(); renderList();
+  $('#deal-go').onclick = () => { const g = hooks.guest(); if (g) { $('#shop').close(); hooks.goTo(g); } };
   if (!$('#shop').open) $('#shop').showModal();
 }

@@ -89,6 +89,7 @@ async function init() {
   renderMarked();
   renderStatus();
   setInterval(renderStatus, 30000);
+  const sp = $('#splash'); sp.classList.add('out'); setTimeout(() => sp.remove(), 500);
   if (!load('sawgrass.intro') && !state.shared) setTimeout(openIntro, 600);
   if (state.shared) { // enquadra tudo o que foi compartilhado
     const pts = [state.meet, state.shared.who, ...state.shared.marks.map((id) => mall.poiById.get(id))].filter(Boolean);
@@ -134,10 +135,15 @@ function bindUI() {
   setShopHooks({
     marked: () => [...marked].map((id) => mall.poiById.get(id)).filter(Boolean),
     poi: (id) => mall.poiById.get(id),
+    guest: () => mall.pois.find((p) => p.cat === 'Atendimento e cartões-presente'),
     goTo: (p) => { state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); },
   });
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
+  $('#sos-btn').onclick = () => $('#sos').showModal();
+  const goPlace = (cat) => { const p = mall.pois.find((q) => q.cat === cat); if (!p) return; $('#sos').close(); state.tour = null; state.to = p; state.picked = null; gpsAsOrigin(); update(true); if (!state.from) openPicker('from'); };
+  $('#sos-sec').onclick = () => goPlace('Administração');
+  $('#sos-info').onclick = () => goPlace('Atendimento e cartões-presente');
   $('#intro-again').onclick = () => { $('#lang').close(); openIntro(); };
   $('#move-cancel').onclick = () => { moving = null; $('#move-bar').hidden = true; };
   $('#fix-chip').onclick = openFixes;
@@ -176,6 +182,7 @@ function bindUI() {
   $('#gps').onclick = () => (gps.watch == null ? startGps() : stopGps()); // liga/desliga
   $('#gps-txt').onclick = () => gps.me && centerOnMe(); // tocar no texto recentraliza
   $('#gps-close').onclick = stopGps;
+  $('#gps-eco').onclick = () => setEco(!eco, tx(!eco ? '🔋 Modo econômico ligado: GPS menos frequente e sem bússola.' : 'Modo econômico desligado.'));
   $('#gps-use').onclick = () => {
     if (!gps.me) return;
     state.from = ME; state.picked = null; update(true);
@@ -342,6 +349,27 @@ function showMarked() {
   fitPoints(ps.filter((p) => p.f === state.floor), 150 * mall.ppm);
 }
 
+/* ---------- rota em voz alta ---------- */
+let voiceOn = (() => { try { return localStorage.getItem('sawgrass.voz') === 'true'; } catch { return false; } })();
+const VOICE_LANG = { pt: 'pt-BR', en: 'en-US', es: 'es-US', fr: 'fr-FR', de: 'de-DE', zh: 'zh-CN', ja: 'ja-JP' };
+let lastSaid = '';
+function say(text) {
+  if (!voiceOn || !('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/[☆★➜›‹·]/g, ' '));
+  u.lang = VOICE_LANG[getLang()] || 'pt-BR';
+  const v = speechSynthesis.getVoices().find((x) => x.lang.replace('_', '-').startsWith(u.lang.slice(0, 2)));
+  if (v) u.voice = v;
+  u.rate = 1;
+  speechSynthesis.speak(u);
+  lastSaid = text;
+}
+function speakStep() {
+  const st = state.route?.steps?.[state.step];
+  if (!st) return;
+  say(st.dist ? `${st.text}. ${tx('siga por {x}', { x: fmtDist(st.dist) })}` : st.text);
+}
+
 /* ---------- tutorial (primeira abertura) ---------- */
 const INTRO = [
   { ico: '🗺️', t: 'Bem-vindo ao Sawgrass Mills', d: 'Busque qualquer loja em "Para onde você vai?" e toque em "Ir ➜": o app traça a rota a pé, com o passo a passo. Ligue o GPS (◎) para sair de onde você está.' },
@@ -476,10 +504,14 @@ function openHours() {
 }
 
 /* ---------- aviso do encontro ---------- */
+let toastT = 0;
 function toast(msg) {
   $('#toast-txt').textContent = msg;
   $('#toast').hidden = false;
-  navigator.vibrate?.([200, 100, 200]);
+  clearTimeout(toastT);
+  // avisos do encontro ficam até a pessoa fechar; os demais somem sozinhos
+  if (/^[⏰🤝]/u.test(msg)) navigator.vibrate?.([200, 100, 200]);
+  else toastT = setTimeout(() => { $('#toast').hidden = true; }, 6000);
 }
 // avisa 10 min antes e na hora (uma vez cada), com o app aberto; notificação do sistema se permitida
 function meetAlerts() {
@@ -824,6 +856,7 @@ function update(refit) {
   for (const b of $('#floors').children) b.classList.toggle('in-route', inRoute.has(b.dataset.f));
 
   renderSheet();
+  if (refit && state.route) speakStep();
   if (gps.me) renderGpsBar();
   if (refit) {
     const target = state.route ? state.route.steps[0].floor : (state.to || state.from)?.f;
@@ -900,7 +933,12 @@ function renderSheet() {
   next.onclick = () => goStep(state.step + 1);
   prev.disabled = state.step === 0;
   next.disabled = state.step === r.steps.length - 1;
-  head.append(g, prev, next);
+  const spk = el('button', 'btn small voice' + (voiceOn ? ' on' : ''), voiceOn ? '🔊' : '🔇');
+  spk.setAttribute('aria-label', tx(voiceOn ? 'Desligar voz' : 'Ler a rota em voz alta'));
+  spk.title = spk.getAttribute('aria-label');
+  spk.hidden = !('speechSynthesis' in window);
+  spk.onclick = () => { voiceOn = !voiceOn; store('sawgrass.voz', voiceOn); if (voiceOn) speakStep(); else speechSynthesis.cancel(); renderSheet(); };
+  head.append(g, spk, prev, next);
 
   const cur = r.steps[state.step];
   const now = el('div', 'now');
@@ -934,6 +972,7 @@ function goStep(i) {
   if (!r || i < 0 || i >= r.steps.length) return;
   state.step = i;
   renderSheet();
+  speakStep();
   const st = r.steps[i];
   // ao chegar num passo de troca de piso, o mapa mostra onde ela fica
   if (st.floor !== state.floor) setFloor(st.floor, false); else drawRoute();
@@ -1498,14 +1537,59 @@ function startGps() {
   $('#gps').title = tx('Desligar localização');
   gpsMsg(tx('Procurando sua posição…'));
   gps.centered = false;
-  startCompass();
-  gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError,
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+  if (!eco) startCompass();
+  watchGps();
+  renderEco();
 }
+
+/* ---------- economia de bateria ---------- */
+// Econômico: GPS menos preciso e menos frequente, sem bússola. Sempre: GPS pausa com o app em segundo plano.
+let eco = (() => { try { return localStorage.getItem('sawgrass.eco') === 'true'; } catch { return false; } })();
+function watchGps() {
+  if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
+  gps.watch = navigator.geolocation.watchPosition(onGps, onGpsError, eco
+    ? { enableHighAccuracy: false, maximumAge: 30000, timeout: 60000 }
+    : { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+}
+function setEco(on, why) {
+  eco = on;
+  try { localStorage.setItem('sawgrass.eco', String(on)); } catch { /* sem armazenamento */ }
+  if (gps.watch != null) {
+    watchGps();
+    if (on) { removeEventListener('deviceorientationabsolute', onHeading, true); removeEventListener('deviceorientation', onHeading, true); gps.heading = null; drawRoute(); }
+    else startCompass();
+  }
+  renderEco();
+  if (why) toast(why);
+}
+function renderEco() {
+  const b = $('#gps-eco');
+  b.classList.toggle('on', eco);
+  b.setAttribute('aria-pressed', String(eco));
+  b.textContent = eco ? tx('🔋 Econômico') : '🔋';
+  b.title = tx('Economia de bateria');
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && gps.watch != null) {
+    navigator.geolocation.clearWatch(gps.watch); gps.watch = null; gps.paused = true;
+  } else if (!document.hidden && gps.paused) {
+    gps.paused = false; watchGps();
+  }
+});
+// bateria fraca (onde o navegador informa): liga o modo econômico sozinho, uma vez
+navigator.getBattery?.().then((bat) => {
+  const check = () => {
+    if (!eco && !bat.charging && bat.level <= 0.2 && !sessionStorage.getItem('eco-auto')) {
+      sessionStorage.setItem('eco-auto', '1');
+      setEco(true, tx('🔋 Bateria fraca: modo econômico ligado.'));
+    }
+  };
+  check(); bat.addEventListener('levelchange', check);
+}).catch(() => {});
 
 function stopGps() {
   if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
-  gps.watch = null; gps.me = null; gps.heading = null;
+  gps.watch = null; gps.me = null; gps.heading = null; gps.paused = false;
   removeEventListener('deviceorientationabsolute', onHeading, true);
   removeEventListener('deviceorientation', onHeading, true);
   if (state.from === ME) { state.from = null; update(false); }
@@ -1568,6 +1652,7 @@ function renderGpsBar() {
   if (state.from === ME && state.to && r) {
     const left = Math.max(0, Math.round(r.meters));
     const arrow = dirArrow(state.to);
+    if (left < 15 && lastSaid !== 'arrive:' + state.to.id) { say(tx('✅ Você chegou: {x}', { x: td(state.to.name) }).replace('✅', '')); lastSaid = 'arrive:' + state.to.id; }
     if (left < 15 && state.tour && state.tour.i < state.tour.stops.length - 1) return gpsMsg(tx('✅ Você chegou: {x}', { x: td(state.to.name) }) + ' · ' + tx('Próxima loja ›'), false);
     return gpsMsg(left < 15 ? tx('✅ Você chegou: {x}', { x: td(state.to.name) }) : tx('{a} {x} · {n} m pela rota ({p})', { a: arrow, x: td(state.to.name), n: left, p: prec }), false);
   }
@@ -1675,6 +1760,7 @@ function fitCurrent() {
 
 init().catch((err) => {
   console.error(err);
+  $('#splash')?.remove();
   const s = $('#sheet');
   s.hidden = false;
   s.textContent = tx('Não foi possível carregar o mapa. Verifique a conexão e tente de novo.');
