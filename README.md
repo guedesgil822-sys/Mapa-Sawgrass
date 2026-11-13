@@ -37,8 +37,11 @@ o painel mostra "Estou aqui", "Ir para cá" e "Marcar/Desmarcar".
 
 ## Ferramentas
 
-O botão **🧰 Ferramentas** abre uma folha com atalhos (padrão de apps de
-shopping e do Google/Apple Maps):
+Layout "barra inferior" (padrão Google Maps/Waze): no topo, a busca
+**"Para onde você vai?"** (vira o cartão De → Para quando há rota, com ✕ para
+limpar) e chips de status; à direita, GPS e zoom; embaixo, a barra fixa
+**Mapa · Buscar · Encontro · Carro · Grupo** (a aba mostra o horário do
+encontro, o número de lojas marcadas e um ponto quando o carro está salvo):
 
 - **🤝 Ponto de encontro**: local + horário (atalhos +15 min, +30 min, +1 h,
   +2 h). Fica um chip no topo com a contagem ("em 25 min"), que fica roxo
@@ -47,7 +50,7 @@ shopping e do Google/Apple Maps):
   estacionamento mais próximo) ou escolhendo da lista, com anotação ("fileira
   B, vaga 23"). "Levar até o carro" traça a rota até a saída daquele
   estacionamento e uma linha até o carro.
-- **📤 Compartilhar**, **★ Lojas marcadas** e **📍 Onde estou (GPS)**.
+- **📤 Grupo** (compartilhar) e **🔎 Buscar** (marcar lojas).
 
 Encontro e carro ficam salvos no aparelho.
 

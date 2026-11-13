@@ -90,17 +90,31 @@ async function init() {
 function bindUI() {
   $('#f-from').onclick = () => openPicker('from');
   $('#f-to').onclick = () => openPicker('to');
-  $('#find').onclick = () => openPicker('find');
+  $('#search-pill').onclick = () => openPicker('to');
+  $('#trip-clear').onclick = () => { state.from = state.to = null; state.picked = null; update(false); };
+  $('#tab-map').onclick = () => { state.picked = null; update(false); fitCurrent(); };
+  $('#tab-find').onclick = () => openPicker('find');
+  $('#tab-meet').onclick = () => openMeet();
+  $('#tab-car').onclick = () => openCar();
+  $('#tab-share').onclick = openShare;
+  // aba acesa = janela aberta no momento (ou Mapa)
+  const TAB_OF = { picker: 'tab-find', meet: 'tab-meet', car: 'tab-car', share: 'tab-share' };
+  const syncTabs = () => {
+    const open = Object.keys(TAB_OF).find((d) => $('#' + d).open && (d !== 'picker' || picking === 'find'));
+    for (const b of $('#tabbar').children) b.classList.toggle('on', b.id === (open ? TAB_OF[open] : 'tab-map'));
+  };
+  for (const d of Object.keys(TAB_OF)) {
+    new MutationObserver(syncTabs).observe($('#' + d), { attributes: true, attributeFilter: ['open'] });
+  }
+  // altura do painel inferior -> posição dos botões de zoom/GPS
+  new ResizeObserver(() => {
+    const sh = $('#sheet'), h = sh.hidden || innerWidth >= 760 ? 0 : sh.getBoundingClientRect().height;
+    document.documentElement.style.setProperty('--sheet-h', h + 'px');
+  }).observe($('#sheet'));
   $('#mark-clear').onclick = () => { clearMarked(); renderResults(); };
   $('#marked-clear').onclick = clearMarked;
   $('#mark-show').onclick = () => { $('#picker').close(); showMarked(); };
   $('#marked-chip').onclick = showMarked;
-  $('#tools-btn').onclick = openTools;
-  $('#t-meet').onclick = () => { $('#tools').close(); openMeet(); };
-  $('#t-car').onclick = () => { $('#tools').close(); openCar(); };
-  $('#t-share').onclick = () => { $('#tools').close(); openShare(); };
-  $('#t-marked').onclick = () => { $('#tools').close(); openPicker('find'); };
-  $('#t-gps').onclick = () => { $('#tools').close(); if (gps.watch == null) startGps(); else stopGps(); };
   $('#meet-chip').onclick = () => openMeet();
   $('#car-chip').onclick = () => openCar();
   $('#mt-place').onclick = () => { $('#meet').close(); openPicker('meet'); };
@@ -249,6 +263,7 @@ function renderMarkBar() {
 
 function renderMarked() {
   const n = marked.size;
+  renderStatus();
   $('#marked-chip').hidden = $('#marked-clear').hidden = !n;
   $('#marked-chip').textContent = `★ ${n} ${n === 1 ? 'marcada' : 'marcadas'}`;
   drawRoute();
@@ -367,6 +382,8 @@ function onMapTap(pt, ev, target) {
 function update(refit) {
   setField('#f-from', state.from, 'Escolha a loja mais próxima');
   setField('#f-to', state.to, 'Escolha o destino');
+  $('#trip').hidden = !(state.from || state.to);
+  $('#search-pill').hidden = !$('#trip').hidden;
 
   state.route = null;
   if (state.from && state.to && state.from.id !== state.to.id) {
@@ -631,19 +648,16 @@ function placeCar() {
 function renderStatus() {
   const mc = $('#meet-chip'), cc = $('#car-chip');
   mc.hidden = !state.meet;
-  if (state.meet) mc.textContent = `🤝 ${state.meet.name}${state.meetTime ? ` · ${state.meetTime} (${relTime(state.meetTime)})` : ''}`;
+  if (state.meet) mc.textContent = `🤝 ${state.meetTime ? `${state.meetTime} · ${relTime(state.meetTime)}` : state.meet.name}`;
   cc.hidden = !state.car;
   if (state.car) cc.textContent = `🚗 ${mall.poiById.get(state.car.lot).name.replace(/^Estacionamento · /, '')}`;
   mc.classList.toggle('late', !!state.meetTime && minsTo(state.meetTime) <= 5);
+  $('#tab-meet-l').textContent = state.meet && state.meetTime ? state.meetTime : 'Encontro';
+  $('#tab-car-b').hidden = !state.car;
+  $('#tab-find-b').hidden = !marked.size;
+  $('#tab-find-b').textContent = marked.size || '';
 }
 
-function openTools() {
-  $('#t-meet-sub').textContent = state.meet ? `${state.meet.name}${state.meetTime ? ' · ' + state.meetTime : ''}` : 'Local e horário';
-  $('#t-car-sub').textContent = state.car ? 'Salvo · ' + hhmm(state.car.t) : 'Marcar onde estacionei';
-  $('#t-marked-sub').textContent = marked.size ? `${marked.size} marcadas` : 'Marcar na busca';
-  $('#t-gps-sub').textContent = gps.watch == null ? 'Ligar GPS' : 'Desligar GPS';
-  $('#tools').showModal();
-}
 
 function openMeet(p) {
   if (p) meetDraft = p; else meetDraft = state.meet;
@@ -951,9 +965,10 @@ function pads() {
   const sheet = $('#sheet');
   const wide = innerWidth >= 760;
   const sh = sheet.hidden ? 0 : sheet.getBoundingClientRect();
+  const tab = $('#tabbar').getBoundingClientRect().height;
   return {
     t: top, r: 70,
-    b: !wide && sh ? sh.height + 16 : 24,
+    b: tab + (!wide && sh ? sh.height : 0) + 16,
     l: wide && sh ? sh.width + 30 : 16,
   };
 }
@@ -973,9 +988,12 @@ function fitCurrent() {
     for (const p of [state.from, state.to]) if (p && p.f === f.id) pts.push(p);
   }
   if (pts.length) return fitPoints(pts, 40 * mall.ppm);
-  // piso inteiro: usa a área onde há lojas/corredores
-  const all = mall.data.nodes.filter((n) => n.f === f.id);
-  if (all.length) fitPoints(all, 0); else view.fit([0, 0, f.width, f.height], pads());
+  // só as lojas (sem estacionamentos): o prédio enche a largura da tela
+  const all = mall.pois.filter((p) => p.f === f.id && p.poly && p.group !== 'Estacionamento')
+    .flatMap((p) => p.poly.reduce((a, v, i) => (i % 2 ? (a[a.length - 1].y = v) : a.push({ x: v, y: 0 }), a), []));
+  if (all.length) { const m = mall.ppm * 4, r = { ...pads(), r: 16 }; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const q of all) { x0 = Math.min(x0, q.x); y0 = Math.min(y0, q.y); x1 = Math.max(x1, q.x); y1 = Math.max(y1, q.y); }
+    view.fit([x0 - m, y0 - m, x1 + m, y1 + m], r); } else view.fit([0, 0, f.width, f.height], pads());
 }
 
 init().catch((err) => {

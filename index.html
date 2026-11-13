@@ -16,18 +16,20 @@
 <div id="markers" aria-hidden="true"></div>
 
 <header class="top">
-  <div class="card trip">
+  <button type="button" class="card search-pill" id="search-pill"><span class="sp-ic" aria-hidden="true">🔎</span><span class="sp-q">Para onde você vai?</span></button>
+  <div class="card trip" id="trip" hidden>
     <div class="rail" aria-hidden="true"><i class="dot from"></i><i class="line"></i><i class="dot to"></i></div>
     <div class="fields">
       <button type="button" class="field" id="f-from"><small>Você está em</small><span>Escolha a loja mais próxima</span></button>
       <button type="button" class="field" id="f-to"><small>Quer ir para</small><span>Escolha o destino</span></button>
     </div>
-    <button type="button" class="icon-btn" id="swap" aria-label="Inverter origem e destino" title="Inverter">⇅</button>
+    <div class="trip-act">
+      <button type="button" class="icon-btn" id="swap" aria-label="Inverter origem e destino" title="Inverter">⇅</button>
+      <button type="button" class="icon-btn" id="trip-clear" aria-label="Limpar rota" title="Limpar rota">✕</button>
+    </div>
   </div>
   <div class="opts">
-    <button type="button" class="chip find" id="find">🔎 Buscar loja</button>
     <label class="chip toggle"><input type="checkbox" id="accessible"><span>♿ Sem escada rolante</span></label>
-    <button type="button" class="chip tools" id="tools-btn">🧰 Ferramentas</button>
     <button type="button" class="chip st-meet" id="meet-chip" hidden></button>
     <button type="button" class="chip st-car" id="car-chip" hidden></button>
     <button type="button" class="chip marked" id="marked-chip" hidden></button>
@@ -59,6 +61,14 @@
 
 <section id="sheet" hidden aria-live="polite"></section>
 
+<nav class="tabbar" id="tabbar" aria-label="Ferramentas">
+  <button type="button" id="tab-map" class="on"><span class="ti" aria-hidden="true">🗺️</span>Mapa</button>
+  <button type="button" id="tab-find"><span class="ti" aria-hidden="true">🔎</span>Buscar<i class="badge" id="tab-find-b" hidden></i></button>
+  <button type="button" id="tab-meet"><span class="ti" aria-hidden="true">🤝</span><span id="tab-meet-l">Encontro</span></button>
+  <button type="button" id="tab-car"><span class="ti" aria-hidden="true">🚗</span>Carro<i class="badge dot" id="tab-car-b" hidden></i></button>
+  <button type="button" id="tab-share"><span class="ti" aria-hidden="true">📤</span>Grupo</button>
+</nav>
+
 <dialog id="picker">
   <form method="dialog" class="picker-head">
     <button class="icon-btn" value="cancel" aria-label="Fechar">←</button>
@@ -71,19 +81,6 @@
     <button type="button" class="btn" id="mark-clear">Limpar</button>
     <button type="button" class="btn primary" id="mark-show">Ver no mapa</button>
   </div>
-</dialog>
-
-<dialog id="tools" class="sheet-dlg">
-  <form method="dialog" class="tools-box">
-    <div class="tools-head"><h2>Ferramentas</h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
-    <div class="tiles">
-      <button type="button" class="tile" id="t-meet"><span class="ti">🤝</span><b>Ponto de encontro</b><small id="t-meet-sub">Local e horário</small></button>
-      <button type="button" class="tile" id="t-car"><span class="ti">🚗</span><b>Meu carro</b><small id="t-car-sub">Marcar onde estacionei</small></button>
-      <button type="button" class="tile" id="t-share"><span class="ti">📤</span><b>Compartilhar</b><small>Com o grupo</small></button>
-      <button type="button" class="tile" id="t-marked"><span class="ti">★</span><b>Lojas marcadas</b><small id="t-marked-sub">Marcar na busca</small></button>
-      <button type="button" class="tile" id="t-gps"><span class="ti">📍</span><b>Onde estou</b><small id="t-gps-sub">Ligar GPS</small></button>
-    </div>
-  </form>
 </dialog>
 
 <dialog id="meet" class="sheet-dlg">
