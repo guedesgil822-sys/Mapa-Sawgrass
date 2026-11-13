@@ -56,8 +56,8 @@ Encontro e carro ficam salvos no aparelho.
 
 ## Idiomas
 
-Português, English, Español, Français e Deutsch (os idiomas dos maiores grupos
-de turistas da Flórida). O app abre no idioma do celular; a bandeira na busca
+Português, English, Español, Français, Deutsch, 中文 (simplificado) e 日本語
+(os idiomas dos maiores grupos de turistas da Flórida, mais China e Japão). O app abre no idioma do celular; a bandeira na busca
 do topo troca o idioma (fica salvo). Traduções em `js/i18n.js`, com o texto em
 português como chave: textos da tela, passo a passo da rota, segmentos,
 categorias e lugares como entradas, banheiros e estacionamentos. Nomes das
