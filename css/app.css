@@ -713,3 +713,15 @@ html, body { background: #fbfbfa; }
 .topics-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .topics-row .chip { cursor: pointer; box-shadow: none; font-size: 14px; padding: 7px 12px; }
 #results li.sec.sells { color: var(--accent); }
+
+/* ---------- 40 · para quem é cada compra ---------- */
+.list-who { display: block; margin-top: 4px; max-width: 100%; font-size: 13px; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+.cota-row { display: flex; flex-direction: column; gap: 4px; padding-top: 8px; border-top: 1px solid var(--line); }
+.cota-row:first-of-type { border-top: 0; }
+.cota-name { font-size: 15px; font-weight: 700; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--ink); width: 60%; }
+.cota-row.warn .cota-bar i { background: #d18a00; }
+.cota-row.over .cota-bar i { background: #c62828; }
+.cota-row.warn .cota-msg { color: #8a5a00; -webkit-text-fill-color: #8a5a00; }
+.cota-row.over .cota-msg { color: #b3123f; -webkit-text-fill-color: #b3123f; }
+.cota-row.ok .cota-msg { color: #0a7d55; -webkit-text-fill-color: #0a7d55; }
+.cota-row.ok .cota-bar i { background: #0a7d55; }

@@ -205,6 +205,7 @@ function renderList() {
       const x = el('button', 'icon-btn', '✕'); x.type = 'button'; x.setAttribute('aria-label', tx('Remover'));
       x.onclick = () => { delReceipt(it); items = items.filter((i) => i !== it); saveList(); renderList(); };
       const txt = el('div', 'list-txt'); txt.append(el('span', '', it.t), conv2);
+      if (people > 1 && showCota()) txt.append(whoSelect(it));
       li.append(cb, txt, receiptBtn(it), pr, x);
       ul.appendChild(li);
     }
@@ -344,12 +345,23 @@ function renderPhrases() {
 const COTA = 1000, COTA_TAX = 0.5;
 const showCota = () => getLang() === 'pt' || cur === 'BRL';
 let people = load('sawgrass.cota.pessoas', 1);
-const cotaUsed = () => items.filter((i) => i.done).reduce((s, i) => s + (i.usd || 0), 0) * (conv.tax ? 1 + SALES_TAX : 1);
+// cada viajante tem a sua cota; cada compra é de alguém (it.who, índice do viajante)
+let travelers = load('sawgrass.viajantes', []);
+const whoOf = (it) => Math.min(it.who || 0, people - 1);
+const travelerName = (i) => (travelers[i] || '').trim() || (i === 0 ? tx('Eu') : tx('Viajante {n}', { n: i + 1 }));
+const cotaUsed = () => {
+  const u = Array(people).fill(0), k = conv.tax ? 1 + SALES_TAX : 1;
+  for (const it of items) if (it.done) u[whoOf(it)] += (it.usd || 0) * k;
+  return u;
+};
 function cotaWarn(before, after) {
   if (!showCota()) return;
-  const lim = COTA * people;
-  if (before <= lim && after > lim) toastShop(tx('🛃 Passou da cota de US$ {n}! O excedente paga 50% na Receita.', { n: lim.toLocaleString('pt-BR') }));
-  else if (before < lim * 0.8 && after >= lim * 0.8 && after <= lim) toastShop(tx('🛃 Atenção: já usou 80% da cota de US$ {n}.', { n: lim.toLocaleString('pt-BR') }));
+  const n = COTA.toLocaleString('pt-BR');
+  after.forEach((a, i) => {
+    const b = before[i] || 0, who = people > 1 ? travelerName(i) + ': ' : '';
+    if (b <= COTA && a > COTA) toastShop(who + tx('🛃 Passou da cota de US$ {n}! O excedente paga 50% na Receita.', { n }));
+    else if (b < COTA * 0.8 && a >= COTA * 0.8 && a <= COTA) toastShop(who + tx('🛃 Atenção: já usou 80% da cota de US$ {n}.', { n }));
+  });
 }
 function toastShop(msg) {
   let t = $('#shop-toast');
@@ -358,9 +370,18 @@ function toastShop(msg) {
   navigator.vibrate?.(150);
   clearTimeout(toastShop.t); toastShop.t = setTimeout(() => { t.hidden = true; }, 6000);
 }
+// seletor "de quem é" de cada item (só aparece com 2 ou mais viajantes)
+function whoSelect(it) {
+  const sel = el('select', 'list-who'); sel.setAttribute('aria-label', tx('Para quem é'));
+  for (let i = 0; i < people; i++) sel.append(new Option('👤 ' + travelerName(i), i));
+  sel.value = whoOf(it);
+  sel.onchange = () => { const b = cotaUsed(); it.who = +sel.value; saveList(); renderList(); cotaWarn(b, cotaUsed()); };
+  return sel;
+}
 function cotaBox() {
-  const lim = COTA * people, used = cotaUsed(), pct = used / lim;
-  const box = el('div', 'cota ' + (pct > 1 ? 'over' : pct >= 0.8 ? 'warn' : 'ok'));
+  const used = cotaUsed();
+  const worst = Math.max(...used.map((u) => u / COTA));
+  const box = el('div', 'cota ' + (worst > 1 ? 'over' : worst >= 0.8 ? 'warn' : 'ok'));
   const head = el('div', 'cota-head');
   head.append(el('b', '', tx('🛃 Cota da Receita')));
   const sel = el('select'); sel.setAttribute('aria-label', tx('Viajantes'));
@@ -368,15 +389,27 @@ function cotaBox() {
   sel.value = people;
   sel.onchange = () => { people = +sel.value; save('sawgrass.cota.pessoas', people); renderList(); };
   head.append(sel);
-  const bar = el('div', 'cota-bar'); const fill = el('i'); fill.style.width = Math.min(100, pct * 100) + '%'; bar.append(fill);
-  const line = el('div', 'cota-line', tx('Usado {a} de {b}', { a: money(used, 'USD'), b: money(lim, 'USD') }));
-  box.append(head, bar, line);
-  if (pct > 1) {
-    const ex = used - lim;
-    box.append(el('div', 'cota-msg', tx('Passou {x}. Imposto estimado: {t} (≈ {l}).', { x: money(ex, 'USD'), t: money(ex * COTA_TAX, 'USD'), l: money(toLocal(ex * COTA_TAX, { tax: false, iof: false }), cur) })));
-  } else {
-    box.append(el('div', 'cota-msg', tx('Ainda cabem {x}.', { x: money(lim - used, 'USD') })));
-  }
+  box.append(head);
+  used.forEach((u, i) => {
+    const pct = u / COTA;
+    const row = el('div', 'cota-row ' + (pct > 1 ? 'over' : pct >= 0.8 ? 'warn' : 'ok'));
+    if (people > 1) {
+      const name = el('input', 'cota-name'); name.value = travelers[i] || ''; name.placeholder = travelerName(i); name.maxLength = 16;
+      name.setAttribute('aria-label', tx('Nome do viajante {n}', { n: i + 1 }));
+      name.onchange = () => { travelers[i] = name.value.trim(); save('sawgrass.viajantes', travelers); renderList(); };
+      row.append(name);
+    }
+    const bar = el('div', 'cota-bar'); const fill = el('i'); fill.style.width = Math.min(100, pct * 100) + '%'; bar.append(fill);
+    row.append(bar, el('div', 'cota-line', tx('Usado {a} de {b}', { a: money(u, 'USD'), b: money(COTA, 'USD') })));
+    if (pct > 1) {
+      const ex = u - COTA;
+      row.append(el('div', 'cota-msg', tx('Passou {x}. Imposto estimado: {t} (≈ {l}).', { x: money(ex, 'USD'), t: money(ex * COTA_TAX, 'USD'), l: money(toLocal(ex * COTA_TAX, { tax: false, iof: false }), cur) })));
+    } else {
+      row.append(el('div', 'cota-msg', tx('Ainda cabem {x}.', { x: money(COTA - u, 'USD') })));
+    }
+    box.append(row);
+  });
+  if (people > 1) box.append(el('small', '', tx('Escolha em cada compra para quem ela é (👤). A cota é de cada viajante e não se soma.')));
   box.append(el('small', '', tx('US$ 1.000 por viajante chegando de avião ou navio (por terra: US$ 500). Notebook e celular novos entram na conta. Confira as regras no site da Receita antes de viajar.')));
   return box;
 }
