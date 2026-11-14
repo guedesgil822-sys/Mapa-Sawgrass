@@ -1652,6 +1652,7 @@ function renderGroup() {
   $('#gr-code-show').textContent = fmtCode(grp.code);
   $('#gr-del').hidden = !grp.owner;
   $('#gr-confirm').hidden = true;
+  renderQuick();
   const names = [...new Set(msgList().map((m) => m.n))];
   $('#gr-who').textContent = names.length ? tx(names.length === 1 ? '{n} pessoa: {x}' : '{n} pessoas: {x}', { n: names.length, x: names.join(', ') }) : '';
   const ul = $('#gr-msgs');
@@ -1671,6 +1672,28 @@ async function sendMsg() {
   $('#gr-text').value = '';
   try { await dbReq('POST', `grupos/${grp.code}/msgs`, { n: myName() || tx('Alguém'), t, ts: { '.sv': 'timestamp' }, u: grp.uid }); }
   catch { $('#gr-text').value = t; }
+}
+
+// 📣 mensagens rápidas: um toque e o grupo recebe (sem digitar andando)
+function renderQuick() {
+  const box = $('#gr-quick');
+  if (!box) return;
+  box.textContent = '';
+  const here = gps.me?.near || (state.from && state.from !== ME ? state.from : null);
+  const msgs = [
+    state.meet ? tx('✅ Cheguei no encontro ({x})', { x: td(state.meet.name) }) : tx('✅ Cheguei'),
+    tx('⏳ Vou atrasar 10 min'),
+    here ? tx('📍 Estou perto de {x}', { x: td(here.name) }) : null,
+    tx('👕 Estou no provador'),
+    tx('🍔 Vamos almoçar?'),
+    tx('🙋 Onde vocês estão?'),
+    tx('🚗 Indo para o carro'),
+  ].filter(Boolean);
+  for (const m of msgs) {
+    const b = el('button', 'chip', m); b.type = 'button';
+    b.onclick = () => { $('#gr-text').value = m; sendMsg(); };
+    box.appendChild(b);
+  }
 }
 
 function sendMyPos() {

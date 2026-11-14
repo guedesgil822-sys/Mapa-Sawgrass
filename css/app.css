@@ -673,3 +673,8 @@ html, body { background: #fbfbfa; }
 @media (max-width: 759px) { .tabbar { background: #fbfbfa; } }
 @media (max-width: 759px) and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabbar { background: #1c2636; } }
 @media (max-width: 759px) { :root[data-theme="dark"] .tabbar { background: #1c2636; } }
+
+/* ---------- 33 · mensagens rápidas no grupo ---------- */
+.grp-quick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+.grp-quick::-webkit-scrollbar { display: none; }
+.grp-quick .chip { flex: none; cursor: pointer; box-shadow: none; font-size: 13.5px; padding: 7px 12px; }
