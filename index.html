@@ -381,6 +381,23 @@
       <div class="sos-acts"><a class="btn small" href="tel:+19548462350">📞 Ligar</a><button type="button" class="btn small primary" id="sos-info">🧭 Ir até lá</button></div>
     </div>
     <p class="cv-note"><span>Criança perdida: avise o segurança ou o funcionário de qualquer loja e diga onde ela foi vista pela última vez. Se estiver num grupo, avise lá também.</span></p>
+    <button type="button" class="btn kid-open" id="kid-open">🧒 Criar cartão “Se eu me perder”</button>
+  </form>
+</dialog>
+
+<dialog id="kid" class="sheet-dlg">
+  <form method="dialog" class="tools-box kid-box">
+    <div class="tools-head"><h2>🧒 <span>Cartão “Se eu me perder”</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <p class="cv-note"><span>Vira uma imagem, em inglês e português, para pôr na tela de bloqueio do celular da criança ou mostrar a um segurança. Fica só no seu celular.</span></p>
+    <label class="share-name">Nome da criança <input type="text" id="kid-name" maxlength="24" autocomplete="off"></label>
+    <label class="share-name">Telefone dos pais (com +55) <input type="tel" id="kid-phone" maxlength="24" placeholder="+55 11 91234-5678" autocomplete="tel"></label>
+    <label class="share-name">Outro telefone (opcional) <input type="tel" id="kid-phone2" maxlength="24" autocomplete="off"></label>
+    <label class="share-name">Se se perder, espere em <select id="kid-place"></select></label>
+    <img class="kid-preview" id="kid-img" alt="Prévia do cartão" hidden>
+    <div class="actions">
+      <button class="btn" type="button" id="kid-make">Gerar</button>
+      <button class="btn primary" type="button" id="kid-save" hidden>📥 Salvar imagem</button>
+    </div>
   </form>
 </dialog>
 

@@ -130,6 +130,19 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Buscar pelo produto, comida por tipo, para quem é e cartão da criança
+
+- **🔎 O que você procura:** a busca entende o que você quer comprar, como "mala", "perfume", "tênis", "óculos de sol", "brinquedo" ou "jaqueta", e mostra as lojas que vendem aquilo.
+  - Sem nada digitado, aparecem atalhos.
+  - O guia de assuntos e marcas fica em `js/products.js`, e o formato do `mall.json` não muda.
+  - Aceita palavras em português, inglês e espanhol, além do nome do assunto no idioma do app.
+- **🍕 Comida por tipo:** o mesmo guia cobre a comida: pizza, hambúrguer, japonês e asiático, mexicano, café, sorvete, churrasco, frango, saudável, latino e frutos do mar.
+- **🎁 Para quem é:** com 2 ou mais viajantes, cada compra da lista tem o seletor 👤, e cada viajante tem a própria barra da cota de US$ 1.000, com nome editável. A cota é individual e não se soma.
+- **🧒 Cartão "Se eu me perder":** no 🆘. Gera uma imagem para a tela de bloqueio da criança, em inglês e português, com:
+  - o nome da criança, o telefone dos pais e o ponto de encontro;
+  - o telefone da segurança do shopping e o 911.
+  - Os dados ficam só no celular.
+
 ## Grupo, notas, tempo, resumo e novo passeio
 
 - **📣 Mensagens rápidas no grupo:** botões prontos no chat, como "Cheguei no encontro", "Vou atrasar 10 min", "Estou perto de (loja)", "Estou no provador", "Vamos almoçar?", "Onde vocês estão?" e "Indo para o carro".

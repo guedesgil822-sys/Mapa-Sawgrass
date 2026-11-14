@@ -173,6 +173,9 @@ function bindUI() {
   loadWeather();
   setInterval(loadWeather, 30 * 60 * 1000);
   $('#sos-btn').onclick = () => $('#sos').showModal();
+  $('#kid-open').onclick = openKid;
+  $('#kid-make').onclick = makeKidCard;
+  $('#kid-save').onclick = saveKidCard;
   $('#wc-btn').onclick = goNearestWc;
   setupInstall();
   // sem internet: o app segue funcionando (tudo fica guardado no celular); avisa o que depende da conexão
@@ -599,6 +602,80 @@ function openHours() {
     t.appendChild(tr);
   });
   $('#hours').showModal();
+}
+
+/* ---------- cartão "Se eu me perder" (imagem para a tela de bloqueio da criança) ---------- */
+const KID_KEY = 'sawgrass.cartao';
+let kidBlob = null;
+function openKid() {
+  $('#sos').close();
+  const k = load(KID_KEY) || {};
+  $('#kid-name').value = k.name || ''; $('#kid-phone').value = k.phone || ''; $('#kid-phone2').value = k.phone2 || '';
+  const sel = $('#kid-place');
+  sel.textContent = '';
+  const guest = mall.pois.find((p) => p.cat === 'Atendimento e cartões-presente');
+  const opts = [guest, state.meet, ...mall.pois.filter((p) => p.group === 'Entradas')].filter((p, i, a) => p && a.indexOf(p) === i);
+  for (const p of opts) sel.append(new Option(td(p.name), p.id));
+  sel.value = k.place && opts.some((p) => p.id === k.place) ? k.place : (guest?.id || '');
+  $('#kid-img').hidden = true; $('#kid-save').hidden = true;
+  $('#kid').showModal();
+}
+function makeKidCard() {
+  const name = $('#kid-name').value.trim(), phone = $('#kid-phone').value.trim(), phone2 = $('#kid-phone2').value.trim();
+  if (!phone) { $('#kid-phone').classList.add('need'); $('#kid-phone').focus(); return; }
+  $('#kid-phone').classList.remove('need');
+  const place = mall.poiById.get($('#kid-place').value);
+  store(KID_KEY, { name, phone, phone2, place: place?.id });
+  // 1170×2532: proporção de tela de celular; o texto fica no meio (o relógio cobre o topo)
+  const W = 1170, H = 2532, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const grd = g.createLinearGradient(0, 0, 0, H); grd.addColorStop(0, '#14233b'); grd.addColorStop(1, '#0b5e50');
+  g.fillStyle = grd; g.fillRect(0, 0, W, H);
+  const F = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  const line = (txt, y, size, color = '#fff', weight = 800) => {
+    g.fillStyle = color; g.font = `${weight} ${size}px ${F}`; g.textAlign = 'center';
+    let s = size;
+    while (g.measureText(txt).width > W - 240 && s > 30) { s -= 4; g.font = `${weight} ${s}px ${F}`; }
+    g.fillText(txt, W / 2, y);
+  };
+  // cartão branco central
+  const x0 = 70, y0 = 820, w = W - 140, h = 1380;
+  g.fillStyle = '#ffffff'; g.beginPath(); g.roundRect(x0, y0, w, h, 60); g.fill();
+  line('IF I AM LOST', 700, 110, '#ffc83d');
+  line('SE EU ME PERDER', 780, 56, '#ffffff', 700);
+  let y = y0 + 150;
+  if (name) { line(name, y, 120, '#14233b'); y += 110; }
+  line('Please call my parents', y, 54, '#55637a', 700); y += 60;
+  line('Ligue para meus pais', y, 42, '#55637a', 600); y += 150;
+  line(phone, y, 120, '#d61f62'); y += 120;
+  if (phone2) { line(phone2, y, 84, '#d61f62'); y += 110; }
+  y += 40;
+  if (place) {
+    // em inglês para o segurança, em português para a criança
+    const en = place.cat === 'Atendimento e cartões-presente' ? 'Simon Guest Services'
+      : place.name.replace(/Entrada da praça de alimentação/, 'Food Court Entrance').replace(/^Entrada/, 'Entrance');
+    line('Meeting point · Ponto de encontro', y, 44, '#55637a', 700); y += 80;
+    line(en, y, 66, '#14233b'); y += 70;
+    if (en !== place.name) { line(place.name, y, 44, '#55637a', 600); y += 80; }
+  }
+  line('Sawgrass Mills Security: (954) 846-2322', y0 + h - 70, 46, '#14233b', 700);
+  line('Emergency: 911', 2360, 64, '#ffffff');
+  c.toBlob((b) => {
+    kidBlob = b;
+    $('#kid-img').src = URL.createObjectURL(b); $('#kid-img').hidden = false; $('#kid-save').hidden = false;
+  }, 'image/png');
+}
+async function saveKidCard() {
+  if (!kidBlob) return;
+  const file = new File([kidBlob], 'se-eu-me-perder.png', { type: 'image/png' });
+  // no celular: abre "Salvar imagem"/compartilhar; no computador: baixa o arquivo
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: tx('Cartão “Se eu me perder”') }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(kidBlob); a.download = 'se-eu-me-perder.png'; a.click();
+  toast(tx('📥 Imagem salva. Coloque como tela de bloqueio do celular da criança.'));
 }
 
 /* ---------- começar novo passeio ---------- */
