@@ -685,3 +685,9 @@ html, body { background: #fbfbfa; }
 .receipt.has { border-style: solid; border-color: var(--from); }
 .receipt.has img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pv-del { display: block; margin: 12px auto 0; background: #c62828; color: #fff; -webkit-text-fill-color: #fff; border-color: #c62828; }
+
+/* ---------- 35 · tempo em Sunrise ---------- */
+.chip.weather { cursor: pointer; }
+.chip.weather.rain { background: #dbeafe; color: #1e3a8a; -webkit-text-fill-color: #1e3a8a; border-color: #93c5fd; }
+.wx-now { margin: 6px 0 4px; font-size: 22px; font-weight: 800; }
+.wx-table td:last-child { text-align: right; color: var(--pick); -webkit-text-fill-color: var(--pick); }

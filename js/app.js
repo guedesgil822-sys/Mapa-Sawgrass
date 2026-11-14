@@ -166,6 +166,9 @@ function bindUI() {
   });
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
+  $('#weather-btn').onclick = openWeather;
+  loadWeather();
+  setInterval(loadWeather, 30 * 60 * 1000);
   $('#sos-btn').onclick = () => $('#sos').showModal();
   $('#wc-btn').onclick = goNearestWc;
   setupInstall();
@@ -569,6 +572,59 @@ function openHours() {
     t.appendChild(tr);
   });
   $('#hours').showModal();
+}
+
+/* ---------- tempo em Sunrise (Open-Meteo, sem cadastro) ---------- */
+const WX_KEY = 'sawgrass.tempo';
+const WX_URL = 'https://api.open-meteo.com/v1/forecast?latitude=26.151&longitude=-80.322&current=temperature_2m,weather_code'
+  + '&hourly=temperature_2m,precipitation_probability,weather_code&timezone=America%2FNew_York&forecast_days=2';
+let wx = null;   // carregado em loadWeather() (load() ainda não existe aqui)
+const wxIcon = (c) => (c === 0 ? '☀️' : c <= 2 ? '🌤️' : c === 3 ? '☁️' : c <= 48 ? '🌫️' : c <= 57 ? '🌦️' : c <= 67 ? '🌧️' : c <= 77 ? '🌨️' : c <= 82 ? '🌧️' : '⛈️');
+const wxTemp = (c) => (getLang() === 'en' ? `${Math.round(c * 9 / 5 + 32)}°F` : `${Math.round(c)}°C`);
+// "2026-11-14T15" no horário da Flórida
+const flHour = (ms = Date.now()) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}T${p.hour}`;
+};
+const wxNext = (n) => { if (!wx) return []; const now = flHour(); return wx.hours.filter((h) => h.time.slice(0, 13) >= now).slice(0, n); };
+// chuva provável (≥ 50%) nas próximas n horas: { h: '15h', p: 70 }
+function rainSoon(n) {
+  const h = wxNext(n + 1).find((x) => x.p >= 50);
+  return h ? { h: hh(+h.time.slice(11, 13)), p: h.p } : null;
+}
+async function loadWeather() {
+  wx ??= load(WX_KEY);
+  if (!wx || Date.now() - wx.t > 30 * 60 * 1000) {
+    try {
+      const j = await (await fetch(WX_URL)).json();
+      wx = { t: Date.now(), cur: { temp: j.current.temperature_2m, code: j.current.weather_code },
+        hours: j.hourly.time.map((time, i) => ({ time, temp: j.hourly.temperature_2m[i], p: j.hourly.precipitation_probability[i] ?? 0, code: j.hourly.weather_code[i] })) };
+      store(WX_KEY, wx);
+    } catch { /* sem internet: fica a última previsão guardada */ }
+  }
+  renderWeather();
+}
+function renderWeather() {
+  const b = $('#weather-btn');
+  if (!wx || Date.now() - wx.t > 12 * 3600 * 1000) { b.hidden = true; return; }
+  const rain = rainSoon(3);
+  b.hidden = false;
+  b.classList.toggle('rain', !!rain);
+  b.textContent = rain ? tx('🌧️ Chuva ~{h}', { h: rain.h }) : `${wxIcon(wx.cur.code)} ${wxTemp(wx.cur.temp)}`;
+}
+function openWeather() {
+  if (!wx) return;
+  $('#wx-now').textContent = `${wxIcon(wx.cur.code)} ${wxTemp(wx.cur.temp)} · ${tx('agora')}`;
+  const t = $('#wx-table');
+  t.textContent = '';
+  for (const h of wxNext(12)) {
+    const tr = el('tr', h.p >= 50 ? 'on' : '');
+    tr.append(el('td', '', hh(+h.time.slice(11, 13))), el('td', '', `${wxIcon(h.code)} ${wxTemp(h.temp)}`), el('td', '', `💧 ${h.p}%`));
+    t.appendChild(tr);
+  }
+  $('#wx-note').textContent = tx('Previsão Open-Meteo, atualizada às {t}. Na Flórida, pancadas de chuva à tarde são comuns e passam rápido.', { t: clock(wx.t) });
+  $('#weather').showModal();
 }
 
 /* ---------- aviso do encontro ---------- */
@@ -1495,6 +1551,8 @@ function saveCar() {
 
 function goToCar() {
   if (!state.car) return;
+  const rain = rainSoon(2);
+  if (rain) toast(tx('🌂 Pode chover até {h} ({p}%). Leve guarda-chuva até o carro.', { h: rain.h, p: rain.p }));
   placeCar();
   state.to = CAR; state.picked = null;
   gpsAsOrigin();
