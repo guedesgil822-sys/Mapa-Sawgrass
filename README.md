@@ -130,6 +130,20 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Grupo, notas, tempo, resumo e novo passeio
+
+- **📣 Mensagens rápidas no grupo:** botões prontos no chat, como "Cheguei no encontro", "Vou atrasar 10 min", "Estou perto de (loja)", "Estou no provador", "Vamos almoçar?", "Onde vocês estão?" e "Indo para o carro".
+- **🧾 Foto da nota fiscal:** cada item da lista de compras tem um 🧾 para fotografar o recibo.
+  - Ao tirar a foto, o item fica marcado como comprado.
+  - Tocando na miniatura, a nota abre em tela cheia, com a opção de apagar.
+  - As fotos ficam só no celular, em `sawgrass.nota.ID`.
+- **🌦️ Tempo em Sunrise:** botão com a temperatura, ou "🌧️ Chuva ~15h" se a chance de chuva nas próximas 3 h for de 50% ou mais.
+  - Tocando, abre a previsão por hora.
+  - Ao pedir a rota até o carro, avisa se pode chover.
+  - A previsão vem do Open-Meteo (gratuito, sem cadastro), é atualizada a cada 30 min e a última fica guardada para usar sem internet.
+- **📊 Meu dia:** soma as rotas seguidas até o fim (último passo ou chegada pelo GPS): distância, passos aproximados e lugares visitados. O gasto vem da lista de compras. Dá para compartilhar e zera sozinho a cada dia.
+- **🔄 Começar novo passeio:** no botão da bandeira. Apaga as lojas marcadas, a lista (com as notas), o carro (com a foto), o encontro, a rota e o resumo do dia. Mantém o idioma, a aparência, a letra, as buscas recentes e o grupo.
+
 ## Enviar, cota, frases, fechamento e banheiro
 
 - **📤 Enviar:** no painel da loja (botão Enviar) e no da rota (📤). O link abre o mapa já na loja ou com a rota traçada (`#loja=ID`, `#de=ID&para=ID`).

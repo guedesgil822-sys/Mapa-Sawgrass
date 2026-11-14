@@ -1,7 +1,7 @@
 import { Mall, TRANSITION, fmtDist, fmtTime, norm } from './graph.js';
 import { MapView, svgEl } from './mapview.js';
 import { t as tx, td, clock, initLang, setLang, getLang, translateDom, LANGS } from './i18n.js';
-import { openShop, setShopHooks, spentUsd, money, toLocal, currency } from './shop.js';
+import { openShop, setShopHooks, spentUsd, money, toLocal, currency, clearShopList } from './shop.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, text) => {
@@ -194,6 +194,7 @@ function bindUI() {
   const big = (on) => { document.documentElement.classList.toggle('big', on); $('#big-text').checked = on; };
   big(localStorage.getItem('sawgrass.letra') === '1');
   $('#big-text').onchange = (e) => { big(e.target.checked); try { localStorage.setItem('sawgrass.letra', e.target.checked ? '1' : '0'); } catch { /* sem armazenamento */ } };
+  $('#reset-btn').onclick = newOuting;
   $('#intro-again').onclick = () => { $('#lang').close(); openIntro(); };
   $('#move-cancel').onclick = () => { moving = null; $('#move-bar').hidden = true; };
   $('#fix-chip').onclick = openFixes;
@@ -574,6 +575,21 @@ function openHours() {
     t.appendChild(tr);
   });
   $('#hours').showModal();
+}
+
+/* ---------- começar novo passeio ---------- */
+// limpa o que é do dia; mantém idioma, aparência, letra, buscas recentes e o grupo
+function newOuting() {
+  if (!confirm(tx('Começar um novo passeio?\n\nVai apagar: lojas marcadas, lista de compras (com as fotos das notas), local do carro (com a foto), ponto de encontro, rota e o resumo do dia.\n\nIdioma, aparência e o grupo continuam.'))) return;
+  marked.clear(); saveMarked();
+  clearShopList();
+  store(CAR_PHOTO_KEY, null); carPhoto = null; state.car = null; store(CAR_KEY, null);
+  state.meet = null; state.meetTime = ''; store(MEET_KEY, null);
+  store(DAY_KEY, null);
+  state.tour = null; state.from = state.to = state.picked = null;
+  $('#lang').close();
+  update(false); renderMarkBar(); renderMarked(); renderStatus(); renderDayBtn(); drawRoute(); fitCurrent();
+  toast(tx('🔄 Pronto! Novo passeio começado.'));
 }
 
 /* ---------- resumo do passeio (do dia, no horário da Flórida) ---------- */

@@ -146,6 +146,8 @@ const LIST_KEY = 'sawgrass.lista';
 let items = load(LIST_KEY, []);
 let hooks = { marked: () => [], poi: () => null, goTo: () => {}, guest: () => null };
 export function setShopHooks(h) { hooks = { ...hooks, ...h }; }
+// novo passeio: esvazia a lista (e as fotos das notas)
+export function clearShopList() { items.forEach(delReceipt); items = []; saveList(); }
 const saveList = () => save(LIST_KEY, items);
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) && n > 0 ? n : null; };
 

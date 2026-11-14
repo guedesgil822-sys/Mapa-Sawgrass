@@ -702,3 +702,6 @@ html, body { background: #fbfbfa; }
 .day-list { margin: 10px 0 0; padding-left: 20px; font-size: 15px; max-height: 24dvh; overflow-y: auto; }
 .day-list li { padding: 3px 0; }
 #day-share { width: 100%; margin-top: 12px; }
+
+/* ---------- 37 · começar novo passeio ---------- */
+.reset-btn { display: block; width: 100%; margin-top: 16px; }
