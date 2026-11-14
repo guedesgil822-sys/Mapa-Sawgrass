@@ -130,6 +130,14 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Buscar pelo produto e comida por tipo
+
+- **🔎 O que você procura:** a busca entende o que você quer comprar, como "mala", "perfume", "tênis", "óculos de sol", "brinquedo" ou "jaqueta", e mostra as lojas que vendem aquilo.
+  - Sem nada digitado, aparecem atalhos.
+  - O guia de assuntos e marcas fica em `js/products.js`, e o formato do `mall.json` não muda.
+  - Aceita palavras em português, inglês e espanhol, além do nome do assunto no idioma do app.
+- **🍕 Comida por tipo:** o mesmo guia cobre a comida: pizza, hambúrguer, japonês e asiático, mexicano, café, sorvete, churrasco, frango, saudável, latino e frutos do mar.
+
 ## Grupo, notas, tempo, resumo e novo passeio
 
 - **📣 Mensagens rápidas no grupo:** botões prontos no chat, como "Cheguei no encontro", "Vou atrasar 10 min", "Estou perto de (loja)", "Estou no provador", "Vamos almoçar?", "Onde vocês estão?" e "Indo para o carro".

@@ -1,6 +1,7 @@
 import { Mall, TRANSITION, fmtDist, fmtTime, norm } from './graph.js';
 import { MapView, svgEl } from './mapview.js';
 import { t as tx, td, clock, initLang, setLang, getLang, translateDom, LANGS } from './i18n.js';
+import { QUICK, findTopic, topicHas, topicById } from './products.js';
 import { openShop, setShopHooks, spentUsd, money, toLocal, currency, clearShopList } from './shop.js';
 
 const $ = (s) => document.querySelector(s);
@@ -28,7 +29,7 @@ const ICON = {
 };
 
 const state = { tour: null, meet: null, meetTime: '', car: null, shared: null, from: null, to: null, floor: null, route: null, step: 0, picked: null, accessible: false, open: false, edit: false };
-let mall, view, layers, picking = 'from', group = '', onlyMarked = false;
+let mall, view, layers, picking = 'from', group = '', onlyMarked = false, forcedTopic = '', forcedLabel = '';
 let cullRaf = 0;
 let drawnKey = '', drawnAt = 0;
 // shopping de piso único: esconde seletor e referências ao piso
@@ -299,6 +300,13 @@ function renderResults() {
   ul.textContent = '';
   const q = $('#q').value.trim();
   let list = mall.search(q, group);
+  // "o que você quer comprar": lojas que vendem o assunto buscado ("malas", "pizza"…)
+  const topic = q && (topicById(forcedTopic && q === forcedLabel ? forcedTopic : '') || findTopic(q));
+  const sells = new Set();
+  if (topic) {
+    for (const p of mall.pois) if ((!group || p.group === group) && topicHas(topic, p)) sells.add(p);
+    list = [...list.filter((p) => !sells.has(p)), ...[...sells].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'))];
+  }
   // "Selecionados": só as lojas marcadas, com logo, para conferir antes de ir ao mapa
   if (onlyMarked && picking === 'find') list = [...marked].map((id) => mall.poiById.get(id)).filter(Boolean);
   if (!list.length) {
@@ -310,10 +318,26 @@ function renderResults() {
   const one = list.length === 1;
   ul.appendChild(el('li', 'count', tx(onlyMarked ? (one ? '{n} selecionada · toque para desmarcar' : '{n} selecionadas · toque para desmarcar')
     : (one ? '{n} lugar' : '{n} lugares'), { n: list.length })));
+  // atalhos "o que você procura?" quando não há nada digitado
+  if (!q && !onlyMarked) {
+    const li = el('li', 'topics');
+    li.append(el('div', 'topics-h', tx('O que você procura?')));
+    const row = el('div', 'topics-row');
+    for (const id of QUICK) {
+      const t = topicById(id);
+      const b = el('button', 'chip', `${t.ico} ${tx(t.label)}`); b.type = 'button';
+      b.onclick = (e) => { e.stopPropagation(); forcedTopic = t.id; forcedLabel = tx(t.label); $('#q').value = forcedLabel; renderResults(); };
+      row.appendChild(b);
+    }
+    li.append(row);
+    ul.appendChild(li);
+  }
+  let sellsHdr = !topic || !sells.size || onlyMarked;
   let letter = null;
   const rec = !q && !onlyMarked && !group ? recents.map((id) => mall.poiById.get(id)).filter(Boolean) : [];
   if (rec.length) ul.appendChild(el('li', 'sec recent', tx('🕘 Recentes')));
   for (const [p, isRec] of [...rec.map((p) => [p, true]), ...list.map((p) => [p, false])]) {
+    if (!isRec && !sellsHdr && sells.has(p)) { sellsHdr = true; ul.appendChild(el('li', 'sec sells', tx('{i} Lojas que vendem: {x}', { i: topic.ico, x: tx(topic.label) }))); }
     if (!q && !isRec) {
       const k = sortKey(p)[0]?.toUpperCase() || '#';
       const l = /[A-Z]/.test(k) ? k : '#';

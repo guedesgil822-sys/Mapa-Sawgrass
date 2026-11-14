@@ -705,3 +705,11 @@ html, body { background: #fbfbfa; }
 
 /* ---------- 37 · começar novo passeio ---------- */
 .reset-btn { display: block; width: 100%; margin-top: 16px; }
+
+/* ---------- 38/39 · o que você procura (produtos e comida) ---------- */
+#results li.topics { display: block; cursor: default; padding: 10px 16px 12px; border-bottom: 1px solid var(--line); }
+#results li.topics:hover { background: none; }
+.topics-h { font-size: 13px; font-weight: 800; color: var(--ink-2); margin-bottom: 8px; }
+.topics-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.topics-row .chip { cursor: pointer; box-shadow: none; font-size: 14px; padding: 7px 12px; }
+#results li.sec.sells { color: var(--accent); }
