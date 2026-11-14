@@ -58,6 +58,8 @@
     <button type="button" class="chip near" id="near-btn">📍 Perto de mim</button>
     <button type="button" class="chip shop" id="shop-btn">🛍️ Compras</button>
     <button type="button" class="chip hours" id="hours-btn"></button>
+    <button type="button" class="chip weather" id="weather-btn" hidden></button>
+    <button type="button" class="chip day" id="day-btn" hidden></button>
     <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
@@ -187,6 +189,7 @@
       </div>
       <div class="grp-who" id="gr-who"></div>
       <ul class="grp-msgs" id="gr-msgs" aria-live="polite"></ul>
+      <div class="grp-quick" id="gr-quick" aria-label="Mensagens rápidas"></div>
       <form class="grp-send" id="gr-form">
         <input type="text" id="gr-text" maxlength="300" placeholder="Mensagem para o grupo" autocomplete="off" enterkeyhint="send">
         <button type="submit" class="btn primary" aria-label="Enviar">➤</button>
@@ -212,6 +215,7 @@
       <button type="button" data-t="dark" role="radio">🌙 Escuro</button>
     </div>
     <label class="chip toggle big-opt"><input type="checkbox" id="big-text"><span>🔠 Letra maior</span></label>
+    <button type="button" class="btn reset-btn" id="reset-btn">🔄 Começar novo passeio</button>
     <button type="button" class="btn link" id="intro-again">👋 Como usar o app</button>
   </form>
 </dialog>
@@ -296,6 +300,29 @@
   </form>
 </dialog>
 
+<dialog id="day" class="sheet-dlg">
+  <form method="dialog" class="tools-box">
+    <div class="tools-head"><h2>📊 <span>Meu dia</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <div class="day-grid">
+      <div class="day-card"><span class="day-ic" aria-hidden="true">🚶</span><b id="day-walk"></b><small id="day-steps"></small></div>
+      <div class="day-card"><span class="day-ic" aria-hidden="true">🛍️</span><b id="day-n"></b><small>lugares visitados</small></div>
+      <div class="day-card"><span class="day-ic" aria-hidden="true">💵</span><b id="day-spent"></b><small id="day-spent-l"></small></div>
+    </div>
+    <ul class="day-list" id="day-list"></ul>
+    <p class="cv-note"><span>Conta as rotas que você seguiu até o fim (último passo ou chegada pelo GPS). O gasto vem dos itens marcados como comprados na lista.</span></p>
+    <button type="button" class="btn primary" id="day-share">📤 Compartilhar resumo</button>
+  </form>
+</dialog>
+
+<dialog id="weather" class="sheet-dlg">
+  <form method="dialog" class="tools-box">
+    <div class="tools-head"><h2>🌦️ <span>Tempo em Sunrise</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <p class="wx-now" id="wx-now"></p>
+    <table class="hours-table wx-table" id="wx-table"></table>
+    <p class="cv-note" id="wx-note"></p>
+  </form>
+</dialog>
+
 <div class="toast" id="toast" role="alert" hidden><span id="toast-txt"></span><button type="button" class="icon-btn" id="toast-x" aria-label="Fechar">✕</button></div>
 
 <dialog id="fixes" class="sheet-dlg">
@@ -323,7 +350,8 @@
 </dialog>
 
 <dialog id="photo-view" class="photo-view">
-  <form method="dialog"><button class="pv-close" value="cancel" aria-label="Fechar"><img id="photo-big" alt="Foto da vaga do carro"></button></form>
+  <form method="dialog"><button class="pv-close" value="cancel" aria-label="Fechar"><img id="photo-big" alt=""></button>
+    <button type="button" class="btn pv-del" id="pv-del" hidden>🗑️ Apagar foto</button></form>
 </dialog>
 
 <dialog id="install" class="sheet-dlg">

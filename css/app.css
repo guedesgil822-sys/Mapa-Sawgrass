@@ -673,3 +673,35 @@ html, body { background: #fbfbfa; }
 @media (max-width: 759px) { .tabbar { background: #fbfbfa; } }
 @media (max-width: 759px) and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabbar { background: #1c2636; } }
 @media (max-width: 759px) { :root[data-theme="dark"] .tabbar { background: #1c2636; } }
+
+/* ---------- 33 · mensagens rápidas no grupo ---------- */
+.grp-quick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+.grp-quick::-webkit-scrollbar { display: none; }
+.grp-quick .chip { flex: none; cursor: pointer; box-shadow: none; font-size: 13.5px; padding: 7px 12px; }
+
+/* ---------- 34 · foto da nota fiscal ---------- */
+.receipt { flex: none; width: 40px; height: 40px; border-radius: 10px; border: 1px dashed var(--line); display: grid; place-items: center; font-size: 19px; cursor: pointer; position: relative; overflow: hidden; background: none; padding: 0; }
+.receipt input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.receipt.has { border-style: solid; border-color: var(--from); }
+.receipt.has img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pv-del { display: block; margin: 12px auto 0; background: #c62828; color: #fff; -webkit-text-fill-color: #fff; border-color: #c62828; }
+
+/* ---------- 35 · tempo em Sunrise ---------- */
+.chip.weather { cursor: pointer; }
+.chip.weather.rain { background: #dbeafe; color: #1e3a8a; -webkit-text-fill-color: #1e3a8a; border-color: #93c5fd; }
+.wx-now { margin: 6px 0 4px; font-size: 22px; font-weight: 800; }
+.wx-table td:last-child { text-align: right; color: var(--pick); -webkit-text-fill-color: var(--pick); }
+
+/* ---------- 36 · resumo do passeio ---------- */
+.chip.day { cursor: pointer; background: #ede4ff; color: #4c1d95; -webkit-text-fill-color: #4c1d95; border-color: #c4b5fd; }
+.day-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.day-card { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px 6px; border-radius: 16px; border: 1px solid var(--line); text-align: center; }
+.day-ic { font-size: 24px; }
+.day-card b { font-size: 19px; font-weight: 800; }
+.day-card small { font-size: 12px; color: var(--ink-2); -webkit-text-fill-color: var(--ink-2); }
+.day-list { margin: 10px 0 0; padding-left: 20px; font-size: 15px; max-height: 24dvh; overflow-y: auto; }
+.day-list li { padding: 3px 0; }
+#day-share { width: 100%; margin-top: 12px; }
+
+/* ---------- 37 · começar novo passeio ---------- */
+.reset-btn { display: block; width: 100%; margin-top: 16px; }

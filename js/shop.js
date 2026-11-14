@@ -54,6 +54,8 @@ export function toLocal(usd, opts = conv) {
   return withTax * (fx.rates[cur] || 0) * (cur === 'BRL' && opts.iof ? 1 + IOF : 1);
 }
 export const currency = () => cur;
+// total comprado (itens marcados), com o imposto da loja se estiver ligado no conversor
+export const spentUsd = () => load('sawgrass.lista', []).filter((i) => i.done).reduce((s, i) => s + (i.usd || 0), 0) * (conv.tax ? 1 + SALES_TAX : 1);
 
 function renderConv() {
   const box = $('#shop-conv');
@@ -144,6 +146,8 @@ const LIST_KEY = 'sawgrass.lista';
 let items = load(LIST_KEY, []);
 let hooks = { marked: () => [], poi: () => null, goTo: () => {}, guest: () => null };
 export function setShopHooks(h) { hooks = { ...hooks, ...h }; }
+// novo passeio: esvazia a lista (e as fotos das notas)
+export function clearShopList() { items.forEach(delReceipt); items = []; saveList(); }
 const saveList = () => save(LIST_KEY, items);
 const num = (v) => { const n = parseFloat(String(v).replace(',', '.')); return Number.isFinite(n) && n > 0 ? n : null; };
 
@@ -199,9 +203,9 @@ function renderList() {
       pr.onchange = () => { it.usd = num(pr.value); saveList(); renderList(); };
       const conv2 = el('small', '', it.usd ? '≈ ' + money(toLocal(it.usd), cur) : '');
       const x = el('button', 'icon-btn', '✕'); x.type = 'button'; x.setAttribute('aria-label', tx('Remover'));
-      x.onclick = () => { items = items.filter((i) => i !== it); saveList(); renderList(); };
+      x.onclick = () => { delReceipt(it); items = items.filter((i) => i !== it); saveList(); renderList(); };
       const txt = el('div', 'list-txt'); txt.append(el('span', '', it.t), conv2);
-      li.append(cb, txt, pr, x);
+      li.append(cb, txt, receiptBtn(it), pr, x);
       ul.appendChild(li);
     }
   }
@@ -220,9 +224,55 @@ function renderList() {
   if (showCota()) pane.appendChild(cotaBox());
   if (items.some((i) => i.done)) {
     const clr = el('button', 'btn link', tx('Limpar comprados')); clr.type = 'button';
-    clr.onclick = () => { items = items.filter((i) => !i.done); saveList(); renderList(); };
+    clr.onclick = () => { items.filter((i) => i.done).forEach(delReceipt); items = items.filter((i) => !i.done); saveList(); renderList(); };
     pane.appendChild(clr);
   }
+}
+
+/* ---------- foto da nota fiscal de cada compra ---------- */
+// guardada à parte (sawgrass.nota.ID), reduzida para caber no armazenamento do navegador
+const RECEIPT = (it) => 'sawgrass.nota.' + it.id;
+const delReceipt = (it) => { try { localStorage.removeItem(RECEIPT(it)); } catch { /* ignora */ } };
+async function shrinkReceipt(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, err) => { const i = new Image(); i.onload = () => ok(i); i.onerror = err; i.src = url; });
+    const k = Math.min(1, 1300 / Math.max(img.naturalWidth, img.naturalHeight));   // nota precisa dar para ler
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.62);
+  } finally { URL.revokeObjectURL(url); }
+}
+function receiptBtn(it) {
+  let photo = null;
+  try { photo = localStorage.getItem(RECEIPT(it)); } catch { /* sem armazenamento */ }
+  if (photo) {
+    const b = el('button', 'receipt has'); b.type = 'button';
+    b.setAttribute('aria-label', tx('Ver nota fiscal'));
+    const im = el('img'); im.src = photo; im.alt = '';
+    b.append(im);
+    b.onclick = () => {
+      $('#photo-big').src = photo;
+      const del = $('#pv-del'); del.hidden = false;
+      del.onclick = () => { if (!confirm(tx('Apagar a foto da nota?'))) return; delReceipt(it); $('#photo-view').close(); renderList(); };
+      $('#photo-view').showModal();
+    };
+    return b;
+  }
+  const lab = el('label', 'receipt'); lab.title = tx('Foto da nota fiscal');
+  const inp = el('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('aria-label', tx('Foto da nota fiscal'));
+  inp.onchange = async () => {
+    const f = inp.files[0]; if (!f) return;
+    try {
+      const d = await shrinkReceipt(f);
+      localStorage.setItem(RECEIPT(it), d);
+      if (!it.done) { it.done = true; saveList(); }   // tem nota: já foi comprado
+    } catch { toastShop(tx('A foto não coube na memória do celular. Apague notas antigas.')); }
+    renderList();
+  };
+  lab.append(inp, el('span', '', '🧾'));
+  return lab;
 }
 
 /* ---------- frases úteis em inglês (o celular fala para o vendedor) ---------- */

@@ -1,7 +1,7 @@
 import { Mall, TRANSITION, fmtDist, fmtTime, norm } from './graph.js';
 import { MapView, svgEl } from './mapview.js';
 import { t as tx, td, clock, initLang, setLang, getLang, translateDom, LANGS } from './i18n.js';
-import { openShop, setShopHooks } from './shop.js';
+import { openShop, setShopHooks, spentUsd, money, toLocal, currency, clearShopList } from './shop.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, text) => {
@@ -166,6 +166,11 @@ function bindUI() {
   });
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
+  $('#weather-btn').onclick = openWeather;
+  $('#day-btn').onclick = openDay;
+  renderDayBtn();
+  loadWeather();
+  setInterval(loadWeather, 30 * 60 * 1000);
   $('#sos-btn').onclick = () => $('#sos').showModal();
   $('#wc-btn').onclick = goNearestWc;
   setupInstall();
@@ -189,6 +194,7 @@ function bindUI() {
   const big = (on) => { document.documentElement.classList.toggle('big', on); $('#big-text').checked = on; };
   big(localStorage.getItem('sawgrass.letra') === '1');
   $('#big-text').onchange = (e) => { big(e.target.checked); try { localStorage.setItem('sawgrass.letra', e.target.checked ? '1' : '0'); } catch { /* sem armazenamento */ } };
+  $('#reset-btn').onclick = newOuting;
   $('#intro-again').onclick = () => { $('#lang').close(); openIntro(); };
   $('#move-cancel').onclick = () => { moving = null; $('#move-bar').hidden = true; };
   $('#fix-chip').onclick = openFixes;
@@ -210,7 +216,7 @@ function bindUI() {
   $('#car-save').onclick = saveCar;
   $('#car-file').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) shrinkPhoto(f).then((d) => { carPhoto = d; renderCarPhoto(); }).catch(() => toast(tx('Não deu para abrir a foto.'))); };
   $('#car-photo-del').onclick = () => { carPhoto = null; renderCarPhoto(); };
-  $('#car-img-btn').onclick = () => { $('#photo-big').src = carPhoto; $('#photo-view').showModal(); };
+  $('#car-img-btn').onclick = () => { $('#photo-big').src = carPhoto; $('#pv-del').hidden = true; $('#photo-view').showModal(); };
   $('#car-del').onclick = () => { store(CAR_PHOTO_KEY, null); carPhoto = null; state.car = null; persistCar(); $('#car').close(); if (state.to === CAR) { state.to = null; update(false); } };
   $('#car-go').onclick = () => { $('#car').close(); goToCar(); };
   $('#sh-send').onclick = sendShare;
@@ -569,6 +575,113 @@ function openHours() {
     t.appendChild(tr);
   });
   $('#hours').showModal();
+}
+
+/* ---------- começar novo passeio ---------- */
+// limpa o que é do dia; mantém idioma, aparência, letra, buscas recentes e o grupo
+function newOuting() {
+  if (!confirm(tx('Começar um novo passeio?\n\nVai apagar: lojas marcadas, lista de compras (com as fotos das notas), local do carro (com a foto), ponto de encontro, rota e o resumo do dia.\n\nIdioma, aparência e o grupo continuam.'))) return;
+  marked.clear(); saveMarked();
+  clearShopList();
+  store(CAR_PHOTO_KEY, null); carPhoto = null; state.car = null; store(CAR_KEY, null);
+  state.meet = null; state.meetTime = ''; store(MEET_KEY, null);
+  store(DAY_KEY, null);
+  state.tour = null; state.from = state.to = state.picked = null;
+  $('#lang').close();
+  update(false); renderMarkBar(); renderMarked(); renderStatus(); renderDayBtn(); drawRoute(); fitCurrent();
+  toast(tx('🔄 Pronto! Novo passeio começado.'));
+}
+
+/* ---------- resumo do passeio (do dia, no horário da Flórida) ---------- */
+const DAY_KEY = 'sawgrass.dia';
+let walkMax = { id: null, m: 0 };
+function dayStats() {
+  const d = flHour().slice(0, 10);
+  let s = load(DAY_KEY);
+  if (!s || s.d !== d) s = { d, m: 0, stores: [], done: [] };
+  return s;
+}
+// chegou a um destino (último passo da rota ou "você chegou" pelo GPS): soma uma vez por trajeto
+function arrived(to, meters) {
+  if (!to || !mall.poiById.has(to.id)) return;
+  const s = dayStats(), key = `${state.from?.id || '?'}>${to.id}`;
+  if (s.done.includes(key)) return;
+  s.done.push(key);
+  s.m += Math.max(0, meters || 0);
+  if (!s.stores.includes(to.id)) s.stores.push(to.id);
+  store(DAY_KEY, s);
+  renderDayBtn();
+}
+function renderDayBtn() {
+  const s = dayStats();
+  $('#day-btn').hidden = !s.stores.length;
+  $('#day-btn').textContent = tx('📊 Meu dia');
+}
+function openDay() {
+  const s = dayStats(), usd = spentUsd(), local = toLocal(usd, { tax: false, iof: false }), cur = currency();
+  const km = s.m / 1000, steps = Math.round(s.m / 0.75);
+  $('#day-walk').textContent = km >= 1 ? `${km.toLocaleString(undefined, { maximumFractionDigits: 1 })} km` : `${Math.round(s.m)} m`;
+  $('#day-steps').textContent = tx('≈ {n} passos', { n: steps.toLocaleString() });
+  $('#day-n').textContent = String(s.stores.length);
+  $('#day-spent').textContent = money(usd, 'USD');
+  $('#day-spent-l').textContent = cur && cur !== 'USD' ? '≈ ' + money(local, cur) : '';
+  const ul = $('#day-list'); ul.textContent = '';
+  for (const id of s.stores) { const p = mall.poiById.get(id); if (p) ul.appendChild(el('li', '', td(p.name))); }
+  $('#day-share').onclick = () => shareText(tx('Meu dia no Sawgrass Mills'), tx('📊 Meu dia no Sawgrass Mills: andei {w} (≈ {n} passos), visitei {s} lugares e gastei {g}.', { w: $('#day-walk').textContent, n: steps.toLocaleString(), s: s.stores.length, g: money(usd, 'USD') }));
+  $('#day').showModal();
+}
+
+/* ---------- tempo em Sunrise (Open-Meteo, sem cadastro) ---------- */
+const WX_KEY = 'sawgrass.tempo';
+const WX_URL = 'https://api.open-meteo.com/v1/forecast?latitude=26.151&longitude=-80.322&current=temperature_2m,weather_code'
+  + '&hourly=temperature_2m,precipitation_probability,weather_code&timezone=America%2FNew_York&forecast_days=2';
+let wx = null;   // carregado em loadWeather() (load() ainda não existe aqui)
+const wxIcon = (c) => (c === 0 ? '☀️' : c <= 2 ? '🌤️' : c === 3 ? '☁️' : c <= 48 ? '🌫️' : c <= 57 ? '🌦️' : c <= 67 ? '🌧️' : c <= 77 ? '🌨️' : c <= 82 ? '🌧️' : '⛈️');
+const wxTemp = (c) => (getLang() === 'en' ? `${Math.round(c * 9 / 5 + 32)}°F` : `${Math.round(c)}°C`);
+// "2026-11-14T15" no horário da Flórida
+const flHour = (ms = Date.now()) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' })
+    .formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}T${p.hour}`;
+};
+const wxNext = (n) => { if (!wx) return []; const now = flHour(); return wx.hours.filter((h) => h.time.slice(0, 13) >= now).slice(0, n); };
+// chuva provável (≥ 50%) nas próximas n horas: { h: '15h', p: 70 }
+function rainSoon(n) {
+  const h = wxNext(n + 1).find((x) => x.p >= 50);
+  return h ? { h: hh(+h.time.slice(11, 13)), p: h.p } : null;
+}
+async function loadWeather() {
+  wx ??= load(WX_KEY);
+  if (!wx || Date.now() - wx.t > 30 * 60 * 1000) {
+    try {
+      const j = await (await fetch(WX_URL)).json();
+      wx = { t: Date.now(), cur: { temp: j.current.temperature_2m, code: j.current.weather_code },
+        hours: j.hourly.time.map((time, i) => ({ time, temp: j.hourly.temperature_2m[i], p: j.hourly.precipitation_probability[i] ?? 0, code: j.hourly.weather_code[i] })) };
+      store(WX_KEY, wx);
+    } catch { /* sem internet: fica a última previsão guardada */ }
+  }
+  renderWeather();
+}
+function renderWeather() {
+  const b = $('#weather-btn');
+  if (!wx || Date.now() - wx.t > 12 * 3600 * 1000) { b.hidden = true; return; }
+  const rain = rainSoon(3);
+  b.hidden = false;
+  b.classList.toggle('rain', !!rain);
+  b.textContent = rain ? tx('🌧️ Chuva ~{h}', { h: rain.h }) : `${wxIcon(wx.cur.code)} ${wxTemp(wx.cur.temp)}`;
+}
+function openWeather() {
+  if (!wx) return;
+  $('#wx-now').textContent = `${wxIcon(wx.cur.code)} ${wxTemp(wx.cur.temp)} · ${tx('agora')}`;
+  const t = $('#wx-table');
+  t.textContent = '';
+  for (const h of wxNext(12)) {
+    const tr = el('tr', h.p >= 50 ? 'on' : '');
+    tr.append(el('td', '', hh(+h.time.slice(11, 13))), el('td', '', `${wxIcon(h.code)} ${wxTemp(h.temp)}`), el('td', '', `💧 ${h.p}%`));
+    t.appendChild(tr);
+  }
+  $('#wx-note').textContent = tx('Previsão Open-Meteo, atualizada às {t}. Na Flórida, pancadas de chuva à tarde são comuns e passam rápido.', { t: clock(wx.t) });
+  $('#weather').showModal();
 }
 
 /* ---------- aviso do encontro ---------- */
@@ -1195,6 +1308,7 @@ function goStep(i) {
   const r = state.route;
   if (!r || i < 0 || i >= r.steps.length) return;
   state.step = i;
+  if (i === r.steps.length - 1 && state.to) arrived(state.to, r.meters);
   renderSheet();
   speakStep();
   const st = r.steps[i];
@@ -1495,6 +1609,8 @@ function saveCar() {
 
 function goToCar() {
   if (!state.car) return;
+  const rain = rainSoon(2);
+  if (rain) toast(tx('🌂 Pode chover até {h} ({p}%). Leve guarda-chuva até o carro.', { h: rain.h, p: rain.p }));
   placeCar();
   state.to = CAR; state.picked = null;
   gpsAsOrigin();
@@ -1652,6 +1768,7 @@ function renderGroup() {
   $('#gr-code-show').textContent = fmtCode(grp.code);
   $('#gr-del').hidden = !grp.owner;
   $('#gr-confirm').hidden = true;
+  renderQuick();
   const names = [...new Set(msgList().map((m) => m.n))];
   $('#gr-who').textContent = names.length ? tx(names.length === 1 ? '{n} pessoa: {x}' : '{n} pessoas: {x}', { n: names.length, x: names.join(', ') }) : '';
   const ul = $('#gr-msgs');
@@ -1671,6 +1788,28 @@ async function sendMsg() {
   $('#gr-text').value = '';
   try { await dbReq('POST', `grupos/${grp.code}/msgs`, { n: myName() || tx('Alguém'), t, ts: { '.sv': 'timestamp' }, u: grp.uid }); }
   catch { $('#gr-text').value = t; }
+}
+
+// 📣 mensagens rápidas: um toque e o grupo recebe (sem digitar andando)
+function renderQuick() {
+  const box = $('#gr-quick');
+  if (!box) return;
+  box.textContent = '';
+  const here = gps.me?.near || (state.from && state.from !== ME ? state.from : null);
+  const msgs = [
+    state.meet ? tx('✅ Cheguei no encontro ({x})', { x: td(state.meet.name) }) : tx('✅ Cheguei'),
+    tx('⏳ Vou atrasar 10 min'),
+    here ? tx('📍 Estou perto de {x}', { x: td(here.name) }) : null,
+    tx('👕 Estou no provador'),
+    tx('🍔 Vamos almoçar?'),
+    tx('🙋 Onde vocês estão?'),
+    tx('🚗 Indo para o carro'),
+  ].filter(Boolean);
+  for (const m of msgs) {
+    const b = el('button', 'chip', m); b.type = 'button';
+    b.onclick = () => { $('#gr-text').value = m; sendMsg(); };
+    box.appendChild(b);
+  }
 }
 
 function sendMyPos() {
@@ -1914,7 +2053,9 @@ function renderGpsBar() {
   if (state.from === ME && state.to && r) {
     const left = Math.max(0, Math.round(r.meters));
     const arrow = dirArrow(state.to);
-    if (left < 15 && lastSaid !== 'arrive:' + state.to.id) { say(tx('✅ Você chegou: {x}', { x: td(state.to.name) }).replace('✅', '')); lastSaid = 'arrive:' + state.to.id; }
+    if (walkMax.id !== state.to.id) walkMax = { id: state.to.id, m: 0 };
+    walkMax.m = Math.max(walkMax.m, left);
+    if (left < 15 && lastSaid !== 'arrive:' + state.to.id) { arrived(state.to, walkMax.m); say(tx('✅ Você chegou: {x}', { x: td(state.to.name) }).replace('✅', '')); lastSaid = 'arrive:' + state.to.id; }
     if (left < 15 && state.tour && state.tour.i < state.tour.stops.length - 1) return gpsMsg(tx('✅ Você chegou: {x}', { x: td(state.to.name) }) + ' · ' + tx('Próxima loja ›'), false);
     return gpsMsg(left < 15 ? tx('✅ Você chegou: {x}', { x: td(state.to.name) }) : tx('{a} {x} · {n} m pela rota ({p})', { a: arrow, x: td(state.to.name), n: left, p: prec }), false);
   }
