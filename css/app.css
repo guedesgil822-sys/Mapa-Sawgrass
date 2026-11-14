@@ -664,12 +664,12 @@ button { cursor: pointer; }
     border-radius: 22px 22px 0 0; border-bottom: 0; border-left: 0; border-right: 0; }
 }
 
-/* faixa vazia embaixo no app instalado do iPhone (--gap medido em app.js; 0 nos demais) */
-html, body { background: #f4f3ef; }
-#map { bottom: calc(-1 * var(--gap, 0px)); }
-@media (max-width: 759px) {
-  :root { --tabh: calc(66px + env(safe-area-inset-bottom) - var(--gap, 0px)); }
-  .tabbar { bottom: calc(-1 * var(--gap, 0px)); height: calc(var(--tabh) + var(--gap, 0px)); }
-}
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]), :root:not([data-theme="light"]) body { background: #14171c; } }
-:root[data-theme="dark"], :root[data-theme="dark"] body { background: #14171c; }
+/* Fundo da página = cor da barra de baixo. No app instalado do iPhone, algumas versões do iOS
+   não deixam a página chegar ao fim da tela; a faixa que sobra embaixo usa esta cor e
+   parece continuação da barra. (O mapa tem o próprio fundo, então isto não aparece em outro lugar.) */
+html, body { background: #fbfbfa; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]), :root:not([data-theme="light"]) body { background: #1c2636; } }
+:root[data-theme="dark"], :root[data-theme="dark"] body { background: #1c2636; }
+@media (max-width: 759px) { .tabbar { background: #fbfbfa; } }
+@media (max-width: 759px) and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tabbar { background: #1c2636; } }
+@media (max-width: 759px) { :root[data-theme="dark"] .tabbar { background: #1c2636; } }
