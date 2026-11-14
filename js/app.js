@@ -1,7 +1,7 @@
 import { Mall, TRANSITION, fmtDist, fmtTime, norm } from './graph.js';
 import { MapView, svgEl } from './mapview.js';
 import { t as tx, td, clock, initLang, setLang, getLang, translateDom, LANGS } from './i18n.js';
-import { openShop, setShopHooks } from './shop.js';
+import { openShop, setShopHooks, spentUsd, money, toLocal, currency } from './shop.js';
 
 const $ = (s) => document.querySelector(s);
 const el = (tag, cls, text) => {
@@ -167,6 +167,8 @@ function bindUI() {
   $('#shop-close').onclick = () => $('#shop').close();
   $('#hours-btn').onclick = openHours;
   $('#weather-btn').onclick = openWeather;
+  $('#day-btn').onclick = openDay;
+  renderDayBtn();
   loadWeather();
   setInterval(loadWeather, 30 * 60 * 1000);
   $('#sos-btn').onclick = () => $('#sos').showModal();
@@ -572,6 +574,45 @@ function openHours() {
     t.appendChild(tr);
   });
   $('#hours').showModal();
+}
+
+/* ---------- resumo do passeio (do dia, no horário da Flórida) ---------- */
+const DAY_KEY = 'sawgrass.dia';
+let walkMax = { id: null, m: 0 };
+function dayStats() {
+  const d = flHour().slice(0, 10);
+  let s = load(DAY_KEY);
+  if (!s || s.d !== d) s = { d, m: 0, stores: [], done: [] };
+  return s;
+}
+// chegou a um destino (último passo da rota ou "você chegou" pelo GPS): soma uma vez por trajeto
+function arrived(to, meters) {
+  if (!to || !mall.poiById.has(to.id)) return;
+  const s = dayStats(), key = `${state.from?.id || '?'}>${to.id}`;
+  if (s.done.includes(key)) return;
+  s.done.push(key);
+  s.m += Math.max(0, meters || 0);
+  if (!s.stores.includes(to.id)) s.stores.push(to.id);
+  store(DAY_KEY, s);
+  renderDayBtn();
+}
+function renderDayBtn() {
+  const s = dayStats();
+  $('#day-btn').hidden = !s.stores.length;
+  $('#day-btn').textContent = tx('📊 Meu dia');
+}
+function openDay() {
+  const s = dayStats(), usd = spentUsd(), local = toLocal(usd, { tax: false, iof: false }), cur = currency();
+  const km = s.m / 1000, steps = Math.round(s.m / 0.75);
+  $('#day-walk').textContent = km >= 1 ? `${km.toLocaleString(undefined, { maximumFractionDigits: 1 })} km` : `${Math.round(s.m)} m`;
+  $('#day-steps').textContent = tx('≈ {n} passos', { n: steps.toLocaleString() });
+  $('#day-n').textContent = String(s.stores.length);
+  $('#day-spent').textContent = money(usd, 'USD');
+  $('#day-spent-l').textContent = cur && cur !== 'USD' ? '≈ ' + money(local, cur) : '';
+  const ul = $('#day-list'); ul.textContent = '';
+  for (const id of s.stores) { const p = mall.poiById.get(id); if (p) ul.appendChild(el('li', '', td(p.name))); }
+  $('#day-share').onclick = () => shareText(tx('Meu dia no Sawgrass Mills'), tx('📊 Meu dia no Sawgrass Mills: andei {w} (≈ {n} passos), visitei {s} lugares e gastei {g}.', { w: $('#day-walk').textContent, n: steps.toLocaleString(), s: s.stores.length, g: money(usd, 'USD') }));
+  $('#day').showModal();
 }
 
 /* ---------- tempo em Sunrise (Open-Meteo, sem cadastro) ---------- */
@@ -1251,6 +1292,7 @@ function goStep(i) {
   const r = state.route;
   if (!r || i < 0 || i >= r.steps.length) return;
   state.step = i;
+  if (i === r.steps.length - 1 && state.to) arrived(state.to, r.meters);
   renderSheet();
   speakStep();
   const st = r.steps[i];
@@ -1995,7 +2037,9 @@ function renderGpsBar() {
   if (state.from === ME && state.to && r) {
     const left = Math.max(0, Math.round(r.meters));
     const arrow = dirArrow(state.to);
-    if (left < 15 && lastSaid !== 'arrive:' + state.to.id) { say(tx('✅ Você chegou: {x}', { x: td(state.to.name) }).replace('✅', '')); lastSaid = 'arrive:' + state.to.id; }
+    if (walkMax.id !== state.to.id) walkMax = { id: state.to.id, m: 0 };
+    walkMax.m = Math.max(walkMax.m, left);
+    if (left < 15 && lastSaid !== 'arrive:' + state.to.id) { arrived(state.to, walkMax.m); say(tx('✅ Você chegou: {x}', { x: td(state.to.name) }).replace('✅', '')); lastSaid = 'arrive:' + state.to.id; }
     if (left < 15 && state.tour && state.tour.i < state.tour.stops.length - 1) return gpsMsg(tx('✅ Você chegou: {x}', { x: td(state.to.name) }) + ' · ' + tx('Próxima loja ›'), false);
     return gpsMsg(left < 15 ? tx('✅ Você chegou: {x}', { x: td(state.to.name) }) : tx('{a} {x} · {n} m pela rota ({p})', { a: arrow, x: td(state.to.name), n: left, p: prec }), false);
   }

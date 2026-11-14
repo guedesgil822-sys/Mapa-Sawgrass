@@ -59,6 +59,7 @@
     <button type="button" class="chip shop" id="shop-btn">🛍️ Compras</button>
     <button type="button" class="chip hours" id="hours-btn"></button>
     <button type="button" class="chip weather" id="weather-btn" hidden></button>
+    <button type="button" class="chip day" id="day-btn" hidden></button>
     <button type="button" class="chip" id="marked-clear" hidden>✕ Limpar</button>
     <a class="chip open-web" id="open-web" hidden href="https://guedesgil822-sys.github.io/Mapa-Sawgrass/" target="_blank" rel="noopener">🌐 Abrir no navegador</a>
     <span class="chip warn" id="draft-flag" hidden>Rascunho do editor</span>
@@ -295,6 +296,20 @@
     <div class="tools-head"><h2>🕘 <span>Horário do shopping</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
     <table class="hours-table" id="hours-table"></table>
     <p class="cv-note"><span>Horário de Sunrise (Flórida). Restaurantes, cinema e algumas lojas abrem ou fecham em outros horários, e feriados mudam o horário.</span></p>
+  </form>
+</dialog>
+
+<dialog id="day" class="sheet-dlg">
+  <form method="dialog" class="tools-box">
+    <div class="tools-head"><h2>📊 <span>Meu dia</span></h2><button class="icon-btn" value="cancel" aria-label="Fechar">✕</button></div>
+    <div class="day-grid">
+      <div class="day-card"><span class="day-ic" aria-hidden="true">🚶</span><b id="day-walk"></b><small id="day-steps"></small></div>
+      <div class="day-card"><span class="day-ic" aria-hidden="true">🛍️</span><b id="day-n"></b><small>lugares visitados</small></div>
+      <div class="day-card"><span class="day-ic" aria-hidden="true">💵</span><b id="day-spent"></b><small id="day-spent-l"></small></div>
+    </div>
+    <ul class="day-list" id="day-list"></ul>
+    <p class="cv-note"><span>Conta as rotas que você seguiu até o fim (último passo ou chegada pelo GPS). O gasto vem dos itens marcados como comprados na lista.</span></p>
+    <button type="button" class="btn primary" id="day-share">📤 Compartilhar resumo</button>
   </form>
 </dialog>
 

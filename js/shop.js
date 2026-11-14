@@ -54,6 +54,8 @@ export function toLocal(usd, opts = conv) {
   return withTax * (fx.rates[cur] || 0) * (cur === 'BRL' && opts.iof ? 1 + IOF : 1);
 }
 export const currency = () => cur;
+// total comprado (itens marcados), com o imposto da loja se estiver ligado no conversor
+export const spentUsd = () => load('sawgrass.lista', []).filter((i) => i.done).reduce((s, i) => s + (i.usd || 0), 0) * (conv.tax ? 1 + SALES_TAX : 1);
 
 function renderConv() {
   const box = $('#shop-conv');
