@@ -725,10 +725,3 @@ html, body { background: #fbfbfa; }
 .cota-row.over .cota-msg { color: #b3123f; -webkit-text-fill-color: #b3123f; }
 .cota-row.ok .cota-msg { color: #0a7d55; -webkit-text-fill-color: #0a7d55; }
 .cota-row.ok .cota-bar i { background: #0a7d55; }
-
-/* ---------- 41 · cartão "Se eu me perder" ---------- */
-.kid-open { width: 100%; margin-top: 4px; }
-.kid-box { display: flex; flex-direction: column; gap: 10px; }
-.kid-box select, .kid-box input { font-size: 16px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); }
-.kid-box input.need { border-color: var(--accent); }
-.kid-preview { display: block; width: 46%; margin: 4px auto 0; border-radius: 14px; box-shadow: var(--shadow); }
