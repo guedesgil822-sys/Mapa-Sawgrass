@@ -678,3 +678,10 @@ html, body { background: #fbfbfa; }
 .grp-quick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
 .grp-quick::-webkit-scrollbar { display: none; }
 .grp-quick .chip { flex: none; cursor: pointer; box-shadow: none; font-size: 13.5px; padding: 7px 12px; }
+
+/* ---------- 34 · foto da nota fiscal ---------- */
+.receipt { flex: none; width: 40px; height: 40px; border-radius: 10px; border: 1px dashed var(--line); display: grid; place-items: center; font-size: 19px; cursor: pointer; position: relative; overflow: hidden; background: none; padding: 0; }
+.receipt input { position: absolute; inset: 0; opacity: 0; cursor: pointer; font-size: 0; }
+.receipt.has { border-style: solid; border-color: var(--from); }
+.receipt.has img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pv-del { display: block; margin: 12px auto 0; background: #c62828; color: #fff; -webkit-text-fill-color: #fff; border-color: #c62828; }

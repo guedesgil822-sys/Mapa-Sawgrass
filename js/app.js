@@ -210,7 +210,7 @@ function bindUI() {
   $('#car-save').onclick = saveCar;
   $('#car-file').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) shrinkPhoto(f).then((d) => { carPhoto = d; renderCarPhoto(); }).catch(() => toast(tx('Não deu para abrir a foto.'))); };
   $('#car-photo-del').onclick = () => { carPhoto = null; renderCarPhoto(); };
-  $('#car-img-btn').onclick = () => { $('#photo-big').src = carPhoto; $('#photo-view').showModal(); };
+  $('#car-img-btn').onclick = () => { $('#photo-big').src = carPhoto; $('#pv-del').hidden = true; $('#photo-view').showModal(); };
   $('#car-del').onclick = () => { store(CAR_PHOTO_KEY, null); carPhoto = null; state.car = null; persistCar(); $('#car').close(); if (state.to === CAR) { state.to = null; update(false); } };
   $('#car-go').onclick = () => { $('#car').close(); goToCar(); };
   $('#sh-send').onclick = sendShare;
