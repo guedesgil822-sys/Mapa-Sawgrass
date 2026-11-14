@@ -713,3 +713,9 @@ html, body { background: #fbfbfa; }
 .topics-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .topics-row .chip { cursor: pointer; box-shadow: none; font-size: 14px; padding: 7px 12px; }
 #results li.sec.sells { color: var(--accent); }
+/* com um atalho escolhido: fila única que rola de lado, o escolhido em destaque */
+#results li.topics.compact { padding: 8px 0 10px; }
+#results li.topics.compact .topics-row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 0 16px; }
+#results li.topics.compact .topics-row::-webkit-scrollbar { display: none; }
+#results li.topics.compact .chip { flex: none; }
+.topics-row .chip.on { background: var(--ink); color: var(--panel); -webkit-text-fill-color: var(--panel); border-color: var(--ink); }
