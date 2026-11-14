@@ -279,14 +279,8 @@ function openPicker(which) {
   picking = which;
   $('#q').placeholder = tx({ from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
     find: 'Para onde você vai?', meet: 'Onde vão se encontrar?' }[which]);
-  // dica do que o toque faz em cada modo
-  $('#mark-hint').textContent = tx({
-    from: 'Toque na loja mais perto de você.',
-    to: 'Toque numa loja para traçar a rota. Para marcar várias, use a aba Buscar.',
-    find: 'Toque na loja para marcar várias (✓) ou em “Ir ➜” para traçar a rota.',
-    meet: 'Toque no lugar do encontro.',
-  }[which]);
-  $('#mark-hint').hidden = false;
+  // a dica do toque agora vai junto da contagem, numa linha só (renderResults)
+  $('#mark-hint').hidden = true;
   renderResults();
   $('#picker').showModal();
   // no celular o teclado cobre metade da lista: só abre se a pessoa tocar na busca
@@ -318,8 +312,13 @@ function renderResults() {
   // sem busca: ordem alfabética com uma divisória por letra (A, B, C…)
   if (!q || onlyMarked) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
   const one = list.length === 1;
-  ul.appendChild(el('li', 'count', tx(onlyMarked ? (one ? '{n} selecionada · toque para desmarcar' : '{n} selecionadas · toque para desmarcar')
+  // contagem + dica curta do que o toque faz, numa linha só (economiza espaço)
+  const hint = onlyMarked ? '' : tx({ from: 'toque na loja mais perto', to: 'toque no destino', find: 'toque marca ✓ · Ir ➜ traça a rota', meet: 'toque no lugar do encontro' }[picking] || '');
+  const cnt = el('li', 'count');
+  cnt.append(el('b', '', tx(onlyMarked ? (one ? '{n} selecionada · toque para desmarcar' : '{n} selecionadas · toque para desmarcar')
     : (one ? '{n} lugar' : '{n} lugares'), { n: list.length })));
+  if (hint) cnt.append(' · ' + hint);
+  ul.appendChild(cnt);
   // atalhos "o que você procura?": sem busca, ou com um atalho escolhido (para trocar de um para outro)
   const activeQuick = topic && QUICK.includes(topic.id) && norm(q) === norm(tx(topic.label)) ? topic.id : '';
   if ((!q || activeQuick) && !onlyMarked) {
