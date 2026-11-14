@@ -279,14 +279,8 @@ function openPicker(which) {
   picking = which;
   $('#q').placeholder = tx({ from: 'Perto de qual loja você está?', to: 'Para onde você quer ir?',
     find: 'Para onde você vai?', meet: 'Onde vão se encontrar?' }[which]);
-  // dica do que o toque faz em cada modo
-  $('#mark-hint').textContent = tx({
-    from: 'Toque na loja mais perto de você.',
-    to: 'Toque numa loja para traçar a rota. Para marcar várias, use a aba Buscar.',
-    find: 'Toque na loja para marcar várias (✓) ou em “Ir ➜” para traçar a rota.',
-    meet: 'Toque no lugar do encontro.',
-  }[which]);
-  $('#mark-hint').hidden = false;
+  // a dica do toque agora vai junto da contagem, numa linha só (renderResults)
+  $('#mark-hint').hidden = true;
   renderResults();
   $('#picker').showModal();
   // no celular o teclado cobre metade da lista: só abre se a pessoa tocar na busca
@@ -305,7 +299,9 @@ function renderResults() {
   const sells = new Set();
   if (topic) {
     for (const p of mall.pois) if ((!group || p.group === group) && topicHas(topic, p)) sells.add(p);
-    list = [...list.filter((p) => !sells.has(p)), ...[...sells].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'))];
+    // primeiro quem vende; depois o que bateu só pelo nome (some quando veio de um atalho)
+    const fromChip = forcedTopic === topic.id && q === forcedLabel;
+    list = [...[...sells].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt')), ...(fromChip ? [] : list.filter((p) => !sells.has(p)))];
   }
   // "Selecionados": só as lojas marcadas, com logo, para conferir antes de ir ao mapa
   if (onlyMarked && picking === 'find') list = [...marked].map((id) => mall.poiById.get(id)).filter(Boolean);
@@ -316,21 +312,34 @@ function renderResults() {
   // sem busca: ordem alfabética com uma divisória por letra (A, B, C…)
   if (!q || onlyMarked) list = [...list].sort((a, b) => sortKey(a).localeCompare(sortKey(b), 'pt'));
   const one = list.length === 1;
-  ul.appendChild(el('li', 'count', tx(onlyMarked ? (one ? '{n} selecionada · toque para desmarcar' : '{n} selecionadas · toque para desmarcar')
+  // contagem + dica curta do que o toque faz, numa linha só (economiza espaço)
+  const hint = onlyMarked ? '' : tx({ from: 'toque na loja mais perto', to: 'toque no destino', find: 'toque marca ✓ · Ir ➜ traça a rota', meet: 'toque no lugar do encontro' }[picking] || '');
+  const cnt = el('li', 'count');
+  cnt.append(el('b', '', tx(onlyMarked ? (one ? '{n} selecionada · toque para desmarcar' : '{n} selecionadas · toque para desmarcar')
     : (one ? '{n} lugar' : '{n} lugares'), { n: list.length })));
-  // atalhos "o que você procura?" quando não há nada digitado
-  if (!q && !onlyMarked) {
-    const li = el('li', 'topics');
-    li.append(el('div', 'topics-h', tx('O que você procura?')));
+  if (hint) cnt.append(' · ' + hint);
+  ul.appendChild(cnt);
+  // atalhos "o que você procura?": sem busca, ou com um atalho escolhido (para trocar de um para outro)
+  const activeQuick = topic && QUICK.includes(topic.id) && norm(q) === norm(tx(topic.label)) ? topic.id : '';
+  if ((!q || activeQuick) && !onlyMarked) {
+    const li = el('li', 'topics' + (activeQuick ? ' compact' : ''));
+    if (!activeQuick) li.append(el('div', 'topics-h', tx('O que você procura?')));
     const row = el('div', 'topics-row');
     for (const id of QUICK) {
-      const t = topicById(id);
-      const b = el('button', 'chip', `${t.ico} ${tx(t.label)}`); b.type = 'button';
-      b.onclick = (e) => { e.stopPropagation(); forcedTopic = t.id; forcedLabel = tx(t.label); $('#q').value = forcedLabel; renderResults(); };
+      const t = topicById(id), on = id === activeQuick;
+      const b = el('button', 'chip' + (on ? ' on' : ''), `${t.ico} ${tx(t.label)}`); b.type = 'button';
+      b.setAttribute('aria-pressed', String(on));
+      b.onclick = (e) => {
+        e.stopPropagation();
+        if (on) { forcedTopic = ''; forcedLabel = ''; $('#q').value = ''; }   // toque no escolhido: volta à lista completa
+        else { forcedTopic = t.id; forcedLabel = tx(t.label); $('#q').value = forcedLabel; }
+        renderResults();
+      };
       row.appendChild(b);
     }
     li.append(row);
     ul.appendChild(li);
+    if (activeQuick) requestAnimationFrame(() => row.querySelector('.on')?.scrollIntoView({ inline: 'center', block: 'nearest' }));
   }
   let sellsHdr = !topic || !sells.size || onlyMarked;
   let letter = null;
