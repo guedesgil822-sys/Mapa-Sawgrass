@@ -174,6 +174,7 @@ function bindUI() {
   setInterval(loadWeather, 30 * 60 * 1000);
   $('#sos-btn').onclick = () => $('#sos').showModal();
   $('#wc-btn').onclick = goNearestWc;
+  bindSheetDrag();
   setupInstall();
   // sem internet: o app segue funcionando (tudo fica guardado no celular); avisa o que depende da conexão
   const net = () => { $('#net-bar').hidden = navigator.onLine; };
@@ -1188,7 +1189,7 @@ function update(refit) {
   if (state.from && state.to && state.from.id !== state.to.id) {
     state.route = mall.route(state.from.id, state.to.id, { accessible: state.accessible });
   }
-  if (refit) { state.step = 0; state.edit = false; }
+  if (refit) { state.step = 0; state.edit = false; sheetMini = false; }
   if (refit && state.to && mall.poiById.get(state.to.id) === state.to) addRecent(state.to);
   // com rota: faixa de instrução no topo (origem/destino ficam atrás do lápis)
   const nav = !!state.route && !state.edit;
@@ -1225,7 +1226,59 @@ function setField(sel, poi, placeholder) {
   b.querySelector('span').textContent = poi ? (multi() ? `${name} · ${poi.f}` : name) : placeholder;
 }
 
+// painel de baixo recolhível: arrastar para baixo (ou tocar na alça) deixa só uma tira; tocar nela abre de novo
+let sheetMini = false;
 function renderSheet() {
+  renderSheetBody();
+  const s = $('#sheet');
+  if (s.hidden) { sheetMini = false; s.classList.remove('mini'); return; }
+  const grip = el('button', 'sheet-grip'); grip.type = 'button';
+  grip.setAttribute('aria-label', tx(sheetMini ? 'Mostrar painel' : 'Recolher painel'));
+  grip.onclick = () => setSheetMini(!sheetMini);
+  s.prepend(grip);
+  // tira recolhida: tempo e destino (e a parada do roteiro)
+  const r = state.route, T = state.tour;
+  const txt = r && state.to
+    ? [T ? `🧭 ${T.i + 1}/${T.stops.length}` : '', fmtTime(r.seconds), td(state.to.name)].filter(Boolean).join(' · ')
+    : state.picked ? td(state.picked.name) : '';
+  const mini = el('button', 'sheet-mini'); mini.type = 'button';
+  mini.append(el('span', 'sm-txt', txt), el('span', 'sm-up', '▲'));
+  mini.setAttribute('aria-label', tx('Mostrar painel'));
+  mini.onclick = () => setSheetMini(false);
+  s.append(mini);
+  s.classList.toggle('mini', sheetMini);
+}
+function setSheetMini(on) {
+  sheetMini = on;
+  $('#sheet').classList.toggle('mini', on);
+  const g = $('#sheet .sheet-grip');
+  if (g) g.setAttribute('aria-label', tx(on ? 'Mostrar painel' : 'Recolher painel'));
+}
+// arrastar o painel: para baixo recolhe, para cima abre
+function bindSheetDrag() {
+  const s = $('#sheet');
+  let y0 = null, dy = 0;
+  s.addEventListener('pointerdown', (e) => {
+    if (innerWidth >= 760 || e.target.closest('button:not(.sheet-grip):not(.sheet-mini), input, select, a, .steps, .tour-list')) return;
+    y0 = e.clientY; dy = 0;
+  });
+  addEventListener('pointermove', (e) => {
+    if (y0 == null) return;
+    dy = e.clientY - y0;
+    if (!sheetMini && dy > 0) s.style.transform = `translateY(${Math.min(dy, 200)}px)`;
+  });
+  const end = () => {
+    if (y0 == null) return;
+    s.style.transform = '';
+    if (!sheetMini && dy > 50) setSheetMini(true);
+    else if (sheetMini && dy < -25) setSheetMini(false);
+    y0 = null;
+  };
+  addEventListener('pointerup', end);
+  addEventListener('pointercancel', end);
+}
+
+function renderSheetBody() {
   const s = $('#sheet');
   s.textContent = '';
   const p = state.picked;
