@@ -1347,7 +1347,12 @@ function goStep(i) {
   const st = r.steps[i];
   // ao chegar num passo de troca de piso, o mapa mostra onde ela fica
   if (st.floor !== state.floor) setFloor(st.floor, false); else drawRoute();
-  fitPoints(st.pts, 200 * mall.ppm);   // cada passo mostra ~200 m em volta: dá para ver as lojas de referência
+  // passo com folga em volta (metade do tamanho dele de cada lado) e no mínimo ~350 m de área:
+  // o trecho fica no meio e dá para ver as lojas e o caminho seguinte
+  const xs = st.pts.map((q) => q.x), ys = st.pts.map((q) => q.y);
+  const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  const m = Math.max(size * 0.5, 60 * mall.ppm);
+  fitPoints([{ x: Math.min(...xs) - m, y: Math.min(...ys) - m }, { x: Math.max(...xs) + m, y: Math.max(...ys) + m }], 350 * mall.ppm);
 }
 
 /* ---------- rota no mapa ---------- */
