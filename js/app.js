@@ -156,7 +156,7 @@ function bindUI() {
   }).observe($('#sheet'));
   $('#mark-clear').onclick = () => { clearMarked(); renderResults(); };
   $('#marked-clear').onclick = clearMarked;
-  $('#tour-btn').onclick = startTour;
+  $('#tour-btn').onclick = () => { if (!(gps.me && ME.node)) state.from = null; startTour(); };
   $('#near-btn').onclick = () => openNear();
   $('#shop-btn').onclick = () => openShop();
   setShopHooks({
@@ -888,10 +888,13 @@ function bestOrder(origin, stops) {
 }
 
 function startTour() {
-  const stops = [...marked].map((id) => mall.poiById.get(id)).filter((p) => p && p.f === state.floor);
+  let stops = [...marked].map((id) => mall.poiById.get(id)).filter((p) => p && p.f === state.floor);
   if (stops.length < 2) return;
-  const origin = gps.me && ME.node ? ME : state.from && !marked.has(state.from.id) ? state.from : null;
+  // de onde você sai: GPS ou a loja escolhida (pode ser uma das marcadas: aí ela sai das paradas)
+  const origin = gps.me && ME.node ? ME : state.from || null;
   if (!origin) { tourPending = true; return openPicker('from'); } // primeiro: de onde você sai
+  stops = stops.filter((p) => p !== origin);
+  if (!stops.length) return toast(tx('Você já está na única loja marcada.'));
   legCache.clear();
   const { order, meters } = bestOrder(origin, stops);
   const paths = order.map((p, i) => {
@@ -920,7 +923,7 @@ function tourBox() {
   const top = el('div', 'tour-top');
   const t = el('div', 'grow');
   t.append(el('b', '', `🧭 ${T.i + 1}/${n}`),
-    el('small', '', tx('{n} lojas · {d} no total', { n, d: fmtDist(T.meters) })));
+    el('small', '', tx(n === 1 ? '{n} loja · {d} no total' : '{n} lojas · {d} no total', { n, d: fmtDist(T.meters) })));
   const x = el('button', 'icon-btn', '✕');
   x.setAttribute('aria-label', tx('Encerrar roteiro'));
   x.onclick = endTour;
