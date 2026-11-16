@@ -744,3 +744,10 @@ html, body { background: #fbfbfa; }
 .sheet-mini .sm-up { font-size: 13px; color: var(--ink-2); -webkit-text-fill-color: var(--ink-2); }
 @media (min-width: 760px) { .sheet-grip { display: none; } }
 @media (prefers-reduced-motion: reduce) { #sheet { transition: none; } }
+
+/* ---------- girar o mapa (dois dedos ou bússola) ---------- */
+.zoom .north-btn { display: grid; place-items: center; color: var(--ink); }
+.zoom .north-btn svg { transition: transform .15s linear; }
+.zoom .north-btn.on { background: var(--pick-fill); color: #fff; }
+.zoom .north-btn.on svg path:last-of-type { fill: #fff; }
+@media (prefers-reduced-motion: reduce) { .zoom .north-btn svg { transition: none; } }

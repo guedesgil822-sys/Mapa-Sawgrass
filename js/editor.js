@@ -33,6 +33,7 @@ async function init() {
     data = await (await fetch('data/mall.json')).json();
   }
   view = new MapView($('#map'));
+  view.rotateEnabled = false; // no editor o mapa não gira
   L = {
     polys: svgEl('g', {}, view.svg), edges: svgEl('g', {}, view.svg), nodes: svgEl('g', {}, view.svg),
     pois: svgEl('g', {}, view.svg), labels: svgEl('g', {}, view.svg), over: svgEl('g', {}, view.svg),
