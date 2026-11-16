@@ -76,7 +76,8 @@ async function init() {
     route: svgEl('g', {}, view.svg),
     labels: svgEl('g', {}, view.svg),
   };
-  view.onChange = () => { if (gps.heading != null && gps.me) drawRoute(); else placeMarkers(); cullLabels(); };
+  view.onChange = () => { if (gps.heading != null && gps.me) drawRoute(); else placeMarkers(); cullLabels(); syncRotation(); };
+  view.onUserRotate = () => { if (compassOn) setCompassMode(false); };
   view.onTap = onMapTap;
 
   buildFloors();
@@ -174,6 +175,7 @@ function bindUI() {
   setInterval(loadWeather, 30 * 60 * 1000);
   $('#sos-btn').onclick = () => $('#sos').showModal();
   $('#wc-btn').onclick = goNearestWc;
+  $('#north').onclick = northClick;
   bindSheetDrag();
   setupInstall();
   // sem internet: o app segue funcionando (tudo fica guardado no celular); avisa o que depende da conexão
@@ -1141,7 +1143,8 @@ function addLabel(p, box, dark) {
   const t = svgEl('text', { class: 'lbl' + (dark ? ' dark' : ''), x: p.x, 'font-size': fs.toFixed(1) }, layers.labels);
   const y0 = p.y - ((best.lines.length - 1) * fs * 1.1) / 2 + fs * 0.35;
   best.lines.forEach((l, i) => { svgEl('tspan', { x: p.x, y: (y0 + i * fs * 1.1).toFixed(1) }, t).textContent = l; });
-  t._fs = fs;
+  t._fs = fs; t._cx = p.x; t._cy = p.y;
+  if (view.r) t.setAttribute('transform', `rotate(${-view.r} ${p.x} ${p.y})`);
 }
 
 function wrap(words, n) {
@@ -2060,7 +2063,7 @@ function setEco(on, why) {
   try { localStorage.setItem('sawgrass.eco', String(on)); } catch { /* sem armazenamento */ }
   if (gps.watch != null) {
     watchGps();
-    if (on) { removeEventListener('deviceorientationabsolute', onHeading, true); removeEventListener('deviceorientation', onHeading, true); gps.heading = null; drawRoute(); }
+    if (on) { if (!compassOn) { removeEventListener('deviceorientationabsolute', onHeading, true); removeEventListener('deviceorientation', onHeading, true); } gps.heading = null; drawRoute(); }
     else startCompass();
   }
   renderEco();
@@ -2094,8 +2097,10 @@ navigator.getBattery?.().then((bat) => {
 function stopGps() {
   if (gps.watch != null) navigator.geolocation.clearWatch(gps.watch);
   gps.watch = null; gps.me = null; gps.heading = null; gps.paused = false;
-  removeEventListener('deviceorientationabsolute', onHeading, true);
-  removeEventListener('deviceorientation', onHeading, true);
+  if (!compassOn) {   // a bússola do mapa continua, se estiver ligada
+    removeEventListener('deviceorientationabsolute', onHeading, true);
+    removeEventListener('deviceorientation', onHeading, true);
+  }
   if (state.from === ME) { state.from = null; update(false); }
   $('#gps').classList.remove('on');
   $('#gps').setAttribute('aria-pressed', 'false');
@@ -2173,7 +2178,51 @@ function dirArrow(p) {
   const tgt = state.route?.steps?.[0]?.pts?.at(-1) || p;
   let a = Math.atan2(tgt.x - ME.x, -(tgt.y - ME.y)) * 180 / Math.PI; // 0 = topo do mapa
   if (gps.heading != null) a -= mapHeading(gps.heading);
+  else a += view.r;   // sem bússola: relativa ao topo da tela (o mapa pode estar girado)
   return ARROWS[Math.round((((a % 360) + 360) % 360) / 45) % 8];
+}
+
+/* ---------- girar o mapa: com dois dedos ou pela bússola ---------- */
+// botão 🧭: mapa girado → volta ao normal; mapa normal → liga a bússola (o mapa acompanha o celular); de novo → desliga
+let compassOn = false, compassH = null, lastR = 0, rotRaf = 0;
+function setCompassMode(on) {
+  compassOn = on;
+  $('#north').classList.toggle('on', on);
+  $('#north').setAttribute('aria-pressed', String(on));
+  if (on) {
+    startCompass();
+    toast(tx('🧭 O mapa vai girar conforme você vira o celular. Toque no 🧭 de novo para desligar.'));
+  } else {
+    compassH = null;
+    if (gps.watch == null) { removeEventListener('deviceorientationabsolute', onHeading, true); removeEventListener('deviceorientation', onHeading, true); }
+  }
+}
+function applyCompass() {
+  if (!compassOn || compassH == null) return;
+  const target = -mapHeading(compassH);           // a direção para onde você olha fica para cima
+  const d = ((target - view.r) % 360 + 540) % 360 - 180;
+  if (Math.abs(d) < 2) return;                     // evita tremer
+  view.setRotation(target, false, gps.me && ME.node ? { x: gps.me.x, y: gps.me.y } : null);
+}
+function syncRotation() {
+  if (view.r === lastR) return;
+  lastR = view.r;
+  const needle = $('#north svg');
+  if (needle) needle.style.transform = `rotate(${view.r}deg)`;
+  $('#north').classList.toggle('turned', Math.abs(view.r) > 1);
+  // nomes das lojas sempre em pé
+  cancelAnimationFrame(rotRaf);
+  rotRaf = requestAnimationFrame(() => {
+    for (const t of layers.labels.children) {
+      if (t._cx == null) continue;
+      if (view.r) t.setAttribute('transform', `rotate(${-view.r} ${t._cx} ${t._cy})`); else t.removeAttribute('transform');
+    }
+  });
+}
+function northClick() {
+  if (compassOn) { setCompassMode(false); view.setRotation(0, true); return; }
+  if (Math.abs(view.r) > 1) { view.setRotation(0, true); return; }
+  setCompassMode(true);
 }
 
 /* bússola: direção do celular convertida para o ângulo do mapa (0 = topo da tela) */
@@ -2192,7 +2241,9 @@ function onHeading(e) {
   let h = null;
   if (e.webkitCompassHeading != null) h = e.webkitCompassHeading; // iPhone
   else if (e.absolute && e.alpha != null) h = 360 - e.alpha;      // Android
-  if (h == null || gps.watch == null) return;
+  if (h == null) return;
+  if (compassOn) { compassH = h; requestAnimationFrame(applyCompass); }
+  if (gps.watch == null) return;
   if (gps.heading != null && Math.abs(((h - gps.heading + 540) % 360) - 180) < 4) return;
   gps.heading = h;
   if (gps.me) { drawRoute(); if (state.from === ME && state.to) renderGpsBar(); }

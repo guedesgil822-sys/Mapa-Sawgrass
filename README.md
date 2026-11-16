@@ -130,6 +130,15 @@ O chip **🛍️ Compras** abre quatro abas (`js/shop.js`):
   Guest Services, em frente à Burlington; ponto aproximado no mapa, com rota),
   link para as promoções oficiais (simon.com) e dicas para economizar.
 
+## Girar o mapa
+
+- **Com dois dedos:** gire o mapa como no Google Maps. Arrastar e dar zoom continuam funcionando, e o giro só começa depois de uns 12°, para não girar sem querer ao dar zoom.
+- **Pela bússola:** toque no botão 🧭 da coluna da direita. O mapa passa a girar conforme você vira o celular, com a direção para onde você olha sempre para cima.
+  - Toque de novo para desligar.
+  - No iPhone, o celular pede permissão para usar a orientação.
+- **Botão 🧭:** a agulha mostra para onde está o norte do mapa. Com o mapa girado, um toque volta ao normal.
+- Os nomes das lojas ficam sempre em pé. A rota, os marcadores e o GPS giram junto. O editor não gira.
+
 ## Buscar pelo produto e comida por tipo
 
 - **🔎 O que você procura:** a busca entende o que você quer comprar, como "mala", "perfume", "tênis", "óculos de sol", "brinquedo" ou "jaqueta", e mostra as lojas que vendem aquilo.
