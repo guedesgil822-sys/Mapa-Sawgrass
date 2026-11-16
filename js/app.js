@@ -281,6 +281,15 @@ function openPicker(which) {
     find: 'Para onde você vai?', meet: 'Onde vão se encontrar?' }[which]);
   // a dica do toque agora vai junto da contagem, numa linha só (renderResults)
   $('#mark-hint').hidden = true;
+  // "onde você está?": pergunta em destaque, dizendo para que serve
+  $('#pick-ask').hidden = which !== 'from';
+  if (which === 'from') {
+    $('#pa-title').textContent = tx('Onde você está agora?');
+    $('#pa-sub').textContent = tx(tourPending ? 'Toque na loja mais perto de você para montar o roteiro.'
+      : wcPending ? 'Toque na loja mais perto de você para achar o banheiro mais perto.'
+      : nearPending ? 'Toque na loja mais perto de você para ver o que tem em volta.'
+      : 'Toque na loja mais perto de você para traçar a rota. Ou ligue o GPS (⊕) no mapa.');
+  }
   renderResults();
   $('#picker').showModal();
   // no celular o teclado cobre metade da lista: só abre se a pessoa tocar na busca
@@ -321,7 +330,7 @@ function renderResults() {
   ul.appendChild(cnt);
   // atalhos "o que você procura?": sem busca, ou com um atalho escolhido (para trocar de um para outro)
   const activeQuick = topic && QUICK.includes(topic.id) && norm(q) === norm(tx(topic.label)) ? topic.id : '';
-  if ((!q || activeQuick) && !onlyMarked) {
+  if ((!q || activeQuick) && !onlyMarked && (picking === 'find' || picking === 'to')) {   // ao escolher onde você está, não atrapalham
     const li = el('li', 'topics' + (activeQuick ? ' compact' : ''));
     if (!activeQuick) li.append(el('div', 'topics-h', tx('O que você procura?')));
     const row = el('div', 'topics-row');

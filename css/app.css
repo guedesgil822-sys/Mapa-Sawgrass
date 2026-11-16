@@ -724,3 +724,10 @@ html, body { background: #fbfbfa; }
 #results li.count b { font-weight: 700; color: var(--ink); -webkit-text-fill-color: var(--ink); }
 .picker-head + .chips { padding-bottom: 6px; }
 #results li.count { display: block; }
+
+/* pergunta "Onde você está agora?" em destaque na busca */
+.pick-ask { display: flex; align-items: center; gap: 12px; margin: 10px 10px 2px; padding: 12px 14px; border-radius: 16px; background: #0b7d57; color: #fff; -webkit-text-fill-color: #fff; flex: none; }
+.pick-ask[hidden] { display: none; }
+.pick-ask .pa-ic { font-size: 26px; line-height: 1; }
+.pick-ask b { display: block; font-size: 18px; }
+.pick-ask small { display: block; font-size: 14px; line-height: 1.3; opacity: .92; }
