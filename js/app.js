@@ -1347,7 +1347,7 @@ function goStep(i) {
   const st = r.steps[i];
   // ao chegar num passo de troca de piso, o mapa mostra onde ela fica
   if (st.floor !== state.floor) setFloor(st.floor, false); else drawRoute();
-  fitPoints(st.pts, 70 * mall.ppm);
+  fitPoints(st.pts, 200 * mall.ppm);   // cada passo mostra ~200 m em volta: dá para ver as lojas de referência
 }
 
 /* ---------- rota no mapa ---------- */
@@ -2185,7 +2185,7 @@ function fitCurrent() {
     for (const p of [state.from, state.to]) if (p && p.f === f.id) pts.push(p);
   }
   // só origem/destino (sem rota): mostra ~250 m em volta para dar contexto
-  if (pts.length) return fitPoints(pts, (state.route ? 60 : 250) * mall.ppm);
+  if (pts.length) return fitPoints(pts, (state.route ? 200 : 250) * mall.ppm);
   // só as lojas (sem estacionamentos): o prédio enche a largura da tela
   const all = mall.pois.filter((p) => p.f === f.id && p.poly && p.group !== 'Estacionamento')
     .flatMap((p) => p.poly.reduce((a, v, i) => (i % 2 ? (a[a.length - 1].y = v) : a.push({ x: v, y: 0 }), a), []));
