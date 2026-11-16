@@ -517,7 +517,7 @@ button { cursor: pointer; }
 
 /* painel inferior: cantos grandes e alça */
 #sheet { border-radius: 26px; padding: 18px 18px 16px; box-shadow: 0 -6px 34px rgba(20, 35, 59, .16); }
-#sheet::before { content: ""; position: absolute; top: 7px; left: 50%; width: 38px; height: 5px; margin-left: -19px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 22%, transparent); }
+/* (a alça agora é um botão: .sheet-grip) */
 #sheet .btn { border-radius: 14px; }
 
 /* durante a rota: sem doca, faixa verde no topo */
@@ -731,3 +731,16 @@ html, body { background: #fbfbfa; }
 .pick-ask .pa-ic { font-size: 26px; line-height: 1; }
 .pick-ask b { display: block; font-size: 18px; }
 .pick-ask small { display: block; font-size: 14px; line-height: 1.3; opacity: .92; }
+
+/* ---------- painel de baixo recolhível ---------- */
+.sheet-grip { position: absolute; top: 0; left: 50%; width: 90px; height: 22px; margin-left: -45px; border: 0; background: none; padding: 0; cursor: grab; touch-action: none; }
+.sheet-grip::before { content: ""; position: absolute; top: 7px; left: 26px; width: 38px; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 25%, transparent); }
+#sheet { touch-action: pan-x; transition: transform .2s ease; }
+.sheet-mini { display: none; }
+#sheet.mini { padding: 18px 16px 10px; }
+#sheet.mini > :not(.sheet-grip):not(.sheet-mini) { display: none !important; }
+#sheet.mini .sheet-mini { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; padding: 4px 2px; text-align: left; cursor: pointer; color: var(--ink); }
+.sheet-mini .sm-txt { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sheet-mini .sm-up { font-size: 13px; color: var(--ink-2); -webkit-text-fill-color: var(--ink-2); }
+@media (min-width: 760px) { .sheet-grip { display: none; } }
+@media (prefers-reduced-motion: reduce) { #sheet { transition: none; } }
