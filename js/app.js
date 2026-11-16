@@ -868,26 +868,56 @@ function walk(a, b) {
   return legCache.get(k);
 }
 
-// melhor ordem: vizinho mais próximo + melhorias 2-opt (caminho aberto, começando na origem)
+// melhor ordem das lojas do roteiro, pela distância a pé de verdade (rota do mapa), começando na origem.
+// Até 12 lojas: ordem exata (a mais curta possível, programação dinâmica de Held-Karp).
+// Mais que isso: vizinho mais próximo + melhorias 2-opt e "mover uma loja" até não melhorar mais.
 function bestOrder(origin, stops) {
-  const rest = [...stops], order = [];
-  let cur = origin;
-  while (rest.length) {
-    let bi = 0;
-    rest.forEach((p, i) => { if (walk(cur, p) < walk(cur, rest[bi])) bi = i; });
-    cur = rest.splice(bi, 1)[0]; order.push(cur);
-  }
-  const cost = (o) => o.reduce((s, p, i) => s + walk(i ? o[i - 1] : origin, p), 0);
-  for (let improved = true; improved;) {
-    improved = false;
-    for (let i = 0; i < order.length - 1; i++) {
-      for (let j = i + 1; j < order.length; j++) {
-        const cand = [...order.slice(0, i), ...order.slice(i, j + 1).reverse(), ...order.slice(j + 1)];
-        if (cost(cand) < cost(order) - 1) { order.splice(0, order.length, ...cand); improved = true; }
+  const n = stops.length;
+  const D = stops.map((a) => stops.map((b) => (a === b ? 0 : walk(a, b))));
+  const S = stops.map((p) => walk(origin, p));
+  const cost = (o) => o.reduce((sum, k, i) => sum + (i ? D[o[i - 1]][k] : S[k]), 0);
+  let idx;
+  if (n <= 12) {
+    const FULL = 1 << n, dp = new Float64Array(FULL * n).fill(Infinity), par = new Int8Array(FULL * n).fill(-1);
+    for (let k = 0; k < n; k++) dp[(1 << k) * n + k] = S[k];
+    for (let m = 1; m < FULL; m++) {
+      for (let k = 0; k < n; k++) {
+        const v = dp[m * n + k];
+        if (!(m & (1 << k)) || v === Infinity) continue;
+        for (let j = 0; j < n; j++) {
+          if (m & (1 << j)) continue;
+          const m2 = m | (1 << j), c = v + D[k][j];
+          if (c < dp[m2 * n + j]) { dp[m2 * n + j] = c; par[m2 * n + j] = k; }
+        }
+      }
+    }
+    let last = 0;
+    for (let k = 1; k < n; k++) if (dp[(FULL - 1) * n + k] < dp[(FULL - 1) * n + last]) last = k;
+    idx = [];
+    for (let m = FULL - 1, k = last; k >= 0;) { idx.unshift(k); const pk = par[m * n + k]; m &= ~(1 << k); k = pk; }
+  } else {
+    const rest = stops.map((_, i) => i);
+    idx = [];
+    let cur = -1;
+    while (rest.length) {
+      let bi = 0;
+      rest.forEach((k, i) => { if ((cur < 0 ? S[k] : D[cur][k]) < (cur < 0 ? S[rest[bi]] : D[cur][rest[bi]])) bi = i; });
+      cur = rest.splice(bi, 1)[0]; idx.push(cur);
+    }
+    for (let improved = true; improved;) {
+      improved = false;
+      for (let i = 0; i < n - 1; i++) for (let j = i + 1; j < n; j++) {   // 2-opt: inverte um trecho
+        const cand = [...idx.slice(0, i), ...idx.slice(i, j + 1).reverse(), ...idx.slice(j + 1)];
+        if (cost(cand) < cost(idx) - 0.5) { idx = cand; improved = true; }
+      }
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {           // move uma loja para outra posição
+        if (i === j) continue;
+        const cand = [...idx]; const [k] = cand.splice(i, 1); cand.splice(j, 0, k);
+        if (cost(cand) < cost(idx) - 0.5) { idx = cand; improved = true; }
       }
     }
   }
-  return { order, meters: cost(order) };
+  return { order: idx.map((k) => stops[k]), meters: cost(idx) };
 }
 
 function startTour() {

@@ -90,7 +90,12 @@ def main():
                 left.append((name, cat, hint)); continue
             x = sum(p["x"] for p in refs) / len(refs)
             y = sum(p["y"] for p in refs) / len(refs)
-            near = min(corridor, key=lambda n: math.hypot(n["x"] - x, n["y"] - y))
+            # porta = a mesma das lojas de referência (o corredor mais próximo em linha reta pode ser
+            # do outro lado de uma parede, por exemplo o caminho externo da Colonnade ao lado da ala azul)
+            nodes = {n["id"]: n for n in data["nodes"]}
+            near = min((nodes[p["node"]] for p in refs if p.get("node") in nodes),
+                       key=lambda n: math.hypot(n["x"] - x, n["y"] - y), default=None) \
+                or min(corridor, key=lambda n: math.hypot(n["x"] - x, n["y"] - y))
             if m and m.group(1) == "across from":   # do outro lado do corredor
                 x, y = 2 * near["x"] - x, 2 * near["y"] - y
                 near = min(corridor, key=lambda n: math.hypot(n["x"] - x, n["y"] - y))
